@@ -1976,7 +1976,7 @@ ii) Figures in the right margin indicate full marks. Original authentic exam pap
         <!-- PROMINENT LARGE DAYS REMAINING BANNER (MONOCHROME RETRO) -->
         <div class="next-exam-banner">
           <div class="next-exam-label">DAYS REMAINING TILL NEXT EXAM</div>
-          <div class="next-exam-countdown" id="mainCountdownNumber">14 DAYS REMAINING</div>
+          <div class="next-exam-countdown" id="mainCountdownNumber">12 DAYS REMAINING</div>
           <div class="next-exam-info">
             <div class="next-exam-title" id="mainCountdownTitle">NEXT: CSE 4101 · Computer Graphics and Image Processing</div>
             <div class="next-exam-sub" id="mainCountdownSub">Saturday, 31 October 2026 · Time: 10:00 AM – 01:00 PM · Venue: CSE 502 &amp; B 505</div>
@@ -2008,7 +2008,7 @@ ii) Figures in the right margin indicate full marks. Original authentic exam pap
         <!-- CALENDAR LEGEND (STRICT RETRO MONOCHROME) -->
         <div class="cal-legend-bar">
           <span class="legend-item"><span class="legend-box legend-passed"></span> <b>Passed Dates (Crossed Out)</b></span>
-          <span class="legend-item"><span class="legend-box legend-today"></span> <b>Today (17 Oct 2026)</b></span>
+          <span class="legend-item" id="calLegendTodayItem"><span class="legend-box legend-today"></span> <b>Today</b></span>
           <span class="legend-item"><span class="legend-box legend-exam"></span> <b>Official Exam Days</b></span>
           <span class="legend-item"><span class="legend-box legend-prep"></span> <b>Preparation / Gap Days</b></span>
           <span class="legend-item text-muted" style="margin-left:auto;">Click any exam date to jump directly to its question archive</span>
@@ -4006,6 +4006,166 @@ function filterQuestionsSearch() {
   });
 }
 
+// 8.5 Dynamic Academic Examination Countdown & Calendar Engine
+function updateDynamicExamCountdown() {
+  const EXAM_SCHEDULE = [
+    {
+      code: "CSE 4101",
+      title: "Computer Graphics and Image Processing",
+      date: "2026-10-31",
+      formattedDate: "Saturday, 31 October 2026",
+      time: "10:00 AM – 01:00 PM",
+      venue: "CSE 502 & B 505"
+    },
+    {
+      code: "CSE 4105",
+      title: "Computer Networks",
+      date: "2026-11-05",
+      formattedDate: "Thursday, 05 November 2026",
+      time: "10:00 AM – 01:00 PM",
+      venue: "CSE 502 & B 505"
+    },
+    {
+      code: "CSE 4115",
+      title: "Computer Security",
+      date: "2026-11-10",
+      formattedDate: "Tuesday, 10 November 2026",
+      time: "10:00 AM – 01:00 PM",
+      venue: "CSE 502 & B 505"
+    },
+    {
+      code: "CSE 4111",
+      title: "Machine Learning",
+      date: "2026-11-16",
+      formattedDate: "Monday, 16 November 2026",
+      time: "10:00 AM – 01:00 PM",
+      venue: "CSE 502 & B 505"
+    },
+    {
+      code: "CSE 4121",
+      title: "Natural Language Processing",
+      date: "2026-11-21",
+      formattedDate: "Saturday, 21 November 2026",
+      time: "10:00 AM – 01:00 PM",
+      venue: "CSE 502 & B 505"
+    }
+  ];
+
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  const todayUtc = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+
+  // 1. Update Calendar Legend Today Label
+  const legendToday = document.getElementById("calLegendTodayItem");
+  if (legendToday) {
+    const formattedToday = now.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+    legendToday.innerHTML = `<span class="legend-box legend-today"></span> <b>Today (${formattedToday})</b>`;
+  }
+
+  // 2. Update Calendar Grid Cells (Passed vs Today vs Future)
+  const allDateCells = document.querySelectorAll(".cal-table td[data-date]");
+  allDateCells.forEach(cell => {
+    const dStr = cell.getAttribute("data-date");
+    if (!dStr) return;
+
+    // Clean existing dynamic today badge
+    const existingBadge = cell.querySelector(".today-badge");
+    if (existingBadge) existingBadge.remove();
+
+    if (dStr < todayStr) {
+      cell.classList.add("passed");
+      cell.classList.remove("today");
+    } else if (dStr === todayStr) {
+      cell.classList.remove("passed");
+      cell.classList.add("today");
+      const badge = document.createElement("span");
+      badge.className = "today-badge";
+      badge.textContent = "TODAY";
+      cell.appendChild(badge);
+    } else {
+      cell.classList.remove("passed");
+      cell.classList.remove("today");
+    }
+  });
+
+  // 3. Compute Days Remaining for Each Exam
+  let nextExam = null;
+  let minDiff = Infinity;
+
+  EXAM_SCHEDULE.forEach(exam => {
+    const [ey, em, ed] = exam.date.split("-").map(Number);
+    const examUtc = Date.UTC(ey, em - 1, ed);
+    const diffDays = Math.round((examUtc - todayUtc) / (1000 * 60 * 60 * 24));
+    exam.diffDays = diffDays;
+
+    if (diffDays >= 0 && diffDays < minDiff) {
+      minDiff = diffDays;
+      nextExam = exam;
+    }
+  });
+
+  // 4. Update Prominent Large Countdown Banner
+  const countdownNumEl = document.getElementById("mainCountdownNumber");
+  const countdownTitleEl = document.getElementById("mainCountdownTitle");
+  const countdownSubEl = document.getElementById("mainCountdownSub");
+
+  if (countdownNumEl && countdownTitleEl && countdownSubEl) {
+    if (nextExam) {
+      if (nextExam.diffDays === 0) {
+        countdownNumEl.textContent = "EXAM TODAY!";
+        countdownTitleEl.textContent = `TODAY: ${nextExam.code} · ${nextExam.title}`;
+      } else if (nextExam.diffDays === 1) {
+        countdownNumEl.textContent = "1 DAY REMAINING";
+        countdownTitleEl.textContent = `NEXT: ${nextExam.code} · ${nextExam.title}`;
+      } else {
+        countdownNumEl.textContent = `${nextExam.diffDays} DAYS REMAINING`;
+        countdownTitleEl.textContent = `NEXT: ${nextExam.code} · ${nextExam.title}`;
+      }
+      countdownSubEl.textContent = `${nextExam.formattedDate} · Time: ${nextExam.time} · Venue: ${nextExam.venue}`;
+    } else {
+      countdownNumEl.textContent = "EXAMINATIONS CONCLUDED";
+      countdownTitleEl.textContent = "All 5 Core Examinations Completed";
+      countdownSubEl.textContent = "Congratulations on finishing the 4th Year 1st Term Examinations!";
+    }
+  }
+
+  // 5. Update Chronological Roster Badges (T-X DAYS)
+  const rosterRows = document.querySelectorAll(".exam-roster-rows .exam-row-item");
+  rosterRows.forEach((row, i) => {
+    const exam = EXAM_SCHEDULE[i];
+    if (!exam) return;
+    const badge = row.querySelector(".exam-t-badge");
+    if (badge) {
+      if (exam.diffDays > 1) {
+        badge.textContent = `T-${exam.diffDays} DAYS`;
+        badge.className = "exam-t-badge";
+        badge.style.textDecoration = "";
+        badge.style.background = "";
+        badge.style.color = "";
+      } else if (exam.diffDays === 1) {
+        badge.textContent = "T-1 DAY (TOMORROW)";
+        badge.className = "exam-t-badge";
+        badge.style.textDecoration = "";
+        badge.style.background = "";
+        badge.style.color = "";
+      } else if (exam.diffDays === 0) {
+        badge.textContent = "TODAY";
+        badge.className = "exam-t-badge";
+        badge.style.background = "var(--border-main)";
+        badge.style.color = "var(--bg-main)";
+        badge.style.textDecoration = "";
+      } else {
+        badge.textContent = "COMPLETED";
+        badge.className = "exam-t-badge text-dim";
+        badge.style.textDecoration = "line-through";
+        badge.style.background = "";
+        badge.style.color = "";
+      }
+    }
+  });
+}
+
 // 9. Robust Boot & Route Listener
 function boot() {
   if (window.__BOOTED__) return;
@@ -4013,9 +4173,12 @@ function boot() {
   initTheme();
   updateGlobalProgress();
   updateGlobalPracticeCounter();
+  updateDynamicExamCountdown();
   router();
   makeEmojisMonochrome(document.body);
   renderMath($("#printableExamSheet"));
+  // Automatically refresh countdown every minute
+  setInterval(updateDynamicExamCountdown, 60000);
 }
 
 if (document.readyState === "loading") {
