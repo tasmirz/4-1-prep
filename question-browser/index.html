@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KUET CSE Question Browser · Master Index</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      border-radius: 0 !important;
+      margin: 0;
+      padding: 0;
+    }
+    :root {
+      --font-mono: "JetBrains Mono", "Fira Code", monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --bg-canvas: #fcfbf9;
+      --bg-sheet: #ffffff;
+      --bg-subtle: #f4f3ef;
+      --bg-card: #f9f8f4;
+      --border-main: #1a1a1a;
+      --border-subtle: #d3d1c7;
+      --text-ink: #111111;
+      --text-dim: #444444;
+      --text-muted: #777777;
+    }
+    html.dark {
+      --bg-canvas: #121315;
+      --bg-sheet: #1a1b1e;
+      --bg-subtle: #222428;
+      --bg-card: #161719;
+      --border-main: #e2e2df;
+      --border-subtle: #3a3d42;
+      --text-ink: #f0f0ee;
+      --text-dim: #b8b8b5;
+      --text-muted: #888884;
+    }
+    body {
+      background: var(--bg-canvas);
+      color: var(--text-ink);
+      font-family: var(--font-sans);
+      padding: 2rem 1rem;
+      max-width: 960px;
+      margin: 0 auto;
+      line-height: 1.5;
+    }
+    header {
+      border: 2px solid var(--border-main);
+      background: var(--bg-sheet);
+      padding: 1.5rem;
+      box-shadow: 2px 2px 0px var(--border-main);
+      margin-bottom: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+    }
+    .card {
+      border: 1px solid var(--border-main);
+      background: var(--bg-sheet);
+      padding: 1.25rem;
+      box-shadow: 2px 2px 0px var(--border-main);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .card.featured {
+      grid-column: 1 / -1;
+      border: 2px solid var(--border-main);
+      background: var(--bg-card);
+    }
+    .code {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 800;
+      border: 1px solid var(--border-main);
+      padding: 0.15rem 0.4rem;
+      background: var(--bg-subtle);
+      display: inline-block;
+      margin-bottom: 0.5rem;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.6rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 800;
+      text-decoration: none;
+      color: var(--text-ink);
+      background: var(--bg-sheet);
+      border: 1px solid var(--border-main);
+      box-shadow: 2px 2px 0px var(--border-main);
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: all 0.1s;
+    }
+    .btn:hover {
+      background: var(--text-ink);
+      color: var(--bg-sheet);
+    }
+    .btn-featured {
+      background: var(--text-ink);
+      color: var(--bg-sheet);
+      padding: 0.85rem 1.25rem;
+      font-size: 0.9rem;
+    }
+    .btn-featured:hover {
+      background: var(--bg-sheet);
+      color: var(--text-ink);
+    }
+    .mono-emoji {
+      filter: grayscale(100%) contrast(150%);
+      display: inline-block;
+      margin-right: 0.3rem;
+    }
+    html.dark .mono-emoji {
+      filter: grayscale(100%) brightness(1.7) contrast(140%);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <div class="code">KUET CSE 4-1 EXAMINATION ARCHIVE</div>
+      <h1>Question Browser Directory</h1>
+      <p style="font-family:var(--font-mono); font-size:0.8rem; color:var(--text-dim); margin-top:0.25rem;">Unified Question Bank &amp; Course-Specific Portals</p>
+    </div>
+    <a href="../index.html" class="btn" style="margin-top:0;">[← BACK TO MAIN HUB]</a>
+  </header>
+
+  <div class="grid">
+    <div class="card featured">
+      <div>
+        <span class="code">MASTER ARCHIVE · ALL 6 COURSES</span>
+        <h2 style="font-size:1.35rem; font-weight:900; margin-bottom:0.5rem;">★ Merged Question Browser (Interactive)</h2>
+        <p style="font-size:0.85rem; color:var(--text-dim); line-height:1.5;">Access all 1,517 solved exam questions, authentic university scan crops, step-by-step mathematical derivations, and all 148 full paper scan pages across all 6 core courses in one unified portal with instant filters.</p>
+      </div>
+      <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+        <a href="../index.html#/subject/merged/exam" class="btn btn-featured" style="flex:2;">[★ ENTER MERGED QB PORTAL →]</a>
+        <a href="../artifacts/Copy of merged questions.pdf" target="_blank" class="btn" style="flex:1;">[DOWNLOAD MERGED PDF (49 MB) ↗]</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div>
+        <span class="code">CSE 3201 / CSE 3202</span>
+        <h3 style="font-size:1.1rem; font-weight:800; margin-bottom:0.4rem;">Computer Networks</h3>
+        <p style="font-size:0.8rem; color:var(--text-dim);">274 Questions · 10 Decks · Authentic scan crops &amp; full examination papers.</p>
+      </div>
+      <div style="display:flex; gap:0.4rem;">
+        <a href="../index.html#/subject/computer-networks/exam" class="btn" style="flex:1;">[HUB PORTAL]</a>
+        <a href="computer-networks.html" class="btn" style="flex:1;">[STANDALONE]</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div>
+        <span class="code">CSE 4111 / CSE 4112</span>
+        <h3 style="font-size:1.1rem; font-weight:800; margin-bottom:0.4rem;">Machine Learning</h3>
+        <p style="font-size:0.8rem; color:var(--text-dim);">241 Questions · 19 Decks · Perceptron, Backprop, RBF, Ensembles &amp; GA/PSO.</p>
+      </div>
+      <div style="display:flex; gap:0.4rem;">
+        <a href="../index.html#/subject/machine-learning/exam" class="btn" style="flex:1;">[HUB PORTAL]</a>
+        <a href="machine-learning.html" class="btn" style="flex:1;">[STANDALONE]</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div>
+        <span class="code">CSE 4109 / CSE 4110</span>
+        <h3 style="font-size:1.1rem; font-weight:800; margin-bottom:0.4rem;">Computer &amp; Network Security</h3>
+        <p style="font-size:0.8rem; color:var(--text-dim);">338 Questions · 29 Decks · RSA, Diffie-Hellman, DES, AES, SHA-512 &amp; TLS.</p>
+      </div>
+      <div style="display:flex; gap:0.4rem;">
+        <a href="../index.html#/subject/computer-and-network-security/exam" class="btn" style="flex:1;">[HUB PORTAL]</a>
+        <a href="computer-and-network-security.html" class="btn" style="flex:1;">[STANDALONE]</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div>
+        <span class="code">CSE 4241 / CSE 4242</span>
+        <h3 style="font-size:1.1rem; font-weight:800; margin-bottom:0.4rem;">Natural Language Processing</h3>
+        <p style="font-size:0.8rem; color:var(--text-dim);">196 Questions · 17 Decks · N-grams, HMM, Viterbi, CFG &amp; Attention.</p>
+      </div>
+      <div style="display:flex; gap:0.4rem;">
+        <a href="../index.html#/subject/natural-language-processing/exam" class="btn" style="flex:1;">[HUB PORTAL]</a>
+        <a href="natural-language-processing.html" class="btn" style="flex:1;">[STANDALONE]</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div>
+        <span class="code">CSE 4107 / CSE 4108</span>
+        <h3 style="font-size:1.1rem; font-weight:800; margin-bottom:0.4rem;">Computer Graphics</h3>
+        <p style="font-size:0.8rem; color:var(--text-dim);">255 Questions · 7 Decks · Bresenham, Midpoint, 2D/3D Transforms &amp; Clipping.</p>
+      </div>
+      <div style="display:flex; gap:0.4rem;">
+        <a href="../index.html#/subject/computer-graphics/exam" class="btn" style="flex:1;">[HUB PORTAL]</a>
+        <a href="computer-graphics.html" class="btn" style="flex:1;">[STANDALONE]</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div>
+        <span class="code">CSE 4125 / CSE 4126</span>
+        <h3 style="font-size:1.1rem; font-weight:800; margin-bottom:0.4rem;">Image Processing &amp; CV</h3>
+        <p style="font-size:0.8rem; color:var(--text-dim);">213 Questions · 7 Decks · Sampling, Convolutions, Fourier &amp; Morphology.</p>
+      </div>
+      <div style="display:flex; gap:0.4rem;">
+        <a href="../index.html#/subject/image-processing-and-computer-vision/exam" class="btn" style="flex:1;">[HUB PORTAL]</a>
+        <a href="image-processing-and-computer-vision.html" class="btn" style="flex:1;">[STANDALONE]</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

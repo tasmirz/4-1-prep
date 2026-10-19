@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Applied Cryptography: Asymmetric Schemes & Signature Protocols</title>
+<style>
+  :root {
+    --bg-color: #121314;
+    --canvas-bg: #121314;
+    --grid-minor: rgba(255, 255, 255, 0.04);
+    --grid-major: rgba(255, 255, 255, 0.09);
+    --panel-bg: #1a1b1d;
+    --panel-border: #555555;
+    --text-primary: #f0f0ea;
+    --text-secondary: #b0b0a8;
+    --text-muted: #808078;
+    --node-bg: #1a1b1d;
+    --node-border: #555555;
+    --link-color: rgba(160, 160, 160, 0.35);
+    --link-pulse: #f0f0ea;
+    --drawer-bg: #1a1b1d;
+    --table-head-bg: #242528;
+    --table-border: #555555;
+    --table-stripe: #1e1f22;
+    --btn-bg: #1e1f22;
+    --btn-hover: #2a2b2f;
+    --icon-color: #b0b0a8;
+    --icon-hover: #f0f0ea;
+    --font-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "JetBrains Mono", "Courier New", Courier, monospace;
+  }
+
+  body.light-theme {
+    --bg-color: #f5f5f0;
+    --canvas-bg: #f5f5f0;
+    --grid-minor: rgba(0, 0, 0, 0.04);
+    --grid-major: rgba(0, 0, 0, 0.09);
+    --panel-bg: #ffffff;
+    --panel-border: #111111;
+    --text-primary: #111111;
+    --text-secondary: #444444;
+    --text-muted: #666666;
+    --node-bg: #ffffff;
+    --node-border: #111111;
+    --link-color: rgba(60, 60, 60, 0.35);
+    --link-pulse: #111111;
+    --drawer-bg: #ffffff;
+    --table-head-bg: #f5f5f0;
+    --table-border: #111111;
+    --table-stripe: #fafaf8;
+    --btn-bg: #f9f9f6;
+    --btn-hover: #eaeae4;
+    --icon-color: #444444;
+    --icon-hover: #111111;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border-radius: 0 !important;
+  }
+
+  ::selection {
+    background: var(--text-primary);
+    color: var(--panel-bg);
+  }
+  ::-moz-selection {
+    background: var(--text-primary);
+    color: var(--panel-bg);
+  }
+
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    font-family: var(--font-serif);
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  #canvas-container {
+    flex: 1;
+    height: 100%;
+    position: relative;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    overflow: hidden;
+  }
+  #canvas-container:active { cursor: grabbing; }
+
+  svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* Minimalist Graph Paper Grid */
+  .grid-bg {
+    transition: opacity 0.2s ease;
+  }
+  .grid-bg.hidden { opacity: 0; }
+
+  /* Moving Organic Links */
+  .link-path {
+    fill: none;
+    stroke: var(--link-color);
+    stroke-width: 1.5px;
+    stroke-linecap: square;
+    transition: stroke 0.2s ease, stroke-width 0.2s ease;
+  }
+  .link-path.highlighted {
+    stroke-width: 2.5px;
+    stroke: var(--text-primary);
+  }
+
+  /* Draggable Node Pills / Wireframe Rectangles */
+  .node-group {
+    cursor: grab;
+    transition: filter 0.15s ease;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .node-group:active { cursor: grabbing; }
+
+  .node-capsule {
+    rx: 0px !important;
+    ry: 0px !important;
+    stroke-width: 1.5px;
+    transition: stroke 0.2s ease, stroke-width 0.2s ease, filter 0.2s ease;
+  }
+  .node-capsule:hover {
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.25));
+  }
+  body:not(.light-theme) .node-capsule:hover {
+    filter: drop-shadow(0 4px 10px rgba(255, 255, 255, 0.25));
+  }
+  .node-capsule.selected {
+    stroke-width: 2.5px !important;
+    stroke: var(--text-primary) !important;
+    filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.4)) !important;
+  }
+  body:not(.light-theme) .node-capsule.selected {
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.4)) !important;
+  }
+  .node-capsule.matched {
+    stroke: var(--text-primary) !important;
+    stroke-width: 3px !important;
+    stroke-dasharray: 4 2;
+  }
+
+  .node-label {
+    font-size: 13px;
+    font-weight: 500;
+    fill: var(--text-primary);
+    font-family: var(--font-serif);
+    pointer-events: none;
+    letter-spacing: 0.1px;
+  }
+  .node-label.root-label {
+    font-size: 14.5px;
+    font-weight: 700;
+    font-style: italic;
+    fill: var(--text-primary);
+  }
+  .node-label.domain-label {
+    font-size: 13.5px;
+    font-weight: 600;
+  }
+
+  .status-dot {
+    pointer-events: none;
+  }
+
+  .badge-count {
+    font-size: 11px;
+    font-weight: 700;
+    fill: #ffffff;
+    font-family: var(--font-mono);
+    pointer-events: none;
+  }
+
+  /* Minimalist Floating Toolbar with Pure Monochrome Icons */
+  .toolbar {
+    position: absolute;
+    top: 16px;
+    left: 20px;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 0 !important;
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 2px 2px 0px var(--panel-border);
+    z-index: 10;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-right: 10px;
+    border-right: 1px solid var(--panel-border);
+    font-size: 13.5px;
+    font-weight: 700;
+    font-family: var(--font-serif);
+    color: var(--text-primary);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .live-dot {
+    width: 7.5px;
+    height: 7.5px;
+    background: var(--text-primary);
+    border-radius: 0 !important;
+  }
+
+  .search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .search-wrap input {
+    background: var(--btn-bg);
+    border: 1px solid var(--panel-border);
+    color: var(--text-primary);
+    font-family: var(--font-serif);
+    border-radius: 0 !important;
+    padding: 5px 10px 5px 28px;
+    font-size: 12.5px;
+    width: 190px;
+    outline: none !important;
+    transition: all 0.15s ease;
+  }
+  .search-wrap input:focus {
+    width: 240px;
+    border-color: var(--text-primary);
+    background: var(--panel-bg);
+  }
+  .search-ico {
+    position: absolute;
+    left: 9px;
+    display: flex;
+    align-items: center;
+    color: var(--icon-color);
+    pointer-events: none;
+  }
+
+  .search-badge {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--panel-bg);
+    background: var(--text-primary);
+    border: 1px solid var(--panel-border);
+    border-radius: 0 !important;
+    padding: 2px 7px;
+    display: none;
+    white-space: nowrap;
+  }
+
+  /* Monochrome Icon Buttons (No text!) */
+  .mono-btn {
+    background: var(--btn-bg);
+    border: 1px solid var(--panel-border);
+    color: var(--icon-color);
+    border-radius: 0 !important;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.1s ease;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    outline: none !important;
+  }
+  .mono-btn svg {
+    width: 15px;
+    height: 15px;
+    stroke: currentColor;
+    display: block;
+  }
+  .mono-btn:hover {
+    background: var(--text-primary);
+    color: var(--panel-bg);
+    border-color: var(--text-primary);
+  }
+  .mono-btn.active {
+    background: var(--text-primary) !important;
+    color: var(--panel-bg) !important;
+    border-color: var(--text-primary) !important;
+  }
+
+  /* Backdrop Overlay when Details Drawer is Open */
+  .drawer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.48);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 15;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .drawer-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  body.light-theme .drawer-overlay {
+    background: rgba(0, 0, 0, 0.25);
+  }
+
+  /* Sleek Slide-over Details Drawer */
+  .details-drawer {
+    width: 500px;
+    max-width: 92vw;
+    height: 100%;
+    background: var(--drawer-bg);
+    border-left: 2px solid var(--panel-border);
+    border-radius: 0 !important;
+    box-shadow: -10px 0 30px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    z-index: 20;
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+  .details-drawer.open {
+    transform: translateX(0);
+  }
+
+  .drawer-head {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--panel-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .drawer-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 0 !important;
+    border: 1px solid var(--panel-border);
+    font-size: 11px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .drawer-title {
+    font-size: 16px;
+    font-weight: 700;
+    font-family: var(--font-serif);
+    line-height: 1.35;
+    color: var(--text-primary);
+  }
+
+  .drawer-bar {
+    padding: 8px 20px;
+    border-bottom: 1px solid var(--panel-border);
+    display: flex;
+    gap: 8px;
+    background: var(--btn-bg);
+  }
+
+  .drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 22px;
+    font-size: 14px;
+    line-height: 1.65;
+    font-family: var(--font-serif);
+    color: var(--text-secondary);
+  }
+  .drawer-body h3 {
+    color: var(--text-primary);
+    margin: 16px 0 8px 0;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: var(--font-serif);
+  }
+  .drawer-body p { margin-bottom: 12px; }
+  .drawer-body ul, .drawer-body ol { padding-left: 22px; margin-bottom: 12px; }
+  .drawer-body li { margin-bottom: 6px; }
+  .drawer-body strong { color: var(--text-primary); font-family: var(--font-serif); }
+  .drawer-body em { font-style: italic; }
+  .drawer-body code {
+    background: var(--btn-bg);
+    color: var(--text-primary);
+    padding: 2px 6px;
+    border: 1px solid var(--panel-border);
+    border-radius: 0 !important;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  /* Clean Academic Tables */
+  .drawer-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0 18px 0;
+    font-size: 13px;
+    border-radius: 0 !important;
+    overflow: hidden;
+    font-family: var(--font-serif);
+    border: 1px solid var(--table-border);
+  }
+  .drawer-body th, .drawer-body td {
+    padding: 8px 11px;
+    border: 1px solid var(--table-border);
+    text-align: left;
+    vertical-align: top;
+  }
+  .drawer-body th {
+    background: var(--table-head-bg);
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+  .drawer-body tr:nth-child(even) { background: var(--table-stripe); }
+
+  /* Concept Pills */
+  .concept-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin: 10px 0 16px 0;
+  }
+  .concept-pill {
+    background: var(--btn-bg);
+    border: 1px solid var(--panel-border);
+    color: var(--text-secondary);
+    font-family: var(--font-serif);
+    border-radius: 0 !important;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.1s ease;
+  }
+  .concept-pill:hover {
+    background: var(--text-primary);
+    color: var(--panel-bg);
+    border-color: var(--text-primary);
+  }
+
+  /* Minimalist Footer Hint */
+  .hint-pill {
+    position: absolute;
+    bottom: 16px;
+    left: 20px;
+    font-size: 12px;
+    font-family: var(--font-serif);
+    color: var(--text-muted);
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 0 !important;
+    padding: 4px 12px;
+    pointer-events: none;
+    box-shadow: 2px 2px 0px var(--panel-border);
+  }
+
+  /* Robust Drawer Theme Adaptations */
+  body.light-theme .drawer-body div[style*="background"] {
+    background: var(--btn-bg) !important;
+    border-color: var(--panel-border) !important;
+    color: var(--text-primary) !important;
+  }
+  body.light-theme .drawer-body span[style*="color:#38bdf8"],
+  body.light-theme .drawer-body p[style*="color:#38bdf8"],
+  body.light-theme .drawer-body a[style*="color:#38bdf8"] {
+    color: var(--text-primary) !important;
+  }
+  body.light-theme .drawer-body p[style*="color:#cbd5e1"],
+  body.light-theme .drawer-body ul[style*="color:#94a3b8"] {
+    color: var(--text-secondary) !important;
+  }
+  body.light-theme .drawer-body tr[style*="background:#1e293b"] {
+    background: var(--table-head-bg) !important;
+    color: var(--text-primary) !important;
+  }
+  body.light-theme .drawer-body tr[style*="background:#1e293b"] th {
+    color: var(--text-primary) !important;
+  }
+  body.light-theme .drawer-body tr[style*="background:#0f172a"] {
+    background: var(--table-stripe) !important;
+  }
+  body.light-theme .drawer-body a[style*="background"] {
+    background: var(--text-primary) !important;
+    color: var(--panel-bg) !important;
+    border: 1px solid var(--panel-border) !important;
+  }
+
+  /* Retro Monochrome Emojis */
+  .mono-emoji {
+    display: inline-block;
+    vertical-align: -0.1em;
+    line-height: 1;
+    filter: grayscale(100%) brightness(0.65) contrast(160%);
+    -webkit-filter: grayscale(100%) brightness(0.65) contrast(160%);
+    transition: filter 0.1s ease;
+  }
+  body:not(.light-theme) .mono-emoji {
+    filter: grayscale(100%) brightness(1.75) contrast(140%);
+    -webkit-filter: grayscale(100%) brightness(1.75) contrast(140%);
+  }
+  body.light-theme .drawer-body a[style*="background"] .mono-emoji,
+  body.light-theme .btn:hover .mono-emoji,
+  body.light-theme button:hover .mono-emoji {
+    filter: grayscale(100%) brightness(2.2) contrast(150%) !important;
+    -webkit-filter: grayscale(100%) brightness(2.2) contrast(150%) !important;
+  }
+</style>
+</head>
+<body>
+
+<div id="canvas-container">
+  <div class="toolbar">
+    <div class="brand">
+      <div class="live-dot"></div>
+      <span>Applied Cryptography: Asymmetric Schemes & Signature Protocols</span>
+    </div>
+
+    <div class="search-wrap">
+      <span class="search-ico">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      </span>
+      <input type="text" id="search-input" placeholder="Search concepts (Tahoe, Karn, AIMD)...">
+    </div>
+    <span class="search-badge" id="search-badge">0</span>
+
+    <!-- Search Prev/Next (Monochrome Icons) -->
+    <button class="mono-btn" id="search-prev" style="display:none;" title="Previous Match">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="18 15 12 9 6 15"></polyline></svg>
+    </button>
+    <button class="mono-btn" id="search-next" style="display:none;" title="Next Match">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+    </button>
+
+    <!-- Theme Switcher (Monochrome Sun/Moon Icon) -->
+    <button class="mono-btn" id="btn-theme" title="Toggle Light / Dark Mode">
+      <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+    </button>
+
+    <!-- Grid Toggle (Monochrome Grid Icon) -->
+    <button class="mono-btn active" id="btn-grid" title="Toggle Graph Paper Grid">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>
+    </button>
+
+    <!-- Reset Layout (Monochrome Reset Icon) -->
+    <button class="mono-btn" id="btn-reset" title="Reset Layout to Default Radial Grid">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
+    </button>
+
+    <!-- Fit View (Monochrome Crosshairs / Fit Icon) -->
+    <button class="mono-btn" id="btn-fit" title="Zoom to Fit">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><polyline points="21 15 21 21 15 21"></polyline><polyline points="3 9 3 3 9 3"></polyline></svg>
+    </button>
+
+    <!-- Expand All (Monochrome Tree Expand Icon) -->
+    <button class="mono-btn" id="btn-expand" title="Expand All Branches">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+    </button>
+
+    <!-- Collapse All (Monochrome Tree Fold Icon) -->
+    <button class="mono-btn" id="btn-collapse" title="Collapse to Domains">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+    </button>
+  </div>
+
+  <svg id="svg-canvas">
+    <defs>
+      <!-- Engineering Graph Paper Grid -->
+      <pattern id="grid-pattern-minor" width="24" height="24" patternUnits="userSpaceOnUse">
+        <path d="M 24 0 L 0 0 0 24" fill="none" stroke="var(--grid-minor)" stroke-width="0.75" />
+      </pattern>
+      <pattern id="grid-pattern-major" width="120" height="120" patternUnits="userSpaceOnUse">
+        <rect width="120" height="120" fill="url(#grid-pattern-minor)" />
+        <path d="M 120 0 L 0 0 0 120" fill="none" stroke="var(--grid-major)" stroke-width="1.2" />
+      </pattern>
+    </defs>
+
+    <g id="viewport">
+      <!-- Infinite Graph Paper Grid Plane -->
+      <rect id="grid-plane" class="grid-bg" x="-10000" y="-10000" width="20000" height="20000" fill="url(#grid-pattern-major)" />
+
+      <!-- Moving Links Layer -->
+      <g id="links-layer"></g>
+
+      <!-- Movable Nodes Layer -->
+      <g id="nodes-layer"></g>
+    </g>
+  </svg>
+
+  <div class="hint-pill">
+    Drag nodes to reposition • Scroll to zoom • Click +/- to toggle branch • Click node for details
+  </div>
+</div>
+
+<!-- Backdrop Overlay for Details Drawer -->
+<div class="drawer-overlay" id="drawer-overlay"></div>
+
+<div class="details-drawer" id="details-drawer">
+  <div class="drawer-head">
+    <div style="display: flex; align-items: flex-start; gap: 10px; flex: 1;">
+      <!-- Monochrome Back Button -->
+      <button class="mono-btn" id="drawer-back" title="Go Back to Previous Concept" disabled style="margin-top: 2px; flex-shrink: 0; opacity: 0.35; cursor: not-allowed; pointer-events: none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+      </button>
+      <div style="flex: 1; min-width: 0;">
+        <div class="drawer-badge" id="drawer-badge">Overview</div>
+        <div class="drawer-title" id="drawer-title">Node Title</div>
+      </div>
+    </div>
+    <!-- Monochrome Close Button -->
+    <button class="mono-btn" id="drawer-close" title="Close Panel" style="flex-shrink: 0;">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </button>
+  </div>
+  <div class="drawer-bar">
+    <!-- Monochrome Back Button in Action Bar -->
+    <button class="mono-btn" id="bar-btn-back" title="Go Back to Previous Concept" disabled style="opacity: 0.35; cursor: not-allowed; pointer-events: none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+    </button>
+    <!-- Monochrome Center/Focus Button -->
+    <button class="mono-btn" id="bar-btn-focus" title="Center in View">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
+    </button>
+    <!-- Monochrome Pin/Unpin Button -->
+    <button class="mono-btn" id="bar-btn-pin" title="Pin / Unpin Node Position">
+      <svg id="pin-icon" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+    </button>
+    <!-- Monochrome Copy Notes Button -->
+    <button class="mono-btn" id="bar-btn-copy" title="Copy Notes to Clipboard">
+      <svg id="copy-icon" viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+    </button>
+  </div>
+  <div class="drawer-body" id="drawer-body">
+    Select any node to view comprehensive disambiguation notes, architecture tables, and formulas.
+  </div>
+</div>
+
+<script>
+const rawData = {"name": "Applied Cryptography: Asymmetric Schemes & Signature Protocols", "details": "\n    <div style=\"margin: 14px 0 16px 0; padding: 12px; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important; box-shadow: 2px 2px 0px rgba(0,0,0,0.3);\">\n      <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;\">\n        <span style=\"font-size:13px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">🎓</span> University Exam Intelligence (CSE 4109)</span>\n        <span style=\"font-size:11px; font-weight:bold; background:#0284c7; color:#fff; padding:2px 8px; border-radius:0 !important;\">338 Questions Analyzed</span>\n      </div>\n      <p style=\"font-size:12px; color:#cbd5e1; margin-bottom:10px; line-height:1.5;\">\n        Complete historical coverage from <strong>2010 to 2024</strong> (2867 Total Marks). Every question includes faculty expectations, topic alignment, and original printed university exam scans.\n      </p>\n      <div style=\"display:flex; gap:8px; flex-wrap:wrap;\">\n        <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:6px; padding:7px 14px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-weight:bold; font-size:12px; transition:background 0.2s ease;\">\n          <span class=\"mono-emoji\">📚</span> Open Question Analyzer (338 Qs · 2867M) &rarr;\n        </a>\n        <a href=\"../final/security-rokib-sir.pdf\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:6px; padding:7px 14px; background:#059669; color:#ffffff; text-decoration:none; border-radius:0 !important; font-weight:bold; font-size:12px; transition:background 0.2s ease;\">\n          <span class=\"mono-emoji\">📖</span> Open Merged PDF Book (193 Pages) &rarr;\n        </a>\n      </div>\n    </div>\n    \n        <h3>Applied Cryptography: Public-Key Mathematics & Signature Protocols</h3>\n        <p>This interactive mind map explores the mathematical and cryptographic foundations taught by Prof. Rokib Sir: from modular arithmetic and Euler's totient theorem to RSA, the Discrete Logarithm Problem (ElGamal), Paillier Additive Homomorphic Encryption, collision-resistant hash functions, and advanced digital signature protocols (Chaum's Blind Signatures, Undeniable Signatures).</p>\n        <div style=\"margin-top: 10px; padding: 10px; background: rgba(56, 189, 248, 0.1); border-left: 3px solid #38bdf8; border-radius: 4px;\">\n          <strong>Core Focus:</strong> Exact mathematical proofs (Euler, CRT), Paillier homomorphic properties, ElGamal nonce reuse vulnerabilities, Birthday bound proofs, and zero-knowledge signature verification.\n        </div>\n        <ul style=\"margin-top: 12px;\">\n          <li><strong>Source:</strong> Course Lectures (Prof. Rokib Sir), Menezes et al. (Handbook of Applied Cryptography), Stallings, Pfleeger.</li>\n          <li><strong>Coverage:</strong> 9 Major Domains across 241 lecture slides.</li>\n        </ul>\n        ", "children": [{"name": "📝 Exam Questions (133 Patterns · 2867M)", "details": "\n        <h3>University Exam Question Archive & Patterns</h3>\n        <p>Comprehensive historical recurrence analysis across KUET Term Examinations (2010–2024).</p>\n        <p style=\"margin-top:8px;\">Click any specific pattern node on this branch to view recurring exam questions, frequency metrics, and exact marks.</p>\n        <div style=\"margin-top:12px;\">\n          <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html\" target=\"_blank\" style=\"display:inline-block; padding:8px 14px; background:#2563eb; color:#fff; text-decoration:none; border-radius:0 !important; font-weight:bold; font-size:12px;\">\n            <span class=\"mono-emoji\">📚</span> Launch Full Interactive Question Browser (338 Questions) &rarr;\n          </a>\n        </div>\n        ", "children": [{"name": "Q: Define sensitive data. What are the fa... (7x)", "details": "\n        <h4>Exam Pattern: Define sensitive data. What are the factors that can make data sensitive? Discuss them.</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: rgba(30, 41, 59, 0.7); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:#38bdf8; font-weight:bold; margin-bottom:4px;\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 7 Times Asked · 60 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:#cbd5e1; margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2016, 2017, 2018, 2019\n          </p>\n          <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2019)</strong> [10M] <em>Define sensitive data. Discuss the factors that can make data sensitive....</em></li><li style='margin-bottom:5px;'><strong>(2018)</strong> [7M] <em>Define sensitive data. Discuss the factors that can make data sensitive....</em></li><li style='margin-bottom:5px;'><strong>(2017)</strong> [10M] <em>Define sensitive data. Discuss the factors that can make data sensitive....</em></li>\n          </ul>\n          <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=Define%20sensitive%20data.%20What%20ar\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#2563eb; color:#fff; text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold;\">\n            <span class=\"mono-emoji\">🔍</span> View in Question Browser (with Original Exam Scans) &rarr;\n          </a>\n        </div>\n        "}, {"name": "Q: What are the parameters that can make ... (5x)", "details": "\n        <h4>Exam Pattern: What are the parameters that can make a computer network vulnerable? Discuss them (10) _ briefly.</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: rgba(30, 41, 59, 0.7); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:#38bdf8; font-weight:bold; margin-bottom:4px;\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 5 Times Asked · 29 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:#cbd5e1; margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2012, 2016, 2018, 2019\n          </p>\n          <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2019)</strong> [10M] <em>the parameters that make a computer network vulnerable? Discuss them briefly....</em></li><li style='margin-bottom:5px;'><strong>(2016)</strong>  <em>' What are the parameters that make a computer network vulnerable? Discuss them briefly....</em></li><li style='margin-bottom:5px;'><strong>(2011)</strong> [9M] <em>What are the parameters that can make a computer network vulnerable? Discuss them....</em></li>\n          </ul>\n          <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=What%20are%20the%20parameters%20that%20c\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#2563eb; color:#fff; text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold;\">\n            <span class=\"mono-emoji\">🔍</span> View in Question Browser (with Original Exam Scans) &rarr;\n          </a>\n        </div>\n        "}, {"name": "Q: Define cryptographic.hash function. Di... (5x)", "details": "\n        <h4>Exam Pattern: Define cryptographic.hash function. Discuss the properties of it.</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: rgba(30, 41, 59, 0.7); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:#38bdf8; font-weight:bold; margin-bottom:4px;\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 5 Times Asked · 22 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:#cbd5e1; margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2013, 2016, 2017, 2018\n          </p>\n          <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2018)</strong>  <em>Define cryptographic hash function. Discuss properties of it....</em></li><li style='margin-bottom:5px;'><strong>(2017)</strong> [7M] <em>Define cryptographic hash function. Discuss some properties of it....</em></li><li style='margin-bottom:5px;'><strong>(2016)</strong>  <em>Define cryptographic hash function. Discuss some properties of it....</em></li>\n          </ul>\n          <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=Define%20cryptographic.hash%20func\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#2563eb; color:#fff; text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold;\">\n            <span class=\"mono-emoji\">🔍</span> View in Question Browser (with Original Exam Scans) &rarr;\n          </a>\n        </div>\n        "}, {"name": "Q: Discuss the dimension of reliability a... (4x)", "details": "\n        <h4>Exam Pattern: Discuss the dimension of reliability and integrity of database. What are the requirements for databa</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: rgba(30, 41, 59, 0.7); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:#38bdf8; font-weight:bold; margin-bottom:4px;\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 4 Times Asked · 26 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:#cbd5e1; margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2012, 2013, 2016, 2019\n          </p>\n          <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2019)</strong> [5M] <em>Discuss the dimensions of reliability and integrity of database. What are the requirements for\ndatabase security? Explain them....</em></li><li style='margin-bottom:5px;'><strong>(2013)</strong>  <em>Discuss the dimensions of•reliability and integrity of database. What are the requirements\nfor database security? Explain them....</em></li><li style='margin-bottom:5px;'><strong>(2012)</strong> [11M] <em>Discuss the dimension of reliability and integrity of database. What are the requirements\nfor database security? Explain them....</em></li>\n          </ul>\n          <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=Discuss%20the%20dimension%20of%20relia\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#2563eb; color:#fff; text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold;\">\n            <span class=\"mono-emoji\">🔍</span> View in Question Browser (with Original Exam Scans) &rarr;\n          </a>\n        </div>\n        "}, {"name": "Q: Explain the terms: denial-of-service (... (4x)", "details": "\n        <h4>Exam Pattern: Explain the terms: denial-of-service (DoS) attack and.ii) distributed denial-of-service (DDoS) attac</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: rgba(30, 41, 59, 0.7); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:#38bdf8; font-weight:bold; margin-bottom:4px;\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 4 Times Asked · 25 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:#cbd5e1; margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2011, 2012, 2016, 2017\n          </p>\n          <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2017)</strong> [8M] <em>Explain the terms: i) denial-of-serVice (DoS) attack and ii) distributed DoS attack....</em></li><li style='margin-bottom:5px;'><strong>(2012)</strong>  <em>Explain the terms: denial-of-service (DoS) attack and.ii) distributed denial-of-service\n(DDoS) attack....</em></li><li style='margin-bottom:5px;'><strong>(2016)</strong> [8M] <em>Explain the terms: (i) denial-of-service (DOS) attack and (ii) distributed denial-of-service (08)\n(DDOS) attack....</em></li>\n          </ul>\n          <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=Explain%20the%20terms:%20denial-of-s\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#2563eb; color:#fff; text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold;\">\n            <span class=\"mono-emoji\">🔍</span> View in Question Browser (with Original Exam Scans) &rarr;\n          </a>\n        </div>\n        "}, {"name": "Q: Explain how triple DES performs data e... (3x)", "details": "\n        <h4>Exam Pattern: Explain how triple DES performs data encryption. Using a block diagram illustrate the major steps of</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: rgba(30, 41, 59, 0.7); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:#38bdf8; font-weight:bold; margin-bottom:4px;\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 3 Times Asked · 39 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:#cbd5e1; margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2017, 2022, 2024\n          </p>\n          <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2024)</strong> [15M] <em>Explain how triple DES performs data encryption. Using a block diagram illustrate the\nmajor steps of each cycle of AES algorithm....</em></li><li style='margin-bottom:5px;'><strong>(2022)</strong> [11M] <em>Explain how triple DES performs data encryption. Using a block diagram illustrate the major\nsteps of each cycle of AES algorithm....</em></li><li style='margin-bottom:5px;'><strong>(2017)</strong> [13M] <em>Explain the mechanism of triple DES encryption. Using a block diagram explain AES\nalgorithm....</em></li>\n          </ul>\n          <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=Explain%20how%20triple%20DES%20perform\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#2563eb; color:#fff; text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold;\">\n            <span class=\"mono-emoji\">🔍</span> View in Question Browser (with Original Exam Scans) &rarr;\n          </a>\n        </div>\n        "}, {"name": "Q: Make a comparison between the mechanis... (3x)", "details": "\n        <h4>Exam Pattern: Make a comparison between the mechanism of AES and DES. Describe AES algorithm using a block diagram</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: rgba(30, 41, 59, 0.7); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:#38bdf8; font-weight:bold; margin-bottom:4px;\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 3 Times Asked · 14 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:#cbd5e1; margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2018, 2019, 2021\n          </p>\n          <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2021)</strong> [5M] <em>Explain AES algorithm with a block diagram. Establish a comparative study between AES\nand DES....</em></li><li style='margin-bottom:5px;'><strong>(2019)</strong> [9M] <em>Explain AES algorithm using a block diagram. Make a comparison between DES and AES....</em></li><li style='margin-bottom:5px;'><strong>(2018)</strong>  <em>Make a comparison between the mechanism of AES and DES. Describe AES algorithm using\na block diagram....</em></li>\n          </ul>\n          <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=Make%20a%20comparison%20between%20the%20\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#2563eb; color:#fff; text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold;\">\n            <span class=\"mono-emoji\">🔍</span> View in Question Browser (with Original Exam Scans) &rarr;\n          </a>\n        </div>\n        "}, {"name": "Q: What are the characteristics of digita... (3x)", "details": "\n        <h4>Exam Pattern: What are the characteristics of digital signature? Explain ElGamal digital signature algorithm (12)</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: rgba(30, 41, 59, 0.7); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:#38bdf8; font-weight:bold; margin-bottom:4px;\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 3 Times Asked · 36 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:#cbd5e1; margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2016, 2017, 2018\n          </p>\n          <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2018)</strong> [12M] <em>Discuss properties of digital signature. Explain ElGamal digital signature algorithm with an (12)...</em></li><li style='margin-bottom:5px;'><strong>(2017)</strong> [12M] <em>Discuss properties of digital signature. Explain ElGamal digital signature algorithm with an (12)\nexample....</em></li><li style='margin-bottom:5px;'><strong>(2016)</strong> [12M] <em>What are the characteristics of digital signature? Explain ElGamal digital signature algorithm (12)\nwith an example....</em></li>\n          </ul>\n          <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=What%20are%20the%20characteristics%20o\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#2563eb; color:#fff; text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold;\">\n            <span class=\"mono-emoji\">🔍</span> View in Question Browser (with Original Exam Scans) &rarr;\n          </a>\n        </div>\n        "}]}, {"name": "1. Cryptographic Foundations & Threat Models", "details": "\n                <h3>Foundations & Cryptanalytic Attack Models</h3>\n                <p>Establishes rigorous definitions of cryptographic security and Kerckhoffs's principle.</p>\n                <div style=\"margin-top:8px;\">\n                  <strong>Kerckhoffs's Principle:</strong> A cryptosystem should be secure even if everything about the system, except the private key, is public knowledge!\n                </div>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 74x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 74 subquestions across 12 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>'Confusion' and 'Diffusion' are the ultimate goal of every cryptosystem — why? Discuss Shannon chara</em></li><li><em>l)cfine and discuss goals of computer security. thing a block diagram Show relation (08)  and explai</em></li>\n              </ul>\n              <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=Security\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            ", "children": [{"name": "Cryptanalysis Attack Classifications", "details": "\n                        <h4>Adversarial Capability Hierarchy</h4>\n                        <table style=\"width:100%; border-collapse:collapse; margin-top:8px; font-size:12px;\">\n                          <tr style=\"background:#1e293b; color:#38bdf8;\">\n                            <th style=\"padding:6px; border:1px solid #334155;\">Attack Model</th>\n                            <th style=\"padding:6px; border:1px solid #334155;\">Adversary Access / Capabilities</th>\n                          </tr>\n                          <tr>\n                            <td style=\"padding:6px; border:1px solid #334155;\"><strong>Ciphertext-Only (COA)</strong></td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">Attacker only observes ciphertext intercepts $C_1, C_2, \\dots, C_k$.</td>\n                          </tr>\n                          <tr style=\"background:#0f172a;\">\n                            <td style=\"padding:6px; border:1px solid #334155;\"><strong>Known-Plaintext (KPA)</strong></td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">Attacker possesses known plaintext-ciphertext pairs $(M_1, C_1), \\dots, (M_k, C_k)$.</td>\n                          </tr>\n                          <tr>\n                            <td style=\"padding:6px; border:1px solid #334155;\"><strong>Chosen-Plaintext (CPA)</strong></td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">Attacker can submit arbitrary plaintexts to the encryption oracle and obtain corresponding ciphertexts. (All public-key ciphers are CPA by default!).</td>\n                          </tr>\n                          <tr style=\"background:#0f172a;\">\n                            <td style=\"padding:6px; border:1px solid #334155;\"><strong>Chosen-Ciphertext (CCA/CCA2)</strong></td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">Attacker can query a decryption oracle for arbitrary ciphertexts (except target challenge). Gold standard security: IND-CCA2.</td>\n                          </tr>\n                        </table>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 74x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 74 subquestions across 12 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>'Confusion' and 'Diffusion' are the ultimate goal of every cryptosystem — why? Discuss Shannon chara</em></li><li><em>l)cfine and discuss goals of computer security. thing a block diagram Show relation (08)  and explai</em></li>\n              </ul>\n              <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=Security\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}, {"name": "One-Time Pad & Shannon Perfect Secrecy", "details": "\n                        <h4>Information-Theoretic Security</h4>\n                        <p>One-Time Pad (Vernam cipher) encrypts via XOR: $C_i = M_i \\oplus K_i$.</p>\n                        <p><strong>Shannon's Theorem:</strong> A cipher achieves perfect secrecy $P(M \\mid C) = P(M)$ if and only if:</p>\n                        <ul>\n                          <li>Key $K$ is truly uniformly random.</li>\n                          <li>Key length $|K| \\ge |M|$ (key as long as message).</li>\n                          <li>Key is NEVER reused for more than a single message.</li>\n                        </ul>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 74x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 74 subquestions across 12 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>'Confusion' and 'Diffusion' are the ultimate goal of every cryptosystem — why? Discuss Shannon chara</em></li><li><em>l)cfine and discuss goals of computer security. thing a block diagram Show relation (08)  and explai</em></li>\n              </ul>\n              <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=Security\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}]}, {"name": "2. Symmetric vs Asymmetric Primitives", "details": "\n                <h3>Stream, Block Ciphers & The Key Distribution Dilemma</h3>\n                <p>Contrasts shared-secret symmetric algorithms with dual-key asymmetric systems.</p>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 33x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 33 subquestions across 11 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Explain how triple DES performs data encryption. Using a block diagram illustrate the major steps of</em></li><li><em>Make a comparison between the mechanism of AES and DES. Describe AES algorithm using a block diagram</em></li>\n              </ul>\n              <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=AES,\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            ", "children": [{"name": "Block Cipher Modes: ECB vs CBC vs CTR", "details": "\n                        <h4>Operational Modes Comparison</h4>\n                        <ul>\n                          <li><strong>ECB (Electronic Codebook):</strong> Encrypts each block independently: $C_i = E_K(P_i)$. Leaks structural patterns (e.g., ECB Penguin); insecure.</li>\n                          <li><strong>CBC (Cipher Block Chaining):</strong> XORs previous ciphertext with current plaintext: $C_i = E_K(P_i \\oplus C_{i-1})$ using an Initialization Vector ($IV$). Requires sequential processing; vulnerable to padding oracle attacks.</li>\n                          <li><strong>CTR (Counter Mode):</strong> Encrypts an incrementing counter: $C_i = P_i \\oplus E_K(\\text{Nonce} \\parallel i)$. Converts block cipher into a stream cipher with full parallelization and random read access!</li>\n                        </ul>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#3b82f6; color:#000;\">MEDIUM PRIORITY · 13x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 13 subquestions across 9 exam sessions (2018, 2021, 2022, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Define known-plaintext attack. How can it be applied for RSA cryptosystem?</em></li><li><em>Discuss about exhaustive attack and one time password.</em></li>\n              </ul>\n              <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=Cryptanalytic\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}, {"name": "Key Distribution Dilemma", "details": "\n                        <h4>Scaling Problem of Symmetric Keys</h4>\n                        <p>For a network of $n$ participants, symmetric cryptography requires pairwise shared secret keys:</p>\n                        <p style=\"text-align:center; font-weight:bold;\">$$K_{total} = \\frac{n(n - 1)}{2} = O(n^2)$$</p>\n                        <p>For $n = 10,000$ users, ~50 million secret keys must be securely distributed! Asymmetric cryptography eliminates this by requiring only $2n$ total keys (one public, one private per user).</p>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 33x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 33 subquestions across 11 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Explain how triple DES performs data encryption. Using a block diagram illustrate the major steps of</em></li><li><em>Make a comparison between the mechanism of AES and DES. Describe AES algorithm using a block diagram</em></li>\n              </ul>\n              <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=AES,\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}]}, {"name": "3. RSA Cryptosystem & Number Theory", "details": "\n                <h3>Prime Factorization Hardness & Euler's Totient</h3>\n                <p>The Rivest-Shamir-Adleman (1977) cryptosystem based on the difficulty of integer prime factorization.</p>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#3b82f6; color:#000;\">MEDIUM PRIORITY · 21x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 21 subquestions across 9 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Define and discuss characteristics of 'Zero Knowledge Proof'. Using a block diagram depict the symme</em></li><li><em>Derive a bonding among order, prime, and primitive element considering the prime 13 and order 2.</em></li>\n              </ul>\n              <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=Key\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            ", "children": [{"name": "RSA Key Generation & Encryption Mechanics", "details": "\n                        <h4>Step-by-Step RSA Algorithm</h4>\n                        <ol style=\"margin-left:16px;\">\n                          <li>Choose two large secret primes $p$ and $q$ ($>1024$ bits each).</li>\n                          <li>Compute RSA modulus: $n = p \\cdot q$.</li>\n                          <li>Compute Euler's totient: $\\phi(n) = (p - 1)(q - 1)$.</li>\n                          <li>Choose public exponent $e$ such that $1 < e < \\phi(n)$ and $\\gcd(e, \\phi(n)) = 1$ (commonly $e = 65537$).</li>\n                          <li>Compute private key $d$ via Extended Euclidean Algorithm:\n                            <p style=\"text-align:center; font-weight:bold;\">$$d \\equiv e^{-1} \\pmod{\\phi(n)} \\iff e \\cdot d \\equiv 1 \\pmod{\\phi(n)}$$</p>\n                          </li>\n                        </ol>\n                        <p><strong>Encryption:</strong> $C = M^e \\bmod n$ (Public Key: $(e, n)$).</p>\n                        <p><strong>Decryption:</strong> $M = C^d \\bmod n$ (Private Key: $d$).</p>\n                        <p><strong>Proof of Correctness:</strong> $C^d \\equiv (M^e)^d \\equiv M^{ed} \\equiv M^{k\\phi(n) + 1} \\equiv (M^{\\phi(n)})^k \\cdot M \\equiv 1^k \\cdot M \\equiv M \\pmod n$ by Euler's Totient Theorem.</p>\n                        "}, {"name": "Square-and-Multiply & Chinese Remainder Theorem (CRT)", "details": "\n                        <h4>Algorithmic Optimization & Vulnerabilities</h4>\n                        <ul>\n                          <li><strong>Square-and-Multiply:</strong> Computes modular exponentiation $a^b \\bmod n$ in $O(\\log b)$ multiplications instead of $O(b)$.</li>\n                          <li><strong>CRT Decryption Acceleration:</strong> Decrypts modulo $p$ and modulo $q$ independently ($M_p = C^{d \\bmod (p-1)} \\bmod p$, $M_q = C^{d \\bmod (q-1)} \\bmod q$) and recombines via CRT, speeding up RSA private key operations by $\\approx 4\\times$.</li>\n                          <li><strong>OAEP Padding:</strong> Textbook RSA is deterministic and multiplicatively malleable: $E(M_1) \\cdot E(M_2) = E(M_1 M_2)$. Real-world RSA mandates Optimal Asymmetric Encryption Padding (RSA-OAEP) to ensure IND-CCA2 security.</li>\n                        </ul>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 74x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 74 subquestions across 12 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>'Confusion' and 'Diffusion' are the ultimate goal of every cryptosystem — why? Discuss Shannon chara</em></li><li><em>l)cfine and discuss goals of computer security. thing a block diagram Show relation (08)  and explai</em></li>\n              </ul>\n              <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=Security\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}]}, {"name": "4. Discrete Logarithms & ElGamal Cryptosystem", "details": "\n                <h3>Cyclic Groups, Diffie-Hellman & Probabilistic Encryption</h3>\n                <p>Based on the intractability of the Discrete Logarithm Problem (DLP) over finite fields $\\mathbb{Z}_p^*$.</p>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 28x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 28 subquestions across 12 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>What are the characteristics of digital signature? Explain ElGamal digital signature algorithm (12)</em></li><li><em>Define 'primitive element' with example. How it is associated with ElGamal cryptosystem? (10)</em></li>\n              </ul>\n              <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=ElGamal\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            ", "children": [{"name": "Discrete Logarithm Problem & Diffie-Hellman", "details": "\n                        <h4>Group-Theoretic One-Way Functions</h4>\n                        <p>Given prime $p$, primitive root (generator) $\\alpha$, and element $y = \\alpha^x \\bmod p$, computing $y$ from $x$ is trivial (modular exponentiation), but computing $x = \\log_\\alpha y \\bmod p$ is computationally infeasible.</p>\n                        <p><strong>Diffie-Hellman Key Exchange (1976):</strong></p>\n                        <ul>\n                          <li>Alice picks secret $a$, sends $A = \\alpha^a \\bmod p$.</li>\n                          <li>Bob picks secret $b$, sends $B = \\alpha^b \\bmod p$.</li>\n                          <li>Shared secret: $K = B^a = (\\alpha^b)^a = \\alpha^{ab} = (\\alpha^a)^b = A^b \\bmod p$.</li>\n                        </ul>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#3b82f6; color:#000;\">MEDIUM PRIORITY · 21x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 21 subquestions across 9 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Define and discuss characteristics of 'Zero Knowledge Proof'. Using a block diagram depict the symme</em></li><li><em>Derive a bonding among order, prime, and primitive element considering the prime 13 and order 2.</em></li>\n              </ul>\n              <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=Key\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}, {"name": "ElGamal Public-Key Encryption Scheme", "details": "\n                        <h4>Probabilistic Ciphertext Tuple $(y_1, y_2)$</h4>\n                        <p><strong>Key Generation:</strong> Private key $d \\in [1, p-2]$, Public key $\\beta = \\alpha^d \\bmod p$.</p>\n                        <p><strong>Encryption:</strong> Choose fresh ephemeral random integer $k \\in \\mathbb{Z}_{p-1}^*$. Compute:</p>\n                        <p style=\"text-align:center; font-weight:bold;\">$$y_1 = \\alpha^k \\bmod p, \\quad y_2 = M \\cdot \\beta^k \\bmod p$$</p>\n                        <p><strong>Decryption:</strong></p>\n                        <p style=\"text-align:center; font-weight:bold;\">$$M = \\frac{y_2}{(y_1)^d} \\bmod p = \\frac{M \\cdot (\\alpha^d)^k}{(\\alpha^k)^d} \\bmod p = M$$</p>\n                        <p><strong>Probabilistic Advantage:</strong> Encrypting the identical plaintext $M$ twice yields completely different ciphertexts $(y_1, y_2)$ due to fresh random $k$, thwarting frequency analysis!</p>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 28x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 28 subquestions across 12 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>What are the characteristics of digital signature? Explain ElGamal digital signature algorithm (12)</em></li><li><em>Define 'primitive element' with example. How it is associated with ElGamal cryptosystem? (10)</em></li>\n              </ul>\n              <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=ElGamal\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}]}, {"name": "5. ElGamal Digital Signatures & Nonce Security", "details": "\n                <h3>Asymmetric Nonce Signatures & Catastrophic Nonce Reuse</h3>\n                <p>Generates non-repudiable digital signatures using modular inverses over modulus $p-1$.</p>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 74x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 74 subquestions across 12 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>'Confusion' and 'Diffusion' are the ultimate goal of every cryptosystem — why? Discuss Shannon chara</em></li><li><em>l)cfine and discuss goals of computer security. thing a block diagram Show relation (08)  and explai</em></li>\n              </ul>\n              <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=Security\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            ", "children": [{"name": "ElGamal Signature Generation & Verification", "details": "\n                        <h4>Signature Protocol Formulation</h4>\n                        <p>Public key $y = \\alpha^x \\bmod p$; private key $x$.</p>\n                        <p><strong>Signing:</strong> Pick random secret nonce $k$ with $\\gcd(k, p-1) = 1$.</p>\n                        <ol style=\"margin-left:16px;\">\n                          <li>Compute $r = \\alpha^k \\bmod p$.</li>\n                          <li>Solve for $s$ using modular inverse: $s = k^{-1}(H(M) - x \\cdot r) \\bmod (p-1)$.</li>\n                          <li>Signature is tuple $(r, s)$.</li>\n                        </ol>\n                        <p><strong>Verification Equation:</strong> Check that $1 \\le r < p$ and verify:</p>\n                        <p style=\"text-align:center; font-weight:bold;\">$$v_1 = y^r \\cdot r^s \\equiv \\alpha^{H(M)} = v_2 \\pmod p$$</p>\n                        <p><em>Proof:</em> $y^r r^s \\equiv (\\alpha^x)^r (\\alpha^k)^{k^{-1}(H(M) - xr)} \\equiv \\alpha^{xr} \\alpha^{H(M) - xr} \\equiv \\alpha^{H(M)} \\pmod p$.</p>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 28x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 28 subquestions across 12 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>What are the characteristics of digital signature? Explain ElGamal digital signature algorithm (12)</em></li><li><em>Define 'primitive element' with example. How it is associated with ElGamal cryptosystem? (10)</em></li>\n              </ul>\n              <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=ElGamal\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}, {"name": "Disaster of Reusing Nonce (k)", "details": "\n                        <h4>Total Private Key Recovery Exploit</h4>\n                        <div style=\"padding:6px; background:rgba(239, 68, 68, 0.1); border-left:2px solid #ef4444;\">\n                          <strong>Fatal Cryptographic Flaw:</strong> If the signer reuses the same nonce $k$ to sign two distinct messages $M_1$ and $M_2$:\n                        </div>\n                        <p style=\"margin-top:6px;\">$$s_1 - s_2 = k^{-1}(H(M_1) - H(M_2)) \\pmod{p-1}$$</p>\n                        <p>Since $s_1, s_2, H(M_1), H(M_2)$ are public, attacker directly solves for secret nonce $k$! Once $k$ is known, private key $x$ is immediately recovered: $x = r^{-1}(H(M) - ks) \\bmod (p-1)$, breaking total security (famous Sony PS3 ECDSA failure!).</p>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 74x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 74 subquestions across 12 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>'Confusion' and 'Diffusion' are the ultimate goal of every cryptosystem — why? Discuss Shannon chara</em></li><li><em>l)cfine and discuss goals of computer security. thing a block diagram Show relation (08)  and explai</em></li>\n              </ul>\n              <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=Security\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}]}, {"name": "6. Paillier Cryptosystem & Homomorphic Encryption", "details": "\n                <h3>Composite Residuosity & Additive Homomorphism</h3>\n                <p>Enables arbitrary mathematical computations directly over encrypted ciphertext without revealing the underlying plaintext (Pascal Paillier 1999).</p>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#3b82f6; color:#000;\">WATCHLIST · 11x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 11 subquestions across 9 exam sessions (2017, 2018, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>What is meant by homomorphic encryption? Explain with examples.</em></li><li><em>Explain Post-Quantum Cryptography (PQC) and discuss its impact on symmetric and (07) asymmetric cryp</em></li>\n              </ul>\n              <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=Homomorphic\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            ", "children": [{"name": "Paillier Mathematical Formulation & Properties", "details": "\n                        <h4>Additive Homomorphism over Modulus $n^2$</h4>\n                        <p>Based on Decisional Composite Residuosity: computing $n$-th residue classes in $\\mathbb{Z}_{n^2}^*$.</p>\n                        <p><strong>Key Setup:</strong> Modulus $n = pq$, $\\lambda = \\text{lcm}(p-1, q-1)$. Select generator $g \\in \\mathbb{Z}_{n^2}^*$ and compute $\\mu = (L(g^\\lambda \\bmod n^2))^{-1} \\bmod n$ where $L(u) = \\frac{u - 1}{n}$.</p>\n                        <p><strong>Encryption:</strong> For plaintext $m \\in \\mathbb{Z}_n$, pick random $r \\in \\mathbb{Z}_n^*$:</p>\n                        <p style=\"text-align:center; font-weight:bold;\">$$c = g^m \\cdot r^n \\bmod n^2$$</p>\n                        <p><strong>Homomorphic Properties:</strong></p>\n                        <ul>\n                          <li><strong>Additive Homomorphism:</strong> Multiplying two ciphertexts decrypts to the sum of their plaintexts:\n                            <p style=\"text-align:center; font-weight:bold;\">$$D(c_1 \\cdot c_2 \\bmod n^2) = m_1 + m_2 \\bmod n$$</p>\n                          </li>\n                          <li><strong>Scalar Multiplication:</strong> Raising ciphertext to a scalar power $k$ decrypts to the product:\n                            <p style=\"text-align:center; font-weight:bold;\">$$D(c^k \\bmod n^2) = k \\cdot m \\bmod n$$</p>\n                          </li>\n                          <li><strong>Applications:</strong> Electronic secret voting tallying without revealing individual votes, privacy-preserving federated machine learning.</li>\n                        </ul>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#3b82f6; color:#000;\">WATCHLIST · 11x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 11 subquestions across 9 exam sessions (2017, 2018, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>What is meant by homomorphic encryption? Explain with examples.</em></li><li><em>Explain Post-Quantum Cryptography (PQC) and discuss its impact on symmetric and (07) asymmetric cryp</em></li>\n              </ul>\n              <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=Homomorphic\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}]}, {"name": "7. Cryptographic Hash Functions & MAC", "details": "\n                <h3>One-Way Compression, Collision Resistance & HMAC</h3>\n                <p>Deterministic algorithms mapping variable-length data to fixed-length output fingerprints.</p>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#3b82f6; color:#000;\">MEDIUM PRIORITY · 19x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 19 subquestions across 8 exam sessions (2016, 2017, 2018, 2019).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Define sensitive data. What are the factors that can make data sensitive? Discuss them.</em></li><li><em>Discuss the dimension of reliability and integrity of database. What are the requirements for databa</em></li>\n              </ul>\n              <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=Database\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            ", "children": [{"name": "The Three Fundamental Security Properties", "details": "\n                        <h4>Preimage & Collision Resistance</h4>\n                        <table style=\"width:100%; border-collapse:collapse; margin-top:8px; font-size:12px;\">\n                          <tr style=\"background:#1e293b; color:#38bdf8;\">\n                            <th style=\"padding:6px; border:1px solid #334155;\">Property</th>\n                            <th style=\"padding:6px; border:1px solid #334155;\">Definition</th>\n                            <th style=\"padding:6px; border:1px solid #334155;\">Complexity Bound ($n$-bit hash)</th>\n                          </tr>\n                          <tr>\n                            <td style=\"padding:6px; border:1px solid #334155;\"><strong>Preimage Resistance</strong></td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">Given hash $h$, computationally infeasible to find any $M$ such that $H(M) = h$ (One-way).</td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">$O(2^n)$ brute force attempts.</td>\n                          </tr>\n                          <tr style=\"background:#0f172a;\">\n                            <td style=\"padding:6px; border:1px solid #334155;\"><strong>Second Preimage Resistance</strong></td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">Given $M_1$, computationally infeasible to find $M_2 \\ne M_1$ such that $H(M_1) = H(M_2)$.</td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">$O(2^n)$ brute force attempts.</td>\n                          </tr>\n                          <tr>\n                            <td style=\"padding:6px; border:1px solid #334155;\"><strong>Collision Resistance</strong></td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">Computationally infeasible to find ANY arbitrary pair $M_1 \\ne M_2$ such that $H(M_1) = H(M_2)$.</td>\n                            <td style=\"padding:6px; border:1px solid #334155;\"><strong>Birthday Paradox Bound:</strong> Only $O(2^{n/2})$ attempts! (Why MD5-128 is broken in $2^{64}$ steps).</td>\n                          </tr>\n                        </table>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 74x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 74 subquestions across 12 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>'Confusion' and 'Diffusion' are the ultimate goal of every cryptosystem — why? Discuss Shannon chara</em></li><li><em>l)cfine and discuss goals of computer security. thing a block diagram Show relation (08)  and explai</em></li>\n              </ul>\n              <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=Security\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}, {"name": "HMAC Construction & Length Extension Attacks", "details": "\n                        <h4>Hash-Based Message Authentication Code</h4>\n                        <p>Naive MAC $H(K \\parallel M)$ is vulnerable to <em>Length Extension Attacks</em> in Merkle-Damgård hashes (SHA-1/256). <strong>HMAC (RFC 2104)</strong> resolves this via nested hashing:</p>\n                        <p style=\"text-align:center; font-weight:bold;\">$$\\text{HMAC}(K, M) = H((K \\oplus opad) \\parallel H((K \\oplus ipad) \\parallel M))$$</p>\n                        <p>Where $ipad = 0x36$ and $opad = 0x5c$ repeated to block length.</p>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#3b82f6; color:#000;\">MEDIUM PRIORITY · 26x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 26 subquestions across 12 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Discuss the basic protocol of signing documents with public-key cryptography and one- way hash funct</em></li><li><em>Discuss the steps to sign documents with public-key cryptography and one 'way hash (07) functions.</em></li>\n              </ul>\n              <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=Digital\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}]}, {"name": "8. Digital Signature Standards & DSA", "details": "\n                <h3>Hash-Then-Sign, Digital Signature Standard & RSA Signatures</h3>\n                <p>Provides Authentication, Message Integrity, and Non-Repudiation.</p>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#3b82f6; color:#000;\">MEDIUM PRIORITY · 26x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 26 subquestions across 12 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Discuss the basic protocol of signing documents with public-key cryptography and one- way hash funct</em></li><li><em>Discuss the steps to sign documents with public-key cryptography and one 'way hash (07) functions.</em></li>\n              </ul>\n              <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=Digital\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            ", "children": [{"name": "RSA Signatures & Digital Signature Standard (DSA)", "details": "\n                        <h4>Signature Algorithms Comparison</h4>\n                        <ul>\n                          <li><strong>RSA Signature:</strong> $S = H(M)^d \\bmod n$. Verification: $S^e \\equiv H(M) \\pmod n$. Requires PSS padding to prevent existential forgery.</li>\n                          <li><strong>Digital Signature Standard (DSA / DSS):</strong> Variant of ElGamal working in a prime subgroup of order $q$ ($160$ bits) where $q \\mid (p - 1)$ ($1024$ bits). Yields much shorter signatures $(r, s)$ with fast signing.</li>\n                        </ul>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 28x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 28 subquestions across 12 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>What are the characteristics of digital signature? Explain ElGamal digital signature algorithm (12)</em></li><li><em>Define 'primitive element' with example. How it is associated with ElGamal cryptosystem? (10)</em></li>\n              </ul>\n              <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=ElGamal\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}]}, {"name": "9. Advanced Signature Protocols", "details": "\n                <h3>Chaum Blind Signatures & Undeniable Signatures</h3>\n                <p>Advanced cryptographic protocols decoupling signature authenticity from message visibility or verification autonomy.</p>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#3b82f6; color:#000;\">MEDIUM PRIORITY · 26x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 26 subquestions across 12 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Discuss the basic protocol of signing documents with public-key cryptography and one- way hash funct</em></li><li><em>Discuss the steps to sign documents with public-key cryptography and one 'way hash (07) functions.</em></li>\n              </ul>\n              <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=Digital\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            ", "children": [{"name": "Chaum's Blind Signatures (E-Cash & Secret Voting)", "details": "\n                        <h4>Anonymous Cryptographic Verification (David Chaum 1982)</h4>\n                        <p>Allows a user to obtain a valid signature from an authority WITHOUT revealing the content of the message to the signer!</p>\n                        <ol style=\"margin-left:16px;\">\n                          <li><strong>Blinding:</strong> User picks random blinding factor $r \\in \\mathbb{Z}_n^*$ and blinds message $M$:\n                            <p style=\"text-align:center;\">$$M' = M \\cdot r^e \\bmod n$$</p>\n                          </li>\n                          <li><strong>Signing:</strong> Signer signs blinded $M'$ using private key $d$:\n                            <p style=\"text-align:center;\">$$S' = (M')^d \\equiv (M \\cdot r^e)^d \\equiv M^d \\cdot r^{ed} \\equiv M^d \\cdot r \\pmod n$$</p>\n                          </li>\n                          <li><strong>Unblinding:</strong> User strips blinding factor $r$:\n                            <p style=\"text-align:center; font-weight:bold;\">$$S = \\frac{S'}{r} = \\frac{M^d \\cdot r}{r} = M^d \\bmod n$$</p>\n                          </li>\n                        </ol>\n                        <p>$S$ is now a perfectly valid RSA signature on $M$, yet the signer has no record of having ever seen $M$!</p>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#3b82f6; color:#000;\">MEDIUM PRIORITY · 26x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 26 subquestions across 12 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Discuss the basic protocol of signing documents with public-key cryptography and one- way hash funct</em></li><li><em>Discuss the steps to sign documents with public-key cryptography and one 'way hash (07) functions.</em></li>\n              </ul>\n              <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=Digital\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}, {"name": "Undeniable Signatures & Disavowal Protocols", "details": "\n                        <h4>Controlled Verification (Chaum & van Antwerpen)</h4>\n                        <p>Standard signatures can be verified by anyone with the public key. In <strong>Undeniable Signatures</strong>, verification requires the active interactive zero-knowledge cooperation of the signer.</p>\n                        <p><strong>Disavowal Protocol:</strong> Prevents a signer from dishonestly refusing to verify a legitimate signature; if the signer claims a signature is forged, they MUST run a zero-knowledge disavowal protocol. If they fail, the signature is mathematically proven authentic!</p>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#3b82f6; color:#000;\">MEDIUM PRIORITY · 26x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 26 subquestions across 12 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Discuss the basic protocol of signing documents with public-key cryptography and one- way hash funct</em></li><li><em>Discuss the steps to sign documents with public-key cryptography and one 'way hash (07) functions.</em></li>\n              </ul>\n              <a href=\"../question-browser/computer-and-network-security-dola-mam-rokib-sir.html?search=Digital\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}]}]};
+
+// 10 Distinct Harmonious Minimalist Domain Themes
+const DOMAIN_THEMES = [
+  { stroke: "#38bdf8", fill: "#0369a1", lightStroke: "#0284c7", lightFill: "#e0f2fe", badgeText: "#38bdf8" },  // D1: Sky
+  { stroke: "#818cf8", fill: "#3730a3", lightStroke: "#4f46e5", lightFill: "#ede9fe", badgeText: "#818cf8" },  // D2: Indigo
+  { stroke: "#34d399", fill: "#065f46", lightStroke: "#059669", lightFill: "#d1fae5", badgeText: "#34d399" },  // D3: Emerald
+  { stroke: "#a78bfa", fill: "#5b21b6", lightStroke: "#7c3aed", lightFill: "#f3e8ff", badgeText: "#a78bfa" },  // D4: Violet
+  { stroke: "#22d3ee", fill: "#155e75", lightStroke: "#0891b2", lightFill: "#cffafe", badgeText: "#22d3ee" },  // D5: Cyan
+  { stroke: "#fb923c", fill: "#9a3412", lightStroke: "#ea580c", lightFill: "#ffedd5", badgeText: "#fb923c" },  // D6: Orange
+  { stroke: "#fb7185", fill: "#9f1239", lightStroke: "#e11d48", lightFill: "#ffe4e6", badgeText: "#fb7185" },  // D7: Rose
+  { stroke: "#2dd4bf", fill: "#115e59", lightStroke: "#0d9488", lightFill: "#ccfbf1", badgeText: "#2dd4bf" },  // D8: Teal
+  { stroke: "#e879f9", fill: "#86198f", lightStroke: "#c026d3", lightFill: "#fae8ff", badgeText: "#e879f9" },  // D9: Fuchsia
+  { stroke: "#facc15", fill: "#854d0e", lightStroke: "#d97706", lightFill: "#fef9c3", badgeText: "#facc15" },  // D10: Gold Matrix
+];
+
+const ROOT_THEME = {
+  stroke: "#f0f0ea",
+  fill: "#1e1f22",
+  lightStroke: "#111111",
+  lightFill: "#f5f5f0",
+  badgeText: "#111111"
+};
+
+// Physics state & node registry
+const nodes = [];
+const links = [];
+const nodeMap = new Map();
+let idCounter = 0;
+
+let storedTheme = localStorage.getItem("hub_theme") || localStorage.getItem("networks_theme");
+let isLightTheme = storedTheme ? storedTheme === "light" : true;
+try {
+  if (window.parent && window.parent.document && window.parent.document.documentElement) {
+    isLightTheme = !window.parent.document.documentElement.classList.contains("dark");
+  }
+} catch (e) {}
+
+if (isLightTheme) {
+  document.body.classList.add("light-theme");
+} else {
+  document.body.classList.remove("light-theme");
+}
+
+window.addEventListener("message", (e) => {
+  if (e.data && e.data.type === "THEME_CHANGE") {
+    const shouldBeLight = e.data.theme === "light";
+    if (isLightTheme !== shouldBeLight) {
+      isLightTheme = shouldBeLight;
+      document.body.classList.toggle("light-theme", isLightTheme);
+      localStorage.setItem("hub_theme", isLightTheme ? "light" : "dark");
+      localStorage.setItem("networks_theme", isLightTheme ? "light" : "dark");
+      updateThemeIcon();
+      buildDOMElements();
+      updatePositionsDOM();
+      highlightSelectedNode();
+    }
+  }
+});
+
+const EMOJI_REGEX = /([\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}\u{2B50}\u{2B55}\u{203C}\u{2049}\u{2139}\u{1FA00}-\u{1FAFF}\u{1F000}-\u{1F2FF}])/gu;
+
+function makeEmojisMonochrome(root) {
+  if (!root) root = document.body;
+  if (!root) return;
+  const walker = document.createTreeWalker(
+    root,
+    NodeFilter.SHOW_TEXT,
+    {
+      acceptNode: function(node) {
+        if (!node.nodeValue || !node.nodeValue.match(EMOJI_REGEX)) {
+          return NodeFilter.FILTER_SKIP;
+        }
+        const parent = node.parentElement;
+        if (!parent) return NodeFilter.FILTER_SKIP;
+        const tag = parent.tagName;
+        if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'TEXTAREA' || tag === 'INPUT') {
+          return NodeFilter.FILTER_REJECT;
+        }
+        if (parent.classList && parent.classList.contains('mono-emoji')) {
+          return NodeFilter.FILTER_SKIP;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    }
+  );
+
+  const nodesToProcess = [];
+  while (walker.nextNode()) {
+    nodesToProcess.push(walker.currentNode);
+  }
+
+  nodesToProcess.forEach(textNode => {
+    const parent = textNode.parentNode;
+    if (!parent) return;
+    const text = textNode.nodeValue;
+    const parts = text.split(EMOJI_REGEX);
+    if (parts.length <= 1) return;
+
+    const fragment = document.createDocumentFragment();
+    parts.forEach(part => {
+      if (!part) return;
+      if (part.match(EMOJI_REGEX)) {
+        const span = document.createElement('span');
+        span.className = 'mono-emoji';
+        span.textContent = part;
+        fragment.appendChild(span);
+      } else {
+        fragment.appendChild(document.createTextNode(part));
+      }
+    });
+    parent.replaceChild(fragment, textNode);
+  });
+}
+
+function buildGraphData(rawNode, depth = 0, domainIdx = 0, parent = null) {
+  const node = {
+    id: ++idCounter,
+    name: rawNode.name,
+    details: rawNode.details || "",
+    depth: depth,
+    domainIdx: depth === 0 ? -1 : (depth === 1 ? domainIdx : parent.domainIdx),
+    parent: parent,
+    _children: [],
+    children: [],
+    collapsed: depth >= 2, // Subtopics start collapsed
+    x: 0,
+    y: 0,
+    targetX: 0,
+    targetY: 0,
+    width: 200,
+    height: 36,
+    radius: 20
+  };
+
+  // Dimensions with ample room for Times New Roman font
+  const len = node.name.length;
+  if (depth === 0) {
+    node.width = 410;
+    node.height = 46;
+  } else if (depth === 1) {
+    node.width = Math.min(370, Math.max(240, len * 7.7 + 56));
+    node.height = 40;
+  } else if (depth === 2) {
+    node.width = Math.min(330, Math.max(210, len * 7.4 + 52));
+    node.height = 36;
+  } else {
+    node.width = Math.min(300, Math.max(180, len * 7.0 + 48));
+    node.height = 32;
+  }
+  node.radius = node.width / 2;
+
+  nodeMap.set(node.id, node);
+  nodes.push(node);
+
+  if (parent) {
+    links.push({ source: parent, target: node, length: depth === 1 ? 380 : (depth === 2 ? 300 : 220) });
+  }
+
+  const rawChildren = rawNode.children || [];
+  rawChildren.forEach((childRaw, idx) => {
+    const childNode = buildGraphData(childRaw, depth + 1, depth === 0 ? idx : domainIdx, node);
+    node._children.push(childNode);
+    if (!node.collapsed) {
+      node.children.push(childNode);
+    }
+  });
+
+  return node;
+}
+
+const rootNode = buildGraphData(rawData);
+
+// Compute 360-degree Radial Staggered Multi-Orbit Geometry
+function calculateRadialPositions() {
+  rootNode.targetX = 0;
+  rootNode.targetY = 0;
+  rootNode.x = 0;
+  rootNode.y = 0;
+
+  // 10 Domains distributed with weighted sector widths based on child count and text lengths
+  const domains = rootNode._children;
+  const numDomains = domains.length;
+
+  // Proportional sector weights giving domains with extensive text and subtopics ample room
+  const weights = domains.map(d => {
+    const subs = d._children || [];
+    const totLen = subs.reduce((acc, s) => acc + (s.name.length || 20), 0);
+    return Math.max(4.0, subs.length * 1.8 + totLen * 0.05);
+  });
+  const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+
+  let currentAngle = -Math.PI / 2;
+  domains.forEach((dom, i) => {
+    const domainSpan = (weights[i] / totalWeight) * (2 * Math.PI);
+    const domainCenterAngle = currentAngle + domainSpan / 2;
+    currentAngle += domainSpan;
+
+    // Widescreen elliptical radial geometry to match horizontal capsule dimensions
+    const r1x = 660;
+    const r1y = 470;
+    dom.targetX = r1x * Math.cos(domainCenterAngle);
+    dom.targetY = r1y * Math.sin(domainCenterAngle);
+    if (dom.x === 0 && dom.y === 0) {
+      dom.x = dom.targetX;
+      dom.y = dom.targetY;
+    }
+
+    // Subtopics fanning out in domain sector with 3-tier radial staggering
+    const subtopics = dom._children || [];
+    const numSub = subtopics.length;
+    const subSector = domainSpan * 0.82;
+    const tiers = numSub >= 3 ? 3 : (numSub >= 2 ? 2 : 1);
+
+    subtopics.forEach((sub, j) => {
+      const subOffset = numSub > 1 ? ((j - (numSub - 1) / 2) / (numSub - 1)) * subSector : 0;
+      const subAngle = domainCenterAngle + subOffset;
+      const tierIdx = (j + (i % 2)) % tiers;
+
+      const r2x = 1100 + tierIdx * 350;
+      const r2y = 800 + tierIdx * 250;
+      sub.targetX = r2x * Math.cos(subAngle);
+      sub.targetY = r2y * Math.sin(subAngle);
+      if (sub.x === 0 && sub.y === 0) {
+        sub.x = sub.targetX;
+        sub.y = sub.targetY;
+      }
+
+      // Concepts / Leaves fanning out with staggered radius relative to parent subtopic
+      const concepts = sub._children || [];
+      const numConcepts = concepts.length;
+      const leafSector = 0.28;
+      const leafTiers = numConcepts >= 4 ? 2 : 1;
+
+      concepts.forEach((con, k) => {
+        const conOffset = numConcepts > 1 ? ((k - (numConcepts - 1) / 2) / (numConcepts - 1)) * leafSector : 0;
+        const conAngle = subAngle + conOffset;
+        const ltIdx = (k % leafTiers);
+        const r3x = r2x + 400 + ltIdx * 220;
+        const r3y = r2y + 300 + ltIdx * 160;
+        con.targetX = r3x * Math.cos(conAngle);
+        con.targetY = r3y * Math.sin(conAngle);
+        if (con.x === 0 && con.y === 0) {
+          con.x = con.targetX;
+          con.y = con.targetY;
+        }
+      });
+    });
+  });
+
+  // Run geometric overlap removal on all initial positions to guarantee zero collisions
+  resolveOverlaps(false);
+
+  // Store settled positions as targetX / targetY for reset button
+  nodes.forEach(n => {
+    n.targetX = n.x;
+    n.targetY = n.y;
+  });
+}
+
+// Deterministic Non-Physics Overlap Removal Pass (Executes once upon render/toggle)
+function resolveOverlaps(onlyVisible = true) {
+  const targetNodes = onlyVisible ? nodes.filter(isVisible) : nodes;
+  const maxIters = 60;
+  for (let it = 0; it < maxIters; it++) {
+    let moved = false;
+    for (let a = 0; a < targetNodes.length; a++) {
+      for (let b = a + 1; b < targetNodes.length; b++) {
+        const nA = targetNodes[a];
+        const nB = targetNodes[b];
+
+        // Safety margins: horizontal width + 36px, vertical height + 24px
+        const minDx = (nA.width + nB.width) / 2 + 36;
+        const minDy = (nA.height + nB.height) / 2 + 24;
+        const dx = nB.x - nA.x;
+        const dy = nB.y - nA.y;
+        const absDx = Math.abs(dx);
+        const absDy = Math.abs(dy);
+
+        if (absDx < minDx && absDy < minDy) {
+          const overlapX = minDx - absDx;
+          const overlapY = minDy - absDy;
+
+          // Push along the axis of smaller relative penetration
+          if (overlapX / minDx < overlapY / minDy) {
+            const pushX = (overlapX / 2) * (dx >= 0 ? 1 : -1);
+            if (nA.depth > 0 && !nA.isPinned) nA.x -= pushX;
+            if (nB.depth > 0 && !nB.isPinned) nB.x += pushX;
+          } else {
+            const pushY = (overlapY / 2) * (dy >= 0 ? 1 : -1);
+            if (nA.depth > 0 && !nA.isPinned) nA.y -= pushY;
+            if (nB.depth > 0 && !nB.isPinned) nB.y += pushY;
+          }
+          moved = true;
+        }
+      }
+    }
+    if (!moved) break;
+  }
+}
+
+calculateRadialPositions();
+
+// Viewport & Pan-Zoom State
+let transform = { x: window.innerWidth / 2, y: window.innerHeight / 2, k: 0.82 };
+let isPanning = false;
+let startPan = { x: 0, y: 0 };
+
+const svg = document.getElementById("svg-canvas");
+const viewport = document.getElementById("viewport");
+const linksLayer = document.getElementById("links-layer");
+const nodesLayer = document.getElementById("nodes-layer");
+
+function updateTransform() {
+  viewport.setAttribute("transform", `translate(${transform.x}, ${transform.y}) scale(${transform.k})`);
+}
+updateTransform();
+
+// Canvas pan
+const container = document.getElementById("canvas-container");
+container.addEventListener("mousedown", (e) => {
+  if (e.target.closest(".node-group") || e.target.closest(".toolbar") || e.target.closest(".details-drawer")) return;
+  isPanning = true;
+  startPan = { x: e.clientX - transform.x, y: e.clientY - transform.y };
+});
+
+window.addEventListener("mousemove", (e) => {
+  if (!isPanning) return;
+  transform.x = e.clientX - startPan.x;
+  transform.y = e.clientY - startPan.y;
+  updateTransform();
+});
+
+window.addEventListener("mouseup", () => isPanning = false);
+
+// Canvas zoom
+container.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  const zoomFactor = 1.14;
+  const direction = e.deltaY < 0 ? 1 : -1;
+  const factor = direction > 0 ? zoomFactor : 1 / zoomFactor;
+
+  const mouseX = e.clientX;
+  const mouseY = e.clientY;
+
+  transform.x = mouseX - (mouseX - transform.x) * factor;
+  transform.y = mouseY - (mouseY - transform.y) * factor;
+  transform.k *= factor;
+  transform.k = Math.max(0.12, Math.min(transform.k, 3.0));
+  updateTransform();
+}, { passive: false });
+
+let draggedNode = null;
+
+function isVisible(node) {
+  let curr = node.parent;
+  while (curr) {
+    if (curr.collapsed) return false;
+    curr = curr.parent;
+  }
+  return true;
+}
+
+// Render Elements (Nodes & Moving Links)
+let selectedNodeId = null;
+
+function buildDOMElements() {
+  linksLayer.innerHTML = "";
+  nodesLayer.innerHTML = "";
+
+  const visibleNodes = nodes.filter(isVisible);
+
+  // Render Links
+  links.forEach(l => {
+    if (!isVisible(l.source) || !isVisible(l.target)) return;
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("class", "link-path");
+    path.id = `link-${l.source.id}-${l.target.id}`;
+    path.dataset.source = l.source.id;
+    path.dataset.target = l.target.id;
+    linksLayer.appendChild(path);
+  });
+
+  // Render Nodes
+  visibleNodes.forEach(n => {
+    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    g.setAttribute("class", "node-group");
+    g.id = `node-${n.id}`;
+
+    const theme = n.depth === 0 ? ROOT_THEME : DOMAIN_THEMES[n.domainIdx % DOMAIN_THEMES.length];
+    const strokeColor = isLightTheme ? theme.lightStroke : theme.stroke;
+    const fillColor = isLightTheme ? theme.lightFill : "var(--node-bg)";
+
+    // Capsule Pill Background (Strict zero-radius rectangle)
+    const capsule = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    capsule.setAttribute("class", "node-capsule" + (n.id === selectedNodeId ? " selected" : ""));
+    capsule.setAttribute("x", -n.width / 2);
+    capsule.setAttribute("y", -n.height / 2);
+    capsule.setAttribute("width", n.width);
+    capsule.setAttribute("height", n.height);
+    capsule.setAttribute("rx", "0");
+    capsule.setAttribute("ry", "0");
+    capsule.setAttribute("fill", fillColor);
+    capsule.setAttribute("stroke", strokeColor);
+    g.appendChild(capsule);
+
+    // Indicator Dot (Retro Square)
+    const dot = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    dot.setAttribute("class", "status-dot");
+    dot.setAttribute("x", -n.width / 2 + 11);
+    dot.setAttribute("y", -3.5);
+    dot.setAttribute("width", 7);
+    dot.setAttribute("height", 7);
+    dot.setAttribute("fill", strokeColor);
+    g.appendChild(dot);
+
+    // Node Text Label in Times New Roman
+    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    let textClass = "node-label";
+    if (n.depth === 0) textClass += " root-label";
+    else if (n.depth === 1) textClass += " domain-label";
+    text.setAttribute("class", textClass);
+    text.setAttribute("x", -n.width / 2 + 28);
+    text.setAttribute("y", 4.5);
+    text.textContent = n.name;
+    g.appendChild(text);
+
+    // Child count badge / Expand indicator
+    if (n._children && n._children.length > 0) {
+      const badgeG = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      badgeG.setAttribute("class", "node-badge");
+      badgeG.setAttribute("transform", `translate(${n.width / 2 - 14}, 0)`);
+      badgeG.style.cursor = "pointer";
+
+      const badgeCircle = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      badgeCircle.setAttribute("x", -7.5);
+      badgeCircle.setAttribute("y", -7.5);
+      badgeCircle.setAttribute("width", 15);
+      badgeCircle.setAttribute("height", 15);
+      badgeCircle.setAttribute("fill", strokeColor);
+      badgeCircle.setAttribute("opacity", "0.9");
+      badgeG.appendChild(badgeCircle);
+
+      const sign = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      sign.setAttribute("class", "badge-count");
+      sign.setAttribute("text-anchor", "middle");
+      sign.setAttribute("y", 4);
+      sign.textContent = n.collapsed ? "+" : "−";
+      badgeG.appendChild(sign);
+
+      badgeG.addEventListener("mousedown", (e) => {
+        e.stopPropagation();
+      });
+
+      badgeG.addEventListener("mouseup", (e) => {
+        e.stopPropagation();
+      });
+
+      badgeG.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleNode(n);
+      });
+
+      g.appendChild(badgeG);
+    }
+
+    // Node drag & click handlers
+    g.addEventListener("mousedown", (e) => {
+      e.stopPropagation();
+      draggedNode = n;
+      const startMouseX = e.clientX;
+      const startMouseY = e.clientY;
+      let hasMoved = false;
+
+      function onMouseMove(moveEvent) {
+        const dx = moveEvent.clientX - startMouseX;
+        const dy = moveEvent.clientY - startMouseY;
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasMoved = true;
+
+        const worldX = (moveEvent.clientX - transform.x) / transform.k;
+        const worldY = (moveEvent.clientY - transform.y) / transform.k;
+        draggedNode.x = worldX;
+        draggedNode.y = worldY;
+        updatePositionsDOM();
+      }
+
+      function onMouseUp() {
+        window.removeEventListener("mousemove", onMouseMove);
+        window.removeEventListener("mouseup", onMouseUp);
+        if (!hasMoved) {
+          selectNode(n);
+        }
+        draggedNode = null;
+      }
+
+      window.addEventListener("mousemove", onMouseMove);
+      window.addEventListener("mouseup", onMouseUp);
+    });
+
+    g.addEventListener("dblclick", (e) => {
+      e.stopPropagation();
+      if (n._children && n._children.length > 0) {
+        toggleNode(n);
+      }
+    });
+
+    nodesLayer.appendChild(g);
+  });
+}
+
+function updatePositionsDOM() {
+  const visibleNodes = nodes.filter(isVisible);
+
+  // 1. Update node capsule positions
+  visibleNodes.forEach(n => {
+    const g = document.getElementById(`node-${n.id}`);
+    if (g) {
+      g.setAttribute("transform", `translate(${n.x}, ${n.y})`);
+    }
+  });
+
+  // 2. Update curved movable links in real time
+  links.forEach(l => {
+    if (!isVisible(l.source) || !isVisible(l.target)) return;
+
+    const path = document.getElementById(`link-${l.source.id}-${l.target.id}`);
+    if (!path) return;
+
+    const sx = l.source.x;
+    const sy = l.source.y;
+    const tx = l.target.x;
+    const ty = l.target.y;
+
+    // Organic S-curve Bezier
+    const dx = tx - sx;
+    const dy = ty - sy;
+    const cx1 = sx + dx * 0.45;
+    const cy1 = sy + dy * 0.1;
+    const cx2 = sx + dx * 0.55;
+    const cy2 = sy + dy * 0.9;
+
+    path.setAttribute("d", `M ${sx} ${sy} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${tx} ${ty}`);
+  });
+}
+
+buildDOMElements();
+updatePositionsDOM();
+setTimeout(fitView, 60);
+
+// Node Selection & Details Drawer History
+const navHistory = [];
+
+function selectNode(n, recordHistory = true) {
+  if (recordHistory && selectedNodeId && selectedNodeId !== n.id) {
+    navHistory.push(selectedNodeId);
+  }
+  selectedNodeId = n.id;
+  highlightSelectedNode();
+  showDrawer(n);
+  updateBackButton();
+}
+
+function goBack() {
+  if (navHistory.length > 0) {
+    const prevId = navHistory.pop();
+    const prevNode = nodeMap.get(prevId);
+    if (prevNode) {
+      // Ensure ancestors of prevNode are expanded
+      let p = prevNode.parent;
+      let needsRebuild = false;
+      while (p) {
+        if (p.collapsed) {
+          p.collapsed = false;
+          needsRebuild = true;
+        }
+        p = p.parent;
+      }
+      if (needsRebuild) {
+        resolveOverlaps(true);
+        buildDOMElements();
+        updatePositionsDOM();
+      }
+      selectNode(prevNode, false);
+      focusNode(prevNode);
+      return;
+    }
+  }
+
+  // Fallback: If no history, navigate to parent if exists
+  if (selectedNodeId) {
+    const curr = nodeMap.get(selectedNodeId);
+    if (curr && curr.parent) {
+      selectNode(curr.parent, false);
+      focusNode(curr.parent);
+    }
+  }
+}
+
+function updateBackButton() {
+  const backBtn = document.getElementById("drawer-back");
+  const barBackBtn = document.getElementById("bar-btn-back");
+  const curr = selectedNodeId ? nodeMap.get(selectedNodeId) : null;
+  const canGoBack = navHistory.length > 0 || (curr && curr.parent);
+
+  [backBtn, barBackBtn].forEach(btn => {
+    if (!btn) return;
+    btn.disabled = !canGoBack;
+    btn.style.opacity = canGoBack ? "1" : "0.35";
+    btn.style.cursor = canGoBack ? "pointer" : "not-allowed";
+    btn.style.pointerEvents = canGoBack ? "auto" : "none";
+    if (navHistory.length > 0) {
+      const prev = nodeMap.get(navHistory[navHistory.length - 1]);
+      btn.setAttribute("title", prev ? `Back to "${prev.name}"` : "Back to Previous");
+    } else if (curr && curr.parent) {
+      btn.setAttribute("title", `Back to Parent "${curr.parent.name}"`);
+    } else {
+      btn.setAttribute("title", "No Previous Concept");
+    }
+  });
+}
+
+function highlightSelectedNode() {
+  document.querySelectorAll(".node-capsule").forEach(r => r.classList.remove("selected"));
+  document.querySelectorAll(".link-path").forEach(l => l.classList.remove("highlighted"));
+
+  if (!selectedNodeId) return;
+
+  const g = document.getElementById(`node-${selectedNodeId}`);
+  if (g) {
+    const cap = g.querySelector(".node-capsule");
+    if (cap) cap.classList.add("selected");
+  }
+
+  // Highlight ancestor links up to root
+  let curr = nodeMap.get(selectedNodeId);
+  while (curr && curr.parent) {
+    const lPath = document.getElementById(`link-${curr.parent.id}-${curr.id}`);
+    if (lPath) lPath.classList.add("highlighted");
+    curr = curr.parent;
+  }
+}
+
+function toggleNode(n) {
+  n.collapsed = !n.collapsed;
+  resolveOverlaps(true);
+  buildDOMElements();
+  updatePositionsDOM();
+  highlightSelectedNode();
+}
+
+function showDrawer(n) {
+  const drawer = document.getElementById("details-drawer");
+  const drawerBadge = document.getElementById("drawer-badge");
+  const drawerTitle = document.getElementById("drawer-title");
+  const drawerBody = document.getElementById("drawer-body");
+
+  const theme = n.depth === 0 ? ROOT_THEME : DOMAIN_THEMES[n.domainIdx % DOMAIN_THEMES.length];
+  const color = isLightTheme ? theme.lightStroke : theme.stroke;
+
+  drawerBadge.style.background = isLightTheme ? theme.lightFill : "rgba(255, 255, 255, 0.08)";
+  drawerBadge.style.color = color;
+  drawerBadge.style.borderColor = color;
+
+  if (n.depth === 0) drawerBadge.textContent = "Root System Overview";
+  else if (n.depth === 1) drawerBadge.textContent = `Domain ${n.domainIdx + 1} Architecture`;
+  else if (n.depth === 2) drawerBadge.textContent = `Subtopic • Domain ${n.domainIdx + 1}`;
+  else drawerBadge.textContent = "Deep Concept Disambiguation";
+
+  drawerTitle.textContent = n.name;
+  drawerTitle.style.color = color;
+
+  let html = "";
+  if (n.details) {
+    html += `<div>${n.details}</div>`;
+  } else {
+    html += `<p style="color: var(--text-muted);">Explore child concepts or surrounding domain modules for specific architectural models and disambiguation matrices.</p>`;
+  }
+
+  // Clickable Subtopic / Concept Pills
+  if (n._children && n._children.length > 0) {
+    html += `<h3 style="margin-top: 20px; border-top: 1px solid var(--panel-border); padding-top: 14px;">Direct Subtopics & Concepts (${n._children.length}):</h3>`;
+    html += `<div class="concept-pills">`;
+    n._children.forEach(c => {
+      html += `<div class="concept-pill" data-id="${c.id}">📍 ${c.name}</div>`;
+    });
+    html += `</div>`;
+  }
+
+  drawerBody.innerHTML = html;
+  makeEmojisMonochrome(drawer);
+
+  // Subtopic pill click listeners
+  drawerBody.querySelectorAll(".concept-pill").forEach(pill => {
+    pill.addEventListener("click", () => {
+      const targetId = parseInt(pill.dataset.id, 10);
+      const targetNode = nodeMap.get(targetId);
+      if (targetNode) {
+        if (n.collapsed) toggleNode(n);
+        selectNode(targetNode);
+        focusNode(targetNode);
+      }
+    });
+  });
+
+  drawer.classList.add("open");
+  const overlay = document.getElementById("drawer-overlay");
+  if (overlay) overlay.classList.add("active");
+}
+
+function closeDrawer() {
+  const drawer = document.getElementById("details-drawer");
+  const overlay = document.getElementById("drawer-overlay");
+  if (drawer) drawer.classList.remove("open");
+  if (overlay) overlay.classList.remove("active");
+}
+
+function focusNode(n) {
+  transform.x = window.innerWidth / 2 - n.x * transform.k - 100;
+  transform.y = window.innerHeight / 2 - n.y * transform.k;
+  updateTransform();
+}
+
+const drawerBackBtn = document.getElementById("drawer-back");
+if (drawerBackBtn) drawerBackBtn.addEventListener("click", goBack);
+
+const barBackBtn = document.getElementById("bar-btn-back");
+if (barBackBtn) barBackBtn.addEventListener("click", goBack);
+
+document.getElementById("drawer-close").addEventListener("click", closeDrawer);
+
+const drawerOverlay = document.getElementById("drawer-overlay");
+if (drawerOverlay) {
+  drawerOverlay.addEventListener("click", closeDrawer);
+}
+
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    closeDrawer();
+  } else if ((e.altKey && e.key === "ArrowLeft") || (e.key === "Backspace" && document.activeElement.tagName !== "INPUT" && document.activeElement.tagName !== "TEXTAREA")) {
+    const drawer = document.getElementById("details-drawer");
+    if (drawer && drawer.classList.contains("open")) {
+      e.preventDefault();
+      goBack();
+    }
+  }
+});
+
+document.getElementById("bar-btn-focus").addEventListener("click", () => {
+  if (selectedNodeId) {
+    const n = nodeMap.get(selectedNodeId);
+    if (n) focusNode(n);
+  }
+});
+
+document.getElementById("bar-btn-pin").addEventListener("click", () => {
+  if (selectedNodeId) {
+    const n = nodeMap.get(selectedNodeId);
+    if (n) {
+      n.isPinned = !n.isPinned;
+      const pinBtn = document.getElementById("bar-btn-pin");
+      pinBtn.classList.toggle("active", n.isPinned);
+      pinBtn.setAttribute("title", n.isPinned ? "Node Pinned (Click to unpin)" : "Pin Node");
+    }
+  }
+});
+
+document.getElementById("bar-btn-copy").addEventListener("click", () => {
+  if (selectedNodeId) {
+    const n = nodeMap.get(selectedNodeId);
+    if (n) {
+      const text = `${n.name}
+
+${n.details ? n.details.replace(/<[^>]+>/g, '') : ''}`;
+      navigator.clipboard.writeText(text).then(() => {
+        const copyIcon = document.getElementById("copy-icon");
+        copyIcon.innerHTML = `<polyline points="20 6 9 17 4 12"></polyline>`;
+        setTimeout(() => {
+          copyIcon.innerHTML = `<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>`;
+        }, 1500);
+      });
+    }
+  }
+});
+
+// Fit View to Visible Nodes
+function fitView() {
+  const visibleNodes = nodes.filter(isVisible);
+  if (visibleNodes.length === 0) return;
+
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  visibleNodes.forEach(n => {
+    minX = Math.min(minX, n.x - n.width / 2);
+    maxX = Math.max(maxX, n.x + n.width / 2);
+    minY = Math.min(minY, n.y - n.height / 2);
+    maxY = Math.max(maxY, n.y + n.height / 2);
+  });
+
+  const spanW = maxX - minX;
+  const spanH = maxY - minY;
+  const availW = window.innerWidth - 120;
+  const availH = window.innerHeight - 120;
+
+  const k = Math.min(availW / spanW, availH / spanH, 1.05);
+  transform.k = Math.max(0.18, k);
+  transform.x = window.innerWidth / 2 - ((minX + maxX) / 2) * transform.k - 40;
+  transform.y = window.innerHeight / 2 - ((minY + maxY) / 2) * transform.k;
+  updateTransform();
+}
+
+document.getElementById("btn-fit").addEventListener("click", fitView);
+
+// Expand All
+document.getElementById("btn-expand").addEventListener("click", () => {
+  nodes.forEach(n => {
+    n.collapsed = false;
+  });
+  resolveOverlaps(true);
+  buildDOMElements();
+  updatePositionsDOM();
+  highlightSelectedNode();
+  setTimeout(fitView, 50);
+});
+
+// Collapse to Domains
+document.getElementById("btn-collapse").addEventListener("click", () => {
+  nodes.forEach(n => {
+    if (n.depth >= 1) n.collapsed = true;
+  });
+  resolveOverlaps(true);
+  buildDOMElements();
+  updatePositionsDOM();
+  highlightSelectedNode();
+  setTimeout(fitView, 50);
+});
+
+// Theme Switcher (Monochrome Sun/Moon Toggle)
+const themeBtn = document.getElementById("btn-theme");
+const themeIcon = document.getElementById("theme-icon");
+
+function updateThemeIcon() {
+  if (isLightTheme) {
+    // Moon icon for switching back to dark
+    themeIcon.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
+    themeBtn.setAttribute("title", "Switch to Dark Mode");
+  } else {
+    // Sun icon for switching to light
+    themeIcon.innerHTML = `<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>`;
+    themeBtn.setAttribute("title", "Switch to Light Mode");
+  }
+}
+updateThemeIcon();
+
+themeBtn.addEventListener("click", () => {
+  isLightTheme = !isLightTheme;
+  document.body.classList.toggle("light-theme", isLightTheme);
+  localStorage.setItem("hub_theme", isLightTheme ? "light" : "dark");
+  localStorage.setItem("networks_theme", isLightTheme ? "light" : "dark");
+  updateThemeIcon();
+  buildDOMElements();
+  updatePositionsDOM();
+  highlightSelectedNode();
+});
+
+// Grid Visibility Toggle
+const gridBtn = document.getElementById("btn-grid");
+const gridPlane = document.getElementById("grid-plane");
+gridBtn.addEventListener("click", () => {
+  gridPlane.classList.toggle("hidden");
+  gridBtn.classList.toggle("active", !gridPlane.classList.contains("hidden"));
+});
+
+// Reset Layout to Default Radial Grid
+const resetBtn = document.getElementById("btn-reset");
+if (resetBtn) {
+  resetBtn.addEventListener("click", () => {
+    nodes.forEach(n => {
+      n.x = n.targetX;
+      n.y = n.targetY;
+    });
+    resolveOverlaps(true);
+    updatePositionsDOM();
+    fitView();
+  });
+}
+
+// Real-Time Search & Match Cycling
+let matchedNodes = [];
+let currentMatchIdx = -1;
+
+const searchInput = document.getElementById("search-input");
+const searchBadge = document.getElementById("search-badge");
+const searchPrev = document.getElementById("search-prev");
+const searchNext = document.getElementById("search-next");
+
+searchInput.addEventListener("input", (e) => {
+  const query = e.target.value.trim().toLowerCase();
+  document.querySelectorAll(".node-capsule").forEach(r => r.classList.remove("matched"));
+
+  matchedNodes = [];
+  currentMatchIdx = -1;
+
+  if (!query) {
+    searchBadge.style.display = "none";
+    searchPrev.style.display = "none";
+    searchNext.style.display = "none";
+    return;
+  }
+
+  nodes.forEach(n => {
+    const isMatch = n.name.toLowerCase().includes(query) || (n.details && n.details.toLowerCase().includes(query));
+    if (isMatch) {
+      matchedNodes.push(n);
+      // Auto expand ancestors so match is rendered
+      let curr = n.parent;
+      while (curr) {
+        curr.collapsed = false;
+        curr = curr.parent;
+      }
+    }
+  });
+
+  buildDOMElements();
+  highlightSelectedNode();
+
+  if (matchedNodes.length > 0) {
+    searchBadge.style.display = "inline-block";
+    searchPrev.style.display = "inline-flex";
+    searchNext.style.display = "inline-flex";
+    currentMatchIdx = 0;
+    updateSearchMatch();
+  } else {
+    searchBadge.style.display = "inline-block";
+    searchBadge.textContent = "0";
+    searchPrev.style.display = "none";
+    searchNext.style.display = "none";
+  }
+});
+
+function updateSearchMatch() {
+  document.querySelectorAll(".node-capsule").forEach(r => r.classList.remove("matched"));
+  searchBadge.textContent = `${currentMatchIdx + 1}/${matchedNodes.length}`;
+
+  matchedNodes.forEach(mn => {
+    const g = document.getElementById(`node-${mn.id}`);
+    if (g) {
+      const cap = g.querySelector(".node-capsule");
+      if (cap) cap.classList.add("matched");
+    }
+  });
+
+  const target = matchedNodes[currentMatchIdx];
+  if (target) {
+    focusNode(target);
+    selectNode(target);
+  }
+}
+
+searchNext.addEventListener("click", () => {
+  if (matchedNodes.length > 0) {
+    currentMatchIdx = (currentMatchIdx + 1) % matchedNodes.length;
+    updateSearchMatch();
+  }
+});
+
+searchPrev.addEventListener("click", () => {
+  if (matchedNodes.length > 0) {
+    currentMatchIdx = (currentMatchIdx - 1 + matchedNodes.length) % matchedNodes.length;
+    updateSearchMatch();
+  }
+});
+
+// Initial View Fit
+setTimeout(() => {
+  fitView();
+  makeEmojisMonochrome(document.body);
+}, 120);
+
+// URL Search & Node Deep-linking
+setTimeout(() => {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const qSearch = params.get("search") || params.get("q") || params.get("topic") || params.get("node");
+    if (qSearch && searchInput) {
+      searchInput.value = decodeURIComponent(qSearch);
+      searchInput.dispatchEvent(new Event("input"));
+    }
+  } catch (e) {
+    console.error("URL search init error:", e);
+  }
+}, 250);
+
+window.addEventListener("resize", () => {
+  fitView();
+});
+</script>
+</body>
+</html>

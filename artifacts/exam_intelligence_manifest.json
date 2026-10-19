@@ -1,0 +1,146 @@
+{
+  "version": "2.0",
+  "updated_at": "2026-10-17T13:10:00",
+  "ocr_search_engine_features": [
+    "Typo-tolerant compound term splitting (e.g. backpropagation -> back propagation, kmeans -> k means)",
+    "Tokenized multi-term query matching (matches questions containing all query tokens in any order)",
+    "Real-time <mark> tag keyword highlighting in question and raw OCR text",
+    "Automatic accordion expansion for matching question clusters",
+    "Dynamic live filtering of Year-by-Year Raw Exam Archive with matching question counts",
+    "One-click OCR text copy with visual confirmation badge"
+  ],
+  "analyzers": [
+    {
+      "course": "Machine Learning",
+      "course_code": "CSE 4111 / 4112",
+      "faculty": [
+        "Prof. Dr. M.A.H. Akhand",
+        "Rocky Sir"
+      ],
+      "primary_file": "question-browser/machine-learning-akhand-sir-rocky-sir.html",
+      "canonical_file": "question-browser/machine-learning.html",
+      "exam_years": "2015-2024",
+      "questions_count": 241,
+      "marks_count": 1729,
+      "clusters_count": 223,
+      "scans_count": 264,
+      "merged_pdfs": [
+        "final/ml-akhand-sir.pdf",
+        "final/ml-rocky-sir.pdf"
+      ],
+      "mindmaps": [
+        "mindmaps/ml_akhand_sir_mindmap.html",
+        "mindmaps/ml_rocky_sir_mindmap.html"
+      ]
+    },
+    {
+      "course": "Computer Networks",
+      "course_code": "CSE 3201 / 3202",
+      "faculty": [
+        "Prof. Sakhawat Sir",
+        "Sadi Sir"
+      ],
+      "primary_file": "question-browser/computer-networks-sakhawat-sir-sadi-sir.html",
+      "canonical_file": "question-browser/computer-networks.html",
+      "exam_years": "2015-2024",
+      "questions_count": 274,
+      "marks_count": 2457,
+      "clusters_count": 244,
+      "scans_count": 299,
+      "merged_pdfs": [
+        "final/networks-sakhawat-sir.pdf",
+        "final/networks-sadi-sir.pdf"
+      ],
+      "mindmaps": [
+        "mindmaps/networks_sakhawat_sir_mindmap.html",
+        "mindmaps/networks_sadi_sir_mindmap.html"
+      ]
+    },
+    {
+      "course": "Computer & Network Security",
+      "course_code": "CSE 4109",
+      "faculty": [
+        "Dola Mam",
+        "Rokib Sir"
+      ],
+      "primary_file": "question-browser/computer-and-network-security-dola-mam-rokib-sir.html",
+      "canonical_file": "question-browser/computer-and-network-security.html",
+      "exam_years": "2010-2024 (12 Examination Sessions)",
+      "questions_count": 338,
+      "marks_count": 2867,
+      "clusters_count": 282,
+      "scans_count": 358,
+      "merged_pdfs": [
+        "final/security-dola-mam.pdf",
+        "final/security-rokib-sir.pdf"
+      ],
+      "mindmaps": [
+        "mindmaps/security_dola_mam_mindmap.html",
+        "mindmaps/security_rokib_sir_mindmap.html"
+      ]
+    },
+    {
+      "course": "Natural Language Processing",
+      "course_code": "CSE 4241",
+      "faculty": [
+        "Shawon Sir",
+        "Azhar Sir"
+      ],
+      "primary_file": "question-browser/natural-language-processing-shawon-sir-azhar-sir.html",
+      "canonical_file": "question-browser/natural-language-processing.html",
+      "exam_years": "2018-2024",
+      "questions_count": 196,
+      "marks_count": 1791,
+      "clusters_count": 172,
+      "scans_count": 211,
+      "merged_pdfs": [
+        "final/nlp-shawon-sir.pdf",
+        "final/nlp-azhar-sir.pdf"
+      ],
+      "mindmaps": [
+        "mindmaps/nlp_shawon_sir_mindmap.html",
+        "mindmaps/nlp_azhar_sir_mindmap.html"
+      ]
+    },
+    {
+      "course": "Computer Graphics",
+      "course_code": "CSE 4107",
+      "faculty": [
+        "Masudul Sir"
+      ],
+      "primary_file": "question-browser/computer-graphics-masudul-sir.html",
+      "canonical_file": "question-browser/computer-graphics.html",
+      "exam_years": "2015-2024",
+      "questions_count": 255,
+      "marks_count": 2474,
+      "clusters_count": 235,
+      "scans_count": 282,
+      "merged_pdfs": [
+        "final/graphics.pdf"
+      ],
+      "mindmaps": [
+        "mindmaps/graphics_masudul_sir_mindmap.html"
+      ]
+    },
+    {
+      "course": "Digital Image Processing & Vision",
+      "course_code": "CSE 4125",
+      "faculty": [
+        "Prof. Masudul Ahsan Sir"
+      ],
+      "primary_file": "question-browser/image-processing-masudul-ahsan-sir.html",
+      "canonical_file": "question-browser/image-processing-and-computer-vision.html",
+      "exam_years": "2016-2024",
+      "questions_count": 213,
+      "marks_count": 2029,
+      "clusters_count": 203,
+      "scans_count": 238,
+      "merged_pdfs": [
+        "final/image-processing-masudul-ahsan.pdf"
+      ],
+      "mindmaps": [
+        "mindmaps/image_processing_masudul_ahsan_sir_mindmap.html"
+      ]
+    }
+  ]
+}

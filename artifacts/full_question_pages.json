@@ -1,0 +1,1204 @@
+{
+  "computer-networks": {
+    "2024": {
+      "year": "2024",
+      "pages": [
+        1,
+        2,
+        3
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_1.jpg",
+        "artifacts/full_exam_pages/page_2.jpg",
+        "artifacts/full_exam_pages/page_3.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-networks-2024.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=1",
+      "page_count": 3
+    },
+    "2023": {
+      "year": "2023",
+      "pages": [
+        4,
+        5,
+        6
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_4.jpg",
+        "artifacts/full_exam_pages/page_5.jpg",
+        "artifacts/full_exam_pages/page_6.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-networks-2023.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=4",
+      "page_count": 3
+    },
+    "2022": {
+      "year": "2022",
+      "pages": [
+        7,
+        8
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_7.jpg",
+        "artifacts/full_exam_pages/page_8.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-networks-2022.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=7",
+      "page_count": 2
+    },
+    "2021": {
+      "year": "2021",
+      "pages": [
+        9,
+        10
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_9.jpg",
+        "artifacts/full_exam_pages/page_10.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-networks-2021.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=9",
+      "page_count": 2
+    },
+    "2020": {
+      "year": "2020",
+      "pages": [
+        11
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_11.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-networks-2020.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=11",
+      "page_count": 1
+    },
+    "2019": {
+      "year": "2019",
+      "pages": [
+        12,
+        13
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_12.jpg",
+        "artifacts/full_exam_pages/page_13.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-networks-2019.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=12",
+      "page_count": 2
+    },
+    "2018": {
+      "year": "2018",
+      "pages": [
+        14,
+        15
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_14.jpg",
+        "artifacts/full_exam_pages/page_15.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-networks-2018.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=14",
+      "page_count": 2
+    },
+    "2017": {
+      "year": "2017",
+      "pages": [
+        16,
+        17
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_16.jpg",
+        "artifacts/full_exam_pages/page_17.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-networks-2017.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=16",
+      "page_count": 2
+    },
+    "2016": {
+      "year": "2016",
+      "pages": [
+        18,
+        19
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_18.jpg",
+        "artifacts/full_exam_pages/page_19.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-networks-2016.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=18",
+      "page_count": 2
+    },
+    "2015": {
+      "year": "2015",
+      "pages": [
+        20,
+        21
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_20.jpg",
+        "artifacts/full_exam_pages/page_21.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-networks-2015.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=20",
+      "page_count": 2
+    }
+  },
+  "computer-graphics": {
+    "2024": {
+      "year": "2024",
+      "pages": [
+        22,
+        23,
+        24
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_22.jpg",
+        "artifacts/full_exam_pages/page_23.jpg",
+        "artifacts/full_exam_pages/page_24.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-graphics-2024.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=22",
+      "page_count": 3
+    },
+    "2023": {
+      "year": "2023",
+      "pages": [
+        25,
+        26,
+        27
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_25.jpg",
+        "artifacts/full_exam_pages/page_26.jpg",
+        "artifacts/full_exam_pages/page_27.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-graphics-2023.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=25",
+      "page_count": 3
+    },
+    "2022": {
+      "year": "2022",
+      "pages": [
+        28,
+        29,
+        30
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_28.jpg",
+        "artifacts/full_exam_pages/page_29.jpg",
+        "artifacts/full_exam_pages/page_30.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-graphics-2022.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=28",
+      "page_count": 3
+    },
+    "2021": {
+      "year": "2021",
+      "pages": [
+        31,
+        32
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_31.jpg",
+        "artifacts/full_exam_pages/page_32.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-graphics-2021.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=31",
+      "page_count": 2
+    },
+    "2020": {
+      "year": "2020",
+      "pages": [
+        33,
+        34
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_33.jpg",
+        "artifacts/full_exam_pages/page_34.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-graphics-2020.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=33",
+      "page_count": 2
+    },
+    "2019": {
+      "year": "2019",
+      "pages": [
+        35,
+        36,
+        37
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_35.jpg",
+        "artifacts/full_exam_pages/page_36.jpg",
+        "artifacts/full_exam_pages/page_37.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-graphics-2019.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=35",
+      "page_count": 3
+    },
+    "2018": {
+      "year": "2018",
+      "pages": [
+        38,
+        39
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_38.jpg",
+        "artifacts/full_exam_pages/page_39.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-graphics-2018.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=38",
+      "page_count": 2
+    },
+    "2017": {
+      "year": "2017",
+      "pages": [
+        40,
+        41
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_40.jpg",
+        "artifacts/full_exam_pages/page_41.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-graphics-2017.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=40",
+      "page_count": 2
+    },
+    "2016": {
+      "year": "2016",
+      "pages": [
+        42,
+        43
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_42.jpg",
+        "artifacts/full_exam_pages/page_43.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-graphics-2016.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=42",
+      "page_count": 2
+    },
+    "2015": {
+      "year": "2015",
+      "pages": [
+        44,
+        45
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_44.jpg",
+        "artifacts/full_exam_pages/page_45.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-graphics-2015.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=44",
+      "page_count": 2
+    }
+  },
+  "security": {
+    "2024": {
+      "year": "2024",
+      "pages": [
+        46,
+        47
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_46.jpg",
+        "artifacts/full_exam_pages/page_47.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/security-2024.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=46",
+      "page_count": 2
+    },
+    "2023": {
+      "year": "2023",
+      "pages": [
+        48,
+        49
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_48.jpg",
+        "artifacts/full_exam_pages/page_49.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/security-2023.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=48",
+      "page_count": 2
+    },
+    "2022": {
+      "year": "2022",
+      "pages": [
+        50,
+        51
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_50.jpg",
+        "artifacts/full_exam_pages/page_51.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/security-2022.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=50",
+      "page_count": 2
+    },
+    "2021": {
+      "year": "2021",
+      "pages": [
+        52
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_52.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/security-2021.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=52",
+      "page_count": 1
+    },
+    "2019": {
+      "year": "2019",
+      "pages": [
+        53
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_53.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/security-2019.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=53",
+      "page_count": 1
+    },
+    "2018": {
+      "year": "2018",
+      "pages": [
+        54
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_54.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/security-2018.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=54",
+      "page_count": 1
+    },
+    "2017": {
+      "year": "2017",
+      "pages": [
+        55,
+        56
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_55.jpg",
+        "artifacts/full_exam_pages/page_56.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/security-2017.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=55",
+      "page_count": 2
+    },
+    "2016": {
+      "year": "2016",
+      "pages": [
+        57,
+        58
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_57.jpg",
+        "artifacts/full_exam_pages/page_58.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/security-2016.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=57",
+      "page_count": 2
+    },
+    "2013": {
+      "year": "2013",
+      "pages": [
+        59
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_59.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/security-2013.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=59",
+      "page_count": 1
+    },
+    "2012": {
+      "year": "2012",
+      "pages": [
+        60
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_60.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/security-2012.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=60",
+      "page_count": 1
+    },
+    "2011": {
+      "year": "2011",
+      "pages": [
+        61
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_61.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/security-2011.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=61",
+      "page_count": 1
+    },
+    "2010": {
+      "year": "2010",
+      "pages": [
+        62,
+        63
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_62.jpg",
+        "artifacts/full_exam_pages/page_63.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/security-2010.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=62",
+      "page_count": 2
+    }
+  },
+  "image-processing": {
+    "2024": {
+      "year": "2024",
+      "pages": [
+        64,
+        65,
+        66
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_64.jpg",
+        "artifacts/full_exam_pages/page_65.jpg",
+        "artifacts/full_exam_pages/page_66.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/image-processing-2024.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=64",
+      "page_count": 3
+    },
+    "2023": {
+      "year": "2023",
+      "pages": [
+        67,
+        68
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_67.jpg",
+        "artifacts/full_exam_pages/page_68.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/image-processing-2023.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=67",
+      "page_count": 2
+    },
+    "2022": {
+      "year": "2022",
+      "pages": [
+        69,
+        70,
+        71
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_69.jpg",
+        "artifacts/full_exam_pages/page_70.jpg",
+        "artifacts/full_exam_pages/page_71.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/image-processing-2022.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=69",
+      "page_count": 3
+    },
+    "2021": {
+      "year": "2021",
+      "pages": [
+        72,
+        73
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_72.jpg",
+        "artifacts/full_exam_pages/page_73.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/image-processing-2021.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=72",
+      "page_count": 2
+    },
+    "2020": {
+      "year": "2020",
+      "pages": [
+        74,
+        75,
+        76
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_74.jpg",
+        "artifacts/full_exam_pages/page_75.jpg",
+        "artifacts/full_exam_pages/page_76.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/image-processing-2020.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=74",
+      "page_count": 3
+    },
+    "2019": {
+      "year": "2019",
+      "pages": [
+        77,
+        78
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_77.jpg",
+        "artifacts/full_exam_pages/page_78.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/image-processing-2019.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=77",
+      "page_count": 2
+    },
+    "2018": {
+      "year": "2018",
+      "pages": [
+        79,
+        80,
+        81
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_79.jpg",
+        "artifacts/full_exam_pages/page_80.jpg",
+        "artifacts/full_exam_pages/page_81.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/image-processing-2018.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=79",
+      "page_count": 3
+    },
+    "2017": {
+      "year": "2017",
+      "pages": [
+        82,
+        83
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_82.jpg",
+        "artifacts/full_exam_pages/page_83.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/image-processing-2017.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=82",
+      "page_count": 2
+    },
+    "2016": {
+      "year": "2016",
+      "pages": [
+        84,
+        85
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_84.jpg",
+        "artifacts/full_exam_pages/page_85.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/image-processing-2016.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=84",
+      "page_count": 2
+    }
+  },
+  "machine-learning": {
+    "2024": {
+      "year": "2024",
+      "pages": [
+        86,
+        87
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_86.jpg",
+        "artifacts/full_exam_pages/page_87.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/machine-learning-2024.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=86",
+      "page_count": 2
+    },
+    "2023": {
+      "year": "2023",
+      "pages": [
+        88,
+        89,
+        90
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_88.jpg",
+        "artifacts/full_exam_pages/page_89.jpg",
+        "artifacts/full_exam_pages/page_90.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/machine-learning-2023.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=88",
+      "page_count": 3
+    },
+    "2021": {
+      "year": "2021",
+      "pages": [
+        91,
+        92,
+        93
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_91.jpg",
+        "artifacts/full_exam_pages/page_92.jpg",
+        "artifacts/full_exam_pages/page_93.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/machine-learning-2021.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=91",
+      "page_count": 3
+    },
+    "2020": {
+      "year": "2020",
+      "pages": [
+        94,
+        95,
+        96
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_94.jpg",
+        "artifacts/full_exam_pages/page_95.jpg",
+        "artifacts/full_exam_pages/page_96.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/machine-learning-2020.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=94",
+      "page_count": 3
+    },
+    "2019": {
+      "year": "2019",
+      "pages": [
+        97,
+        98
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_97.jpg",
+        "artifacts/full_exam_pages/page_98.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/machine-learning-2019.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=97",
+      "page_count": 2
+    },
+    "2018": {
+      "year": "2018",
+      "pages": [
+        99,
+        100
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_99.jpg",
+        "artifacts/full_exam_pages/page_100.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/machine-learning-2018.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=99",
+      "page_count": 2
+    },
+    "2017": {
+      "year": "2017",
+      "pages": [
+        101,
+        102
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_101.jpg",
+        "artifacts/full_exam_pages/page_102.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/machine-learning-2017.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=101",
+      "page_count": 2
+    },
+    "2015": {
+      "year": "2015",
+      "pages": [
+        103,
+        104
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_103.jpg",
+        "artifacts/full_exam_pages/page_104.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/machine-learning-2015.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=103",
+      "page_count": 2
+    }
+  },
+  "nlp": {
+    "2024": {
+      "year": "2024",
+      "pages": [
+        105,
+        106
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_105.jpg",
+        "artifacts/full_exam_pages/page_106.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/nlp-2024.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=105",
+      "page_count": 2
+    },
+    "2023": {
+      "year": "2023",
+      "pages": [
+        107,
+        108
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_107.jpg",
+        "artifacts/full_exam_pages/page_108.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/nlp-2023.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=107",
+      "page_count": 2
+    },
+    "2022": {
+      "year": "2022",
+      "pages": [
+        109,
+        110
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_109.jpg",
+        "artifacts/full_exam_pages/page_110.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/nlp-2022.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=109",
+      "page_count": 2
+    },
+    "2021": {
+      "year": "2021",
+      "pages": [
+        111,
+        112
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_111.jpg",
+        "artifacts/full_exam_pages/page_112.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/nlp-2021.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=111",
+      "page_count": 2
+    },
+    "2020": {
+      "year": "2020",
+      "pages": [
+        113,
+        114
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_113.jpg",
+        "artifacts/full_exam_pages/page_114.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/nlp-2020.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=113",
+      "page_count": 2
+    },
+    "2019": {
+      "year": "2019",
+      "pages": [
+        115,
+        116
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_115.jpg",
+        "artifacts/full_exam_pages/page_116.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/nlp-2019.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=115",
+      "page_count": 2
+    },
+    "2018": {
+      "year": "2018",
+      "pages": [
+        117,
+        118
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_117.jpg",
+        "artifacts/full_exam_pages/page_118.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/nlp-2018.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=117",
+      "page_count": 2
+    }
+  },
+  "computer-and-network-security": {
+    "2024": {
+      "year": "2024",
+      "pages": [
+        46,
+        47
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_46.jpg",
+        "artifacts/full_exam_pages/page_47.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-and-network-security-2024.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=46",
+      "page_count": 2
+    },
+    "2023": {
+      "year": "2023",
+      "pages": [
+        48,
+        49
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_48.jpg",
+        "artifacts/full_exam_pages/page_49.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-and-network-security-2023.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=48",
+      "page_count": 2
+    },
+    "2022": {
+      "year": "2022",
+      "pages": [
+        50,
+        51
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_50.jpg",
+        "artifacts/full_exam_pages/page_51.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-and-network-security-2022.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=50",
+      "page_count": 2
+    },
+    "2021": {
+      "year": "2021",
+      "pages": [
+        52
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_52.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-and-network-security-2021.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=52",
+      "page_count": 1
+    },
+    "2019": {
+      "year": "2019",
+      "pages": [
+        53
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_53.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-and-network-security-2019.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=53",
+      "page_count": 1
+    },
+    "2018": {
+      "year": "2018",
+      "pages": [
+        54
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_54.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-and-network-security-2018.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=54",
+      "page_count": 1
+    },
+    "2017": {
+      "year": "2017",
+      "pages": [
+        55,
+        56
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_55.jpg",
+        "artifacts/full_exam_pages/page_56.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-and-network-security-2017.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=55",
+      "page_count": 2
+    },
+    "2016": {
+      "year": "2016",
+      "pages": [
+        57,
+        58
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_57.jpg",
+        "artifacts/full_exam_pages/page_58.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-and-network-security-2016.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=57",
+      "page_count": 2
+    },
+    "2013": {
+      "year": "2013",
+      "pages": [
+        59
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_59.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-and-network-security-2013.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=59",
+      "page_count": 1
+    },
+    "2012": {
+      "year": "2012",
+      "pages": [
+        60
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_60.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-and-network-security-2012.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=60",
+      "page_count": 1
+    },
+    "2011": {
+      "year": "2011",
+      "pages": [
+        61
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_61.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-and-network-security-2011.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=61",
+      "page_count": 1
+    },
+    "2010": {
+      "year": "2010",
+      "pages": [
+        62,
+        63
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_62.jpg",
+        "artifacts/full_exam_pages/page_63.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/computer-and-network-security-2010.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=62",
+      "page_count": 2
+    }
+  },
+  "image-processing-and-computer-vision": {
+    "2024": {
+      "year": "2024",
+      "pages": [
+        64,
+        65,
+        66
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_64.jpg",
+        "artifacts/full_exam_pages/page_65.jpg",
+        "artifacts/full_exam_pages/page_66.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/image-processing-and-computer-vision-2024.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=64",
+      "page_count": 3
+    },
+    "2023": {
+      "year": "2023",
+      "pages": [
+        67,
+        68
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_67.jpg",
+        "artifacts/full_exam_pages/page_68.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/image-processing-and-computer-vision-2023.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=67",
+      "page_count": 2
+    },
+    "2022": {
+      "year": "2022",
+      "pages": [
+        69,
+        70,
+        71
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_69.jpg",
+        "artifacts/full_exam_pages/page_70.jpg",
+        "artifacts/full_exam_pages/page_71.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/image-processing-and-computer-vision-2022.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=69",
+      "page_count": 3
+    },
+    "2021": {
+      "year": "2021",
+      "pages": [
+        72,
+        73
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_72.jpg",
+        "artifacts/full_exam_pages/page_73.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/image-processing-and-computer-vision-2021.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=72",
+      "page_count": 2
+    },
+    "2020": {
+      "year": "2020",
+      "pages": [
+        74,
+        75,
+        76
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_74.jpg",
+        "artifacts/full_exam_pages/page_75.jpg",
+        "artifacts/full_exam_pages/page_76.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/image-processing-and-computer-vision-2020.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=74",
+      "page_count": 3
+    },
+    "2019": {
+      "year": "2019",
+      "pages": [
+        77,
+        78
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_77.jpg",
+        "artifacts/full_exam_pages/page_78.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/image-processing-and-computer-vision-2019.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=77",
+      "page_count": 2
+    },
+    "2018": {
+      "year": "2018",
+      "pages": [
+        79,
+        80,
+        81
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_79.jpg",
+        "artifacts/full_exam_pages/page_80.jpg",
+        "artifacts/full_exam_pages/page_81.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/image-processing-and-computer-vision-2018.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=79",
+      "page_count": 3
+    },
+    "2017": {
+      "year": "2017",
+      "pages": [
+        82,
+        83
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_82.jpg",
+        "artifacts/full_exam_pages/page_83.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/image-processing-and-computer-vision-2017.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=82",
+      "page_count": 2
+    },
+    "2016": {
+      "year": "2016",
+      "pages": [
+        84,
+        85
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_84.jpg",
+        "artifacts/full_exam_pages/page_85.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/image-processing-and-computer-vision-2016.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=84",
+      "page_count": 2
+    }
+  },
+  "natural-language-processing": {
+    "2024": {
+      "year": "2024",
+      "pages": [
+        105,
+        106
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_105.jpg",
+        "artifacts/full_exam_pages/page_106.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/natural-language-processing-2024.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=105",
+      "page_count": 2
+    },
+    "2023": {
+      "year": "2023",
+      "pages": [
+        107,
+        108
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_107.jpg",
+        "artifacts/full_exam_pages/page_108.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/natural-language-processing-2023.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=107",
+      "page_count": 2
+    },
+    "2022": {
+      "year": "2022",
+      "pages": [
+        109,
+        110
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_109.jpg",
+        "artifacts/full_exam_pages/page_110.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/natural-language-processing-2022.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=109",
+      "page_count": 2
+    },
+    "2021": {
+      "year": "2021",
+      "pages": [
+        111,
+        112
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_111.jpg",
+        "artifacts/full_exam_pages/page_112.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/natural-language-processing-2021.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=111",
+      "page_count": 2
+    },
+    "2020": {
+      "year": "2020",
+      "pages": [
+        113,
+        114
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_113.jpg",
+        "artifacts/full_exam_pages/page_114.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/natural-language-processing-2020.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=113",
+      "page_count": 2
+    },
+    "2019": {
+      "year": "2019",
+      "pages": [
+        115,
+        116
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_115.jpg",
+        "artifacts/full_exam_pages/page_116.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/natural-language-processing-2019.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=115",
+      "page_count": 2
+    },
+    "2018": {
+      "year": "2018",
+      "pages": [
+        117,
+        118
+      ],
+      "page_images": [
+        "artifacts/full_exam_pages/page_117.jpg",
+        "artifacts/full_exam_pages/page_118.jpg"
+      ],
+      "standalone_pdf": "artifacts/full_question_pdfs/natural-language-processing-2018.pdf",
+      "merged_pdf_url": "artifacts/Copy of merged questions.pdf#page=117",
+      "page_count": 2
+    }
+  }
+}

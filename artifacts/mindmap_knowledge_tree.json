@@ -1,0 +1,562 @@
+{
+  "name": "Computer Networks: Core Concepts & Disambiguation",
+  "details": "\n    <h3>Computer Networks: Comprehensive Conceptual Knowledge & Disambiguation Engine</h3>\n    <p>This interactive knowledge map is organized not merely by lecture sequence, but by <strong>foundational network abstractions, protocol mechanisms, and rigorous technical disambiguations</strong>.</p>\n    <div style=\"margin-top: 10px; padding: 10px; background: rgba(56, 189, 248, 0.1); border-left: 3px solid #38bdf8; border-radius: 4px;\">\n      <strong>Core Focus:</strong> Disambiguating subtle, often-confused networking concepts (Flow vs Congestion Control, GBN vs SR, Tahoe vs Reno vs NewReno, HTTP/1 vs 2 vs 3, Transport vs Network Layer, Karn's Ambiguity, TLS 1.2 vs 1.3).\n    </div>\n    <ul style=\"margin-top: 12px;\">\n      <li><strong>Scope:</strong> Application Layer Systems, Transport Layer Primitives, RDT State Machines, TCP/UDP Architectures, Congestion/Flow Engineering, and Cryptographic Security.</li>\n      <li><strong>Source Base:</strong> Sadi Sir's Lectures (Part 1), Kurose & Ross (8th ed.), Forouzan (5th ed.), and authoritative RFC specifications (RFC 768, 793, 1122, 2018, 5681, 6298, 8446).</li>\n    </ul>\n    ",
+  "children": [
+    {
+      "name": "1. Application Layer Systems & Web Architectures",
+      "domain_id": 1,
+      "details": "\n            <h3>Application Layer Architecture & Protocols</h3>\n            <p>The Application Layer contains user-facing programs and network services communicating across the Internet. Unlike lower layers implemented in the OS kernel or network hardware, application protocols run entirely in user space.</p>\n            <p><strong>Primary Function:</strong> Defines message formats, syntax, semantics, and exchange sequences between user processes.</p>\n            ",
+      "children": [
+        {
+          "name": "1.1 Client-Server vs Peer-to-Peer (P2P)",
+          "details": "\n                    <h3>Architecture Disambiguation: Client-Server vs P2P</h3>\n                    <table style=\"width:100%; border-collapse:collapse; margin-top:8px; font-size:12px;\">\n                      <tr style=\"background:#1e293b; color:#38bdf8;\">\n                        <th style=\"padding:6px; border:1px solid #334155;\">Metric</th>\n                        <th style=\"padding:6px; border:1px solid #334155;\">Client-Server</th>\n                        <th style=\"padding:6px; border:1px solid #334155;\">Peer-to-Peer (P2P)</th>\n                      </tr>\n                      <tr>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Host Role</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Dedicated, always-on server; transient clients.</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Arbitrary end-systems act as both client and server (servents).</td>\n                      </tr>\n                      <tr style=\"background:#0f172a;\">\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Addressing</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Fixed, well-known IP address.</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Dynamic, churn-heavy residential IP addresses.</td>\n                      </tr>\n                      <tr>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Scalability</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Server bandwidth bottlenecks as $N$ clients grow: $T \\ge \\max(NF/u_s, F/d_{\\min})$.</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Self-Scalability:</strong> Peers bring service capacity as well as demand: $T \\ge \\max(F/u_s, F/d_{\\min}, NF / (u_s + \\sum u_i))$.</td>\n                      </tr>\n                      <tr style=\"background:#0f172a;\">\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Management</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Centralized, highly controlled.</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Decentralized, complex NAT traversal and peer churn.</td>\n                      </tr>\n                    </table>\n                    ",
+          "children": [
+            {
+              "name": "Client-Server: Centralized Bottleneck",
+              "details": "Server upload capacity $u_s$ must support $N$ clients. Time to distribute a file of size $F$ scales linearly with $N$: $D_{cs} \\ge NF / u_s$."
+            },
+            {
+              "name": "P2P: Self-Scalability & Churn",
+              "details": "Each peer that downloads also uploads chunks to other peers. Total upload capacity grows linearly with $N$ ($u_s + \\sum u_i$), keeping distribution time bounded."
+            }
+          ]
+        },
+        {
+          "name": "1.2 Web & HTTP Evolution (1.0 vs 1.1 vs 2 vs 3)",
+          "details": "\n                    <h3>Evolution of Hypertext Transfer Protocol (HTTP)</h3>\n                    <table style=\"width:100%; border-collapse:collapse; margin-top:8px; font-size:12px;\">\n                      <tr style=\"background:#1e293b; color:#38bdf8;\">\n                        <th style=\"padding:6px; border:1px solid #334155;\">Version</th>\n                        <th style=\"padding:6px; border:1px solid #334155;\">Transport</th>\n                        <th style=\"padding:6px; border:1px solid #334155;\">Connection Model</th>\n                        <th style=\"padding:6px; border:1px solid #334155;\">Head-of-Line (HOL) Blocking</th>\n                      </tr>\n                      <tr>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>HTTP/1.0</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">TCP</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Non-persistent: 1 TCP connection per object (2 RTT + transfer).</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">High (serial connection overhead).</td>\n                      </tr>\n                      <tr style=\"background:#0f172a;\">\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>HTTP/1.1</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">TCP</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Persistent connection (reused for multiple objects). Optional pipelining.</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Application-level HOL blocking:</strong> If object 1 is delayed, objects 2, 3 must wait in line.</td>\n                      </tr>\n                      <tr>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>HTTP/2</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">TCP</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Binary framing layer. Interleaved multiplexed streams over 1 TCP connection. Server Push. HPACK header compression.</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>TCP-level HOL blocking:</strong> A single lost TCP packet halts <em>all</em> multiplexed streams in that connection!</td>\n                      </tr>\n                      <tr style=\"background:#0f172a;\">\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>HTTP/3</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>QUIC (UDP)</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Independent streams at transport layer. 0-RTT/1-RTT connection setup combining transport + TLS 1.3 handshake. Connection migration via 64-bit Connection ID.</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Zero HOL Blocking:</strong> Packet loss on stream A does not stall stream B.</td>\n                      </tr>\n                    </table>\n                    ",
+          "children": [
+            {
+              "name": "HTTP/1.0: Non-Persistent (2 RTT/Object)",
+              "details": "Opens a new TCP connection for every single inline asset (images, CSS). Wastes RTT and server memory."
+            },
+            {
+              "name": "HTTP/1.1: Persistent & App-Level HOL",
+              "details": "Reuses open TCP connection. Pipelining was rarely deployed due to middlebox bugs and FIFO response requirements."
+            },
+            {
+              "name": "HTTP/2: Binary Framing & TCP HOL",
+              "details": "Splits messages into binary frames (HEADERS, DATA) tagged with Stream IDs. Eliminates app HOL, but single TCP loss halts all streams."
+            },
+            {
+              "name": "HTTP/3: QUIC over UDP (Zero HOL)",
+              "details": "Runs over UDP. Streams are independent at the transport layer. Lost packets only stall their own stream."
+            }
+          ]
+        },
+        {
+          "name": "1.3 Web State: Cookies & Caching",
+          "details": "\n                    <h3>State Management & Performance Optimization</h3>\n                    <ul>\n                      <li><strong>Cookies (State over Stateless HTTP):</strong> HTTP is stateless. Cookies restore state via 4 components:\n                        <ol>\n                          <li><code>Set-Cookie: key=val</code> header in HTTP server response.</li>\n                          <li><code>Cookie: key=val</code> header in subsequent client requests.</li>\n                          <li>Cookie file kept on client host and managed by user browser.</li>\n                          <li>Backend database at web site mapping cookie IDs to user session, shopping cart, or authentication credentials.</li>\n                        </ol>\n                      </li>\n                      <li><strong>Web Caching (Proxy Servers):</strong> Satisfies client requests without involving the origin server. Reduces response time and access link traffic.</li>\n                      <li><strong>Conditional GET (Cache Validation):</strong>\n                        <ul>\n                          <li>Client/Proxy cache sends: <code>If-Modified-Since: &lt;date&gt;</code> or <code>If-None-Match: &lt;etag&gt;</code>.</li>\n                          <li>If not modified: Server returns <code>HTTP/1.1 304 Not Modified</code> with <strong>empty entity body</strong>, saving link bandwidth.</li>\n                          <li>If modified: Server returns <code>HTTP/1.1 200 OK</code> with fresh data payload.</li>\n                        </ul>\n                      </li>\n                    </ul>\n                    ",
+          "children": [
+            {
+              "name": "Cookies: 4-Component Architecture",
+              "details": "Set-Cookie header -> Client storage -> Cookie header in future requests -> Server database mapping."
+            },
+            {
+              "name": "Conditional GET: 304 Not Modified",
+              "details": "Uses If-Modified-Since or ETag headers to validate freshness without transferring payload."
+            }
+          ]
+        },
+        {
+          "name": "1.4 DNS: Iterative vs Recursive Resolution",
+          "details": "\n                    <h3>Disambiguation: Iterative vs Recursive DNS Resolution</h3>\n                    <table style=\"width:100%; border-collapse:collapse; margin-top:8px; font-size:12px;\">\n                      <tr style=\"background:#1e293b; color:#38bdf8;\">\n                        <th style=\"padding:6px; border:1px solid #334155;\">Feature</th>\n                        <th style=\"padding:6px; border:1px solid #334155;\">Iterative Query</th>\n                        <th style=\"padding:6px; border:1px solid #334155;\">Recursive Query</th>\n                      </tr>\n                      <tr>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Server Action</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Queried server replies: <em>\"I don't know the answer, but ask this next server.\"</em> (returns referral).</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Queried server replies: <em>\"I will find the answer for you.\"</em> (assumes full burden).</td>\n                      </tr>\n                      <tr style=\"background:#0f172a;\">\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Workload Location</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Workload stays on the <strong>Local DNS Server (resolver)</strong>.</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Workload cascades upward through Root and TLD servers.</td>\n                      </tr>\n                      <tr>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Internet Standard</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Standard across Root and TLD servers to prevent central overload.</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Used only between residential host and Local DNS Server.</td>\n                      </tr>\n                    </table>\n                    <p style=\"margin-top:8px;\"><strong>DNS Record Types:</strong> <code>A</code> (Host->IPv4), <code>AAAA</code> (Host->IPv6), <code>NS</code> (Domain->Authoritative Server), <code>CNAME</code> (Alias->Canonical Name), <code>MX</code> (Domain->Mail Server).</p>\n                    ",
+          "children": [
+            {
+              "name": "Iterative Query (Referral Chains)",
+              "details": "Queried name server returns the IP address of the next hierarchical server to contact."
+            },
+            {
+              "name": "Recursive Query (Delegated Burden)",
+              "details": "The queried server contacts the next server on the client's behalf and returns the final answer."
+            },
+            {
+              "name": "DNS Record Types: A, AAAA, NS, CNAME, MX",
+              "details": "A=IPv4, AAAA=IPv6, NS=Authoritative Server, CNAME=Canonical Alias, MX=Mail Server."
+            }
+          ]
+        },
+        {
+          "name": "1.5 Email Architecture: Push vs Pull Protocols",
+          "details": "\n                    <h3>Disambiguation: Push Protocol (SMTP) vs Pull Protocols (POP3/IMAP)</h3>\n                    <ul>\n                      <li><strong>SMTP (Push):</strong> Used by sending client to deposit mail at sender's mail server, and between mail servers over TCP port 25. Operates on 7-bit ASCII (MIME encodes binary attachments).</li>\n                      <li><strong>POP3 (Pull):</strong> Connects to mail server to retrieve messages. Typically download-and-delete. Stateless across sessions.</li>\n                      <li><strong>IMAP (Pull):</strong> Connects to mail server to manage messages in server folders. Stateful across sessions. Allows partial download of headers and attachments.</li>\n                      <li><strong>Webmail (HTTP/HTTPS):</strong> Browser uses HTTP to view and compose mail; the mail server still uses SMTP to deliver messages to destination mail servers.</li>\n                    </ul>\n                    ",
+          "children": [
+            {
+              "name": "SMTP (Push Protocol, Port 25)",
+              "details": "Pushes mail from client to sender server, and server-to-server. Requires 7-bit ASCII."
+            },
+            {
+              "name": "POP3 vs IMAP (Pull Protocols)",
+              "details": "POP3 downloads and is stateless; IMAP preserves folder hierarchy and is stateful across sessions."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Transport Layer Foundations & Demultiplexing",
+      "domain_id": 2,
+      "details": "\n            <h3>Transport Layer Principles</h3>\n            <p>Provides logical end-to-end communication between application processes on different hosts.</p>\n            <p><strong>Fundamental Problem:</strong> How to take packets delivered host-to-host by IP and route them to the exact executing process socket.</p>\n            ",
+      "children": [
+        {
+          "name": "2.1 Transport Layer vs Network Layer",
+          "details": "\n                    <h3>Disambiguation: Transport Layer vs Network Layer</h3>\n                    <table style=\"width:100%; border-collapse:collapse; margin-top:8px; font-size:12px;\">\n                      <tr style=\"background:#1e293b; color:#38bdf8;\">\n                        <th style=\"padding:6px; border:1px solid #334155;\">Dimension</th>\n                        <th style=\"padding:6px; border:1px solid #334155;\">Transport Layer (L4)</th>\n                        <th style=\"padding:6px; border:1px solid #334155;\">Network Layer (L3)</th>\n                      </tr>\n                      <tr>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Communication Scope</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Process-to-Process</strong> (Socket-to-Socket)</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Host-to-Host</strong> (Machine-to-Machine)</td>\n                      </tr>\n                      <tr style=\"background:#0f172a;\">\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Addressing</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Port Numbers</strong> (16-bit, 0\u201365535)</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>IP Addresses</strong> (32-bit IPv4 / 128-bit IPv6)</td>\n                      </tr>\n                      <tr>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Implementation Location</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Strictly at <strong>End-Systems (Hosts)</strong> in the OS Kernel. Network core routers ignore L4 headers.</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Across <strong>Every Host and Core Router</strong> in the Internet.</td>\n                      </tr>\n                      <tr style=\"background:#0f172a;\">\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Service Capabilities</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Can enhance underlying service: converts unreliable IP into reliable, in-order byte stream (TCP).</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Best-effort datagram delivery. Packets can be lost, reordered, corrupted, or duplicated.</td>\n                      </tr>\n                    </table>\n                    ",
+          "children": [
+            {
+              "name": "Process-to-Process vs Host-to-Host",
+              "details": "Transport communicates between specific OS process sockets; Network communicates between physical network interfaces."
+            },
+            {
+              "name": "End-to-End Principle",
+              "details": "Intelligence and state are maintained solely at the end hosts; the network core routers remain simple packet forwarders."
+            }
+          ]
+        },
+        {
+          "name": "2.2 Multiplexing & Demux: 2-Tuple vs 4-Tuple",
+          "details": "\n                    <h3>Disambiguation: UDP 2-Tuple Demux vs TCP 4-Tuple Demux</h3>\n                    <table style=\"width:100%; border-collapse:collapse; margin-top:8px; font-size:12px;\">\n                      <tr style=\"background:#1e293b; color:#38bdf8;\">\n                        <th style=\"padding:6px; border:1px solid #334155;\">Protocol</th>\n                        <th style=\"padding:6px; border:1px solid #334155;\">Demultiplexing Key</th>\n                        <th style=\"padding:6px; border:1px solid #334155;\">Socket Mapping Behavior</th>\n                      </tr>\n                      <tr>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>UDP (Connectionless)</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>2-Tuple:</strong> <code>(Dest IP, Dest Port)</code></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Two UDP packets arriving from different source IPs or source ports with the same destination port are delivered to the <strong>exact same socket</strong>.</td>\n                      </tr>\n                      <tr style=\"background:#0f172a;\">\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>TCP (Connection-Oriented)</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>4-Tuple:</strong> <code>(Src IP, Src Port, Dest IP, Dest Port)</code></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Each unique client connection is directed to a <strong>separate dedicated socket</strong> spawned by the server (accept loop), even though all initial handshakes arrive at port 80/443.</td>\n                      </tr>\n                    </table>\n                    <p style=\"margin-top:8px;\"><strong>Port Number Space (16 bits):</strong> Well-Known (0\u20131023), Registered (1024\u201349151), Ephemeral/Private (49152\u201365535).</p>\n                    ",
+          "children": [
+            {
+              "name": "UDP 2-Tuple: (Dest IP, Dest Port)",
+              "details": "Shared socket for all senders targeting the destination port. Source IP/port are read inside the message payload."
+            },
+            {
+              "name": "TCP 4-Tuple: (Src IP, Src Port, Dest IP, Dest Port)",
+              "details": "Unique dedicated socket per active connection. Server accept() forks or binds a separate socket structure."
+            },
+            {
+              "name": "Port Classification (16-bit space)",
+              "details": "Well-known (0-1023), Registered (1024-49151), Dynamic/Ephemeral (49152-65535)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Reliable Data Transfer (RDT) Theory & Pipelining",
+      "domain_id": 3,
+      "details": "\n            <h3>Reliable Data Transfer (RDT) State Machines</h3>\n            <p>RDT models the progressive construction of reliability over channels that exhibit bit corruption, duplicate packet delivery, packet reordering, and complete packet loss.</p>\n            ",
+      "children": [
+        {
+          "name": "3.1 RDT Protocol Evolution (1.0 -> 3.0)",
+          "details": "\n                    <h3>Step-by-Step RDT State Machine Progression</h3>\n                    <ul>\n                      <li><strong>rdt 1.0:</strong> Completely reliable underlying channel. No bit errors, no losses. Trivial sender/receiver state machines.</li>\n                      <li><strong>rdt 2.0:</strong> Channel with bit corruption. Introduces <strong>Checksum</strong>, <strong>ACK</strong> (positive feedback), and <strong>NAK</strong> (negative feedback).\n                        <br><span style=\"color:#f87171;\">Fatal Flaw:</span> If the ACK/NAK packet itself gets corrupted, sender cannot know what receiver said!</li>\n                      <li><strong>rdt 2.1:</strong> Solves corrupted feedback by introducing a <strong>1-bit Sequence Number</strong> (0 and 1) in data packets. If ACK/NAK is corrupted, sender retransmits. Receiver detects duplicate sequence number, discards duplicate data, and re-ACKs.</li>\n                      <li><strong>rdt 2.2:</strong> <strong>NAK-Free Protocol.</strong> Replaces NAKs with duplicate ACKs. Receiver ACKs the last correctly received packet sequence number. An ACK for the previous packet serves as an implicit NAK for the current packet.</li>\n                      <li><strong>rdt 3.0:</strong> Channel with bit errors AND packet loss. Introduces a <strong>Countdown Timer</strong>. Sender retransmits packet on timer expiration. Handles packet loss, lost ACKs, and premature timeouts.</li>\n                    </ul>\n                    ",
+          "children": [
+            {
+              "name": "rdt 1.0: Flawless Channel",
+              "details": "Assumes underlying channel has zero packet loss and zero bit corruption. No ACKs, no timers."
+            },
+            {
+              "name": "rdt 2.0: Checksum & Fatal Feedback Flaw",
+              "details": "Introduces Checksums and ACK/NAK. Fatal flaw: sender cannot interpret a corrupted ACK/NAK packet."
+            },
+            {
+              "name": "rdt 2.1: 1-Bit Sequence Number",
+              "details": "Adds 1-bit sequence number (0 or 1). Sender retransmits on corrupted ACK; receiver discards duplicates."
+            },
+            {
+              "name": "rdt 2.2: NAK-Free Protocol",
+              "details": "Eliminates NAKs entirely by sending duplicate ACKs for the last good packet."
+            },
+            {
+              "name": "rdt 3.0: Countdown Timer for Packet Loss",
+              "details": "Adds countdown retransmission timer to recover from dropped packets, dropped ACKs, and network delay."
+            }
+          ]
+        },
+        {
+          "name": "3.2 Stop-and-Wait vs Pipelined Protocols",
+          "details": "\n                    <h3>Disambiguation: Stop-and-Wait vs Pipelined Utilization</h3>\n                    <p><strong>Stop-and-Wait Efficiency Formula:</strong></p>\n                    $$U_{\\text{sender}} = \\frac{L/R}{\\text{RTT} + L/R}$$\n                    <p><em>Example:</em> 1 Gbps link ($R = 10^9\\text{ bps}$), 30 ms RTT ($0.03\\text{ s}$), 1 KB packet ($L = 8000\\text{ bits}$).</p>\n                    <p>Transmission delay $t_{\\text{trans}} = 8000 / 10^9 = 8\\,\\mu\\text{s}$.</p>\n                    $$U_{\\text{sender}} = \\frac{0.000008}{0.03 + 0.000008} \\approx 0.00027 \\quad (0.027\\%!)$$\n                    <p>The link is idle 99.97% of the time! Pipelining solves this by allowing $N$ in-flight packets:</p>\n                    $$U_{\\text{pipelined}} = \\frac{N \\times (L/R)}{\\text{RTT} + L/R}$$\n                    <p>Choosing $N = \\lceil (\\text{RTT} \\times R) / L \\rceil$ yields 100% link utilization.</p>\n                    ",
+          "children": [
+            {
+              "name": "Stop-and-Wait: <0.1% Link Utilization",
+              "details": "Sender must wait a full RTT for ACK before sending next segment, leaving link idle 99.9% of the time."
+            },
+            {
+              "name": "Pipelined Utilization: N * (L/R) / RTT",
+              "details": "Keeps the pipeline full with N in-flight unacknowledged packets. 100% utilization when N >= Bandwidth-Delay Product."
+            }
+          ]
+        },
+        {
+          "name": "3.3 Go-Back-N (GBN) vs Selective Repeat (SR)",
+          "details": "\n                    <h3>Deep Disambiguation: Go-Back-N vs Selective Repeat</h3>\n                    <table style=\"width:100%; border-collapse:collapse; margin-top:8px; font-size:12px;\">\n                      <tr style=\"background:#1e293b; color:#38bdf8;\">\n                        <th style=\"padding:6px; border:1px solid #334155;\">Dimension</th>\n                        <th style=\"padding:6px; border:1px solid #334155;\">Go-Back-N (GBN)</th>\n                        <th style=\"padding:6px; border:1px solid #334155;\">Selective Repeat (SR)</th>\n                      </tr>\n                      <tr>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Acknowledgment Type</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Cumulative ACK:</strong> <code>ACK(n)</code> acknowledges all packets up to and including $n$.</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Individual ACK:</strong> <code>ACK(n)</code> acknowledges only packet $n$.</td>\n                      </tr>\n                      <tr style=\"background:#0f172a;\">\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Sender Timers</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Single timer</strong> for the oldest unacknowledged packet (<code>base</code>).</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Independent timer</strong> for each unacknowledged packet.</td>\n                      </tr>\n                      <tr>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Receiver Buffering</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>No buffering.</strong> Out-of-order packets are discarded immediately. Re-ACKs highest in-order packet.</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Buffers out-of-order packets</strong> until missing gaps are filled, then delivers batch to application.</td>\n                      </tr>\n                      <tr style=\"background:#0f172a;\">\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Retransmission Cost</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Retransmits <strong>ALL $N$ packets</strong> in window on timeout (wasteful over lossy links).</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Retransmits <strong>only the specific lost packet</strong>.</td>\n                      </tr>\n                      <tr>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Window Size Constraint</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">$N \\le 2^k - 1$</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>$N \\le 2^{k-1}$</strong> (Window size cannot exceed half sequence space to prevent ambiguity between old duplicates and new packets).</td>\n                      </tr>\n                    </table>\n                    ",
+          "children": [
+            {
+              "name": "GBN: Cumulative ACK & 1 Timer",
+              "details": "Receiver discards all out-of-order packets. Single timer for base. Retransmits entire window on timeout."
+            },
+            {
+              "name": "SR: Individual ACKs & Buffer",
+              "details": "Receiver buffers out-of-order packets. Per-packet timers. Retransmits only lost packets."
+            },
+            {
+              "name": "Window Size Rule: N <= 2^(k-1)",
+              "details": "In SR, window size cannot exceed half the sequence space to avoid ambiguity between old and new packets."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Transmission Control Protocol (TCP) Architecture",
+      "domain_id": 4,
+      "details": "\n            <h3>TCP Architecture & Protocol State Machines (RFC 793, 1122, 5681)</h3>\n            <p>TCP provides connection-oriented, full-duplex, reliable byte-stream delivery with end-to-end flow control and network-wide congestion control.</p>\n            ",
+      "children": [
+        {
+          "name": "4.1 TCP Header Layout & Semantics (20-60 Bytes)",
+          "details": "\n                    <h3>TCP Header Structure & Field Semantics (Slide 216 Diagram)</h3>\n                    <ul>\n                      <li><strong>Source & Destination Ports (16 bits each):</strong> Process demultiplexing endpoints.</li>\n                      <li><strong>Sequence Number (32 bits):</strong> The byte-stream index of the first data byte in this segment. Under ISN (Initial Sequence Number), randomly generated to prevent cross-connection collision.</li>\n                      <li><strong>Acknowledgment Number (32 bits):</strong> The next byte number the receiver expects to receive. Cumulative in TCP.</li>\n                      <li><strong>HLEN (4 bits):</strong> Number of 32-bit words in header (minimum 5 = 20 bytes, maximum 15 = 60 bytes).</li>\n                      <li><strong>Flags (6 bits):</strong>\n                        <ul>\n                          <li><code>URG</code>: Urgent pointer valid.</li>\n                          <li><code>ACK</code>: Acknowledgment field valid (set in all segments after initial SYN).</li>\n                          <li><code>PSH</code>: Receiver should push data to app immediately without waiting for buffer to fill.</li>\n                          <li><code>RST</code>: Abruptly reset/refuse the connection.</li>\n                          <li><code>SYN</code>: Synchronize sequence numbers during connection establishment.</li>\n                          <li><code>FIN</code>: Sender has finished transmitting data (closes one direction of full-duplex stream).</li>\n                        </ul>\n                      </li>\n                      <li><strong>Window Size (16 bits):</strong> Advertised receive window (<code>rwnd</code>) in bytes for flow control. Multiplied by Window Scale Option (RFC 7323) up to $2^{30}$ bytes.</li>\n                      <li><strong>Checksum (16 bits):</strong> 1's complement sum over header, data, and 12-byte IP pseudo-header (Source IP, Dest IP, Protocol 6, TCP Length).</li>\n                      <li><strong>Options (0 \u2013 40 bytes):</strong> MSS (Maximum Segment Size), SACK (Selective Acknowledgment), Timestamps.</li>\n                    </ul>\n                    ",
+          "children": [
+            {
+              "name": "6 Control Flags (URG, ACK, PSH, RST, SYN, FIN)",
+              "details": "SYN starts, FIN cleanly ends, RST abruptly resets, ACK confirms bytes, PSH bypasses buffer, URG points to urgent data."
+            },
+            {
+              "name": "Sequence & Ack Numbers (Byte Stream)",
+              "details": "Counts bytes, not packets. ACK indicates the next expected byte."
+            },
+            {
+              "name": "Window Size & Options (MSS, SACK, Scale)",
+              "details": "16-bit rwnd for flow control. Window scale option shifts up to 1GB. SACK reports received non-contiguous blocks."
+            }
+          ]
+        },
+        {
+          "name": "4.2 Three-Way Handshake & SYN Floods",
+          "details": "\n                    <h3>Connection Establishment & Attack Vector Disambiguation</h3>\n                    <p><strong>Three-Way Handshake:</strong></p>\n                    <ol>\n                      <li><strong>Client -> Server:</strong> <code>SYN=1, seq=client_isn</code> (No data payload).</li>\n                      <li><strong>Server -> Client:</strong> <code>SYN=1, ACK=1, seq=server_isn, ack=client_isn + 1</code>. Server allocates TCB (Transmission Control Block) and buffers.</li>\n                      <li><strong>Client -> Server:</strong> <code>ACK=1, seq=client_isn + 1, ack=server_isn + 1</code>. May carry first application data bytes!</li>\n                    </ol>\n                    <p><strong>SYN Flood Attack vs SYN Cookies Defense:</strong></p>\n                    <ul>\n                      <li><strong>SYN Flood:</strong> Attacker transmits flood of SYNs with spoofed source IPs and never completes Step 3. Server connection queue fills with half-open connections, refusing legitimate users.</li>\n                      <li><strong>SYN Cookies (Defense):</strong> Server <em>allocates zero memory</em> on receiving SYN. It crafts <code>server_isn</code> using a cryptographic hash:\n                        $$server\\_isn = \\text{Hash}(src\\_ip, src\\_port, dst\\_ip, dst\\_port, \\text{secret}) + \\text{timestamp}$$\n                        When legitimate client sends ACK with <code>ack = server_isn + 1</code>, server verifies hash and only then allocates socket memory!</li>\n                    </ul>\n                    ",
+          "children": [
+            {
+              "name": "3-Way Handshake Sequence",
+              "details": "Client SYN -> Server SYN-ACK (allocates state) -> Client ACK (completes connection)."
+            },
+            {
+              "name": "SYN Flood Attack",
+              "details": "Spoofed SYNs overwhelm server's half-open connection table, denying service to legitimate clients."
+            },
+            {
+              "name": "SYN Cookies Defense",
+              "details": "Server allocates zero state upon SYN, encoding state into ISN hash; verifies upon final ACK."
+            }
+          ]
+        },
+        {
+          "name": "4.3 Connection Teardown & TIME_WAIT (2MSL)",
+          "details": "\n                    <h3>Connection Teardown & Why TIME_WAIT is Essential</h3>\n                    <p>TCP is full-duplex, so each direction must be closed independently:</p>\n                    <ol>\n                      <li>Client sends <code>FIN=1, seq=u</code> -> Enters <code>FIN_WAIT_1</code>.</li>\n                      <li>Server sends <code>ACK=1, ack=u+1</code> -> Client enters <code>FIN_WAIT_2</code>. Server enters <code>CLOSE_WAIT</code> (server can still send remaining data).</li>\n                      <li>Server finishes data, sends <code>FIN=1, seq=w</code> -> Server enters <code>LAST_ACK</code>.</li>\n                      <li>Client sends <code>ACK=1, ack=w+1</code> -> Client enters <strong>TIME_WAIT</strong> for $2 \\times \\text{MSL}$. Server receives ACK and enters <code>CLOSED</code>.</li>\n                    </ol>\n                    <p><strong>Why is TIME_WAIT Necessary? (Two Reasons):</strong></p>\n                    <ul>\n                      <li><strong>Reason 1 (Reliable Termination):</strong> If Client's final ACK is lost, Server retransmits FIN. If Client had already closed immediately, it would respond with <code>RST</code>, causing an error on Server rather than a clean close.</li>\n                      <li><strong>Reason 2 (Old Packet Drain):</strong> Prevents old wandering duplicate segments from a prior connection incarnation from being mistakenly delivered to a new connection reusing the same 4-tuple. MSL is Maximum Segment Lifetime (typically 30\u201360s; $2\\text{MSL} = 1\\text{\u2013}2\\text{ min}$).</li>\n                    </ul>\n                    ",
+          "children": [
+            {
+              "name": "4-Way FIN/ACK Teardown",
+              "details": "Each direction closes independently. FIN -> ACK -> FIN -> ACK."
+            },
+            {
+              "name": "TIME_WAIT State & 2MSL Quarantine",
+              "details": "Client waits 2MSL (60-120s) to re-ACK if final ACK was lost, and to flush old duplicate packets from network."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Flow Control & Buffer Management",
+      "domain_id": 5,
+      "details": "\n            <h3>Flow Control Architecture</h3>\n            <p><strong>Definition:</strong> An end-to-end speed matching mechanism that prevents a fast sender from overflowing the receiver's application buffer.</p>\n            <p><strong>Governing Equation:</strong> $\\text{rwnd} = \\text{RcvBuffer} - [\\text{LastByteRcvd} - \\text{LastByteRead}]$.</p>\n            ",
+      "children": [
+        {
+          "name": "5.1 Sliding Window Dynamics & Zero-Window Probes",
+          "details": "\n                    <h3>Sliding Window Transitions (Slide 250 Diagram)</h3>\n                    <ul>\n                      <li><strong>Closing Window:</strong> Left edge advances right as bytes are sent and acknowledged.</li>\n                      <li><strong>Opening Window:</strong> Right edge advances right as receiver application reads data from buffer, expanding <code>rwnd</code>.</li>\n                      <li><strong>Shrinking Window:</strong> Right edge moves left (strongly discouraged by RFC 1122).</li>\n                      <li><strong>Zero-Window Deadlock Problem:</strong> If receiver advertises <code>rwnd = 0</code>, sender stops transmitting. Later, receiver's app reads data and receiver sends an ACK with <code>rwnd > 0</code>. <em>If this ACK is lost, both sides wait forever (Deadlock)!</em></li>\n                      <li><strong>Persistence Timer Solution:</strong> When <code>rwnd = 0</code>, sender starts a Persistence Timer. On expiry, sender sends a <strong>1-byte Probe Segment</strong>. The receiver must ACK this probe, re-advertising the current <code>rwnd</code> and breaking the deadlock.</li>\n                    </ul>\n                    ",
+          "children": [
+            {
+              "name": "Sliding Window Edges (Open, Close, Shrink)",
+              "details": "Left edge closes on ACKs; right edge opens as receiver application reads data."
+            },
+            {
+              "name": "Zero-Window Probes & Persistence Timer",
+              "details": "1-byte probe segment sent periodically when rwnd=0 to prevent deadlock from lost window update ACKs."
+            }
+          ]
+        },
+        {
+          "name": "5.2 Silly Window Syndrome: Nagle vs Clark",
+          "details": "\n                    <h3>Disambiguation: Sender-Side vs Receiver-Side Silly Window Syndrome</h3>\n                    <p><strong>The Pathology:</strong> Tiny packets (e.g. 1-byte data + 40-byte TCP/IP header = 41-byte packet with 2.4% efficiency!) flood the network.</p>\n                    <table style=\"width:100%; border-collapse:collapse; margin-top:8px; font-size:12px;\">\n                      <tr style=\"background:#1e293b; color:#38bdf8;\">\n                        <th style=\"padding:6px; border:1px solid #334155;\">Entity</th>\n                        <th style=\"padding:6px; border:1px solid #334155;\">Problem Cause</th>\n                        <th style=\"padding:6px; border:1px solid #334155;\">RFC Solution</th>\n                      </tr>\n                      <tr>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Sender Side</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Application generates data 1 byte at a time (e.g. Telnet keystrokes) and immediately transmits.</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Nagle's Algorithm (RFC 896):</strong> If data $\\ge \\text{MSS}$, send immediately. Otherwise, send only if all previous packets have been acknowledged. While waiting for ACK, buffer incoming bytes.</td>\n                      </tr>\n                      <tr style=\"background:#0f172a;\">\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Receiver Side</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Application reads data 1 byte at a time from full buffer, immediately advertising <code>rwnd = 1</code> to sender.</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Clark's Solution (RFC 813):</strong> Do not advertise a window update until the receiver buffer has space for at least <strong>$\\min(\\text{MSS}, \\text{Buffer}/2)$</strong>. Otherwise, keep advertising <code>rwnd = 0</code>.</td>\n                      </tr>\n                    </table>\n                    ",
+          "children": [
+            {
+              "name": "Nagle's Algorithm (Sender-Side Solution)",
+              "details": "Buffers tiny writes until full MSS is assembled OR previous packet ACK has arrived."
+            },
+            {
+              "name": "Clark's Solution (Receiver-Side Solution)",
+              "details": "Advertises rwnd=0 until buffer can accommodate at least min(MSS, Buffer/2)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Congestion Control & Algorithmic Regimes",
+      "domain_id": 6,
+      "details": "\n            <h3>TCP Congestion Control Engineering</h3>\n            <p>Prevents sender from injecting more traffic than intermediate network routers can handle. Governed by $W = \\min(\\text{cwnd}, \\text{rwnd})$.</p>\n            ",
+      "children": [
+        {
+          "name": "6.1 Flow Control vs Congestion Control Disambiguation",
+          "details": "\n                    <h3>Core Disambiguation: Flow Control vs Congestion Control</h3>\n                    <table style=\"width:100%; border-collapse:collapse; margin-top:8px; font-size:12px;\">\n                      <tr style=\"background:#1e293b; color:#38bdf8;\">\n                        <th style=\"padding:6px; border:1px solid #334155;\">Metric</th>\n                        <th style=\"padding:6px; border:1px solid #334155;\">Flow Control</th>\n                        <th style=\"padding:6px; border:1px solid #334155;\">Congestion Control</th>\n                      </tr>\n                      <tr>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Objective</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Protect the <strong>Receiver's application buffer</strong> from overflow.</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Protect the <strong>Subnet routers & links</strong> from packet drops.</td>\n                      </tr>\n                      <tr style=\"background:#0f172a;\">\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Controlling Variable</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><code>rwnd</code> (Receiver Window, advertised explicitly in TCP header).</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><code>cwnd</code> (Congestion Window, maintained locally by sender).</td>\n                      </tr>\n                      <tr>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Feedback Mechanism</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Direct, explicit (Receiver writes window value in header).</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Implicit (packet loss, timeouts, duplicate ACKs) or explicit (ECN).</td>\n                      </tr>\n                    </table>\n                    ",
+          "children": [
+            {
+              "name": "Receiver Buffer vs Router Buffer",
+              "details": "Flow control protects the destination host buffer; congestion control protects shared intermediate routers."
+            },
+            {
+              "name": "rwnd vs cwnd Interaction",
+              "details": "Effective transmission window W = min(cwnd, rwnd). Minimum bottleneck constraint always wins."
+            }
+          ]
+        },
+        {
+          "name": "6.2 AIMD: Additive Increase / Multiplicative Decrease",
+          "details": "\n                    <h3>AIMD: Stability & Fairness Proof</h3>\n                    <ul>\n                      <li><strong>Additive Increase:</strong> Probing for spare capacity. Increase <code>cwnd</code> by 1 MSS per RTT:\n                        $$\\text{cwnd} = \\text{cwnd} + \\frac{\\text{MSS} \\times \\text{MSS}}{\\text{cwnd}} \\quad \\text{on each ACK}$$\n                      </li>\n                      <li><strong>Multiplicative Decrease:</strong> Reacting to congestion. Cut <code>cwnd</code> in half on packet drop:\n                        $$\\text{cwnd} = \\text{cwnd} / 2$$\n                      </li>\n                      <li><strong>Why AIMD? (Chiu & Jain Vector Space Proof):</strong> AIMD drives competing flows along the efficiency line toward the 45-degree <strong>Equal Share (Fairness) line</strong>. AI shifts parallel to fairness line; MD points directly toward the origin, converging to fairness!</li>\n                    </ul>\n                    ",
+          "children": [
+            {
+              "name": "Additive Increase (+1 MSS / RTT)",
+              "details": "Increases cwnd linearly to probe bandwidth without causing sudden packet drops."
+            },
+            {
+              "name": "Multiplicative Decrease (Halve cwnd)",
+              "details": "Cuts rate immediately by 50% to rapidly drain overwhelmed router queues."
+            },
+            {
+              "name": "Chiu-Jain Fairness Convergence",
+              "details": "Proves vector trajectory converges to optimal bandwidth allocation and fairness across flows."
+            }
+          ]
+        },
+        {
+          "name": "6.3 Congestion Phases: Slow Start vs Avoidance",
+          "details": "\n                    <h3>Congestion Phases & Fast Retransmit (Slide 270 Diagram)</h3>\n                    <ul>\n                      <li><strong>Slow Start:</strong> Initial phase. <code>cwnd = 1 MSS</code>. Doubles every RTT ($1 \\to 2 \\to 4 \\to 8 \\dots$). Increases by 1 MSS on <em>every incoming ACK</em>. Continues until <code>cwnd >= ssthresh</code>.</li>\n                      <li><strong>Congestion Avoidance:</strong> Linear growth (+1 MSS per RTT). Begins when <code>cwnd >= ssthresh</code>.</li>\n                      <li><strong>Fast Retransmit:</strong> Upon receiving <strong>3 Duplicate ACKs</strong> (4 identical ACKs total), sender infers packet loss immediately <em>without waiting for timer expiration</em>, and retransmits missing segment.</li>\n                    </ul>\n                    ",
+          "children": [
+            {
+              "name": "Slow Start (Exponential cwnd Doubling)",
+              "details": "Doubles cwnd every RTT to quickly ramp up transmission to pipe capacity."
+            },
+            {
+              "name": "Congestion Avoidance (Linear AIMD)",
+              "details": "Increases cwnd by 1 MSS per RTT once ssthresh is crossed."
+            },
+            {
+              "name": "Fast Retransmit (3 Duplicate ACKs)",
+              "details": "Infer single packet loss early from 3 duplicate ACKs; retransmits without waiting for RTO timeout."
+            }
+          ]
+        },
+        {
+          "name": "6.4 TCP Tahoe vs Reno vs NewReno Disambiguation",
+          "details": "\n                    <h3>Evolution of TCP Congestion Control Algorithms</h3>\n                    <table style=\"width:100%; border-collapse:collapse; margin-top:8px; font-size:12px;\">\n                      <tr style=\"background:#1e293b; color:#38bdf8;\">\n                        <th style=\"padding:6px; border:1px solid #334155;\">Algorithm</th>\n                        <th style=\"padding:6px; border:1px solid #334155;\">Reaction to Timeout</th>\n                        <th style=\"padding:6px; border:1px solid #334155;\">Reaction to 3 Duplicate ACKs</th>\n                      </tr>\n                      <tr>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>TCP Tahoe (1988)</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><code>ssthresh = cwnd/2</code><br><code>cwnd = 1 MSS</code><br>Enter Slow Start</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Same as timeout:</strong><br><code>ssthresh = cwnd/2</code><br><code>cwnd = 1 MSS</code><br>Enter Slow Start (Harsh penalty)</td>\n                      </tr>\n                      <tr style=\"background:#0f172a;\">\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>TCP Reno (1990)</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><code>ssthresh = cwnd/2</code><br><code>cwnd = 1 MSS</code><br>Enter Slow Start</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Fast Recovery:</strong><br><code>ssthresh = cwnd/2</code><br><code>cwnd = ssthresh + 3 MSS</code><br>Skips Slow Start! Stays in Congestion Avoidance.</td>\n                      </tr>\n                      <tr>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>TCP NewReno (1999)</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><code>ssthresh = cwnd/2</code><br><code>cwnd = 1 MSS</code><br>Enter Slow Start</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Handles Multiple Drops:</strong> Remains in Fast Recovery upon receiving <em>Partial ACKs</em>, retransmitting subsequent lost packets without waiting for timeout.</td>\n                      </tr>\n                    </table>\n                    ",
+          "children": [
+            {
+              "name": "Tahoe: Drops cwnd to 1 MSS on any loss",
+              "details": "Always resets to cwnd=1 and slow starts, severely punishing throughput on isolated drops."
+            },
+            {
+              "name": "Reno: Fast Recovery (Halves cwnd)",
+              "details": "On 3 dup ACKs, cuts cwnd to ssthresh and maintains data clocking in Fast Recovery."
+            },
+            {
+              "name": "NewReno: Partial ACKs in Fast Recovery",
+              "details": "Tracks full and partial ACKs during Fast Recovery to repair multiple lost packets in one RTT."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "7. RTT Estimation & Timer Engineering",
+      "domain_id": 7,
+      "details": "\n            <h3>TCP Round-Trip Time & Timer Mechanics</h3>\n            <p>Accurate RTT calculation is vital. Setting RTO too short causes unnecessary duplicate transmissions; setting RTO too long causes slow recovery.</p>\n            ",
+      "children": [
+        {
+          "name": "7.1 Jacobson's Adaptive EWMA Algorithm",
+          "details": "\n                    <h3>Jacobson's RTT & Deviation Estimator (RFC 6298)</h3>\n                    <p>Calculates moving average and variance to dynamically adapt to network jitter:</p>\n                    <ol>\n                      <li><strong>EstimatedRTT (EWMA):</strong>\n                        $$\\text{EstimatedRTT} = (1 - \\alpha) \\times \\text{EstimatedRTT} + \\alpha \\times \\text{SampleRTT}$$\n                        <em>Recommended value:</em> $\\alpha = 0.125$ ($1/8$).\n                      </li>\n                      <li><strong>DevRTT (Mean Absolute Deviation):</strong>\n                        $$\\text{DevRTT} = (1 - \\beta) \\times \\text{DevRTT} + \\beta \\times |\\text{SampleRTT} - \\text{EstimatedRTT}|$$\n                        <em>Recommended value:</em> $\\beta = 0.25$ ($1/4$).\n                      </li>\n                      <li><strong>TimeoutInterval (RTO):</strong>\n                        $$\\text{TimeoutInterval} = \\text{EstimatedRTT} + 4 \\times \\text{DevRTT}$$\n                      </li>\n                    </ol>\n                    <p><em>Safety Margin:</em> The $4 \\times \\text{DevRTT}$ margin prevents spurious timeouts during temporary packet delay spikes.</p>\n                    ",
+          "children": [
+            {
+              "name": "EstimatedRTT (alpha = 0.125)",
+              "details": "Exponentially Weighted Moving Average filters out transient RTT fluctuations."
+            },
+            {
+              "name": "DevRTT (beta = 0.25)",
+              "details": "Tracks dispersion / jitter in round trip times."
+            },
+            {
+              "name": "RTO = EstimatedRTT + 4 * DevRTT",
+              "details": "Dynamic safety margin; scales automatically with network variance."
+            }
+          ]
+        },
+        {
+          "name": "7.2 Karn's Algorithm (Retransmission Ambiguity)",
+          "details": "\n                    <h3>Disambiguation: The Retransmission Ambiguity Flaw (Slide 320 Diagram)</h3>\n                    <p><strong>The Flaw:</strong> If a packet is retransmitted after timeout, and an ACK arrives:</p>\n                    <ul>\n                      <li>Did the ACK acknowledge the <strong>1st transmission</strong> (delayed) or the <strong>2nd transmission</strong> (retransmitted)?</li>\n                      <li>If sender assumes 1st: SampleRTT is huge and false!</li>\n                      <li>If sender assumes 2nd: SampleRTT is artificially tiny!</li>\n                    </ul>\n                    <p><strong>Karn's Two Rules:</strong></p>\n                    <ol>\n                      <li><strong>Rule 1:</strong> Do NOT update EstimatedRTT or DevRTT using SampleRTT measured on retransmitted segments.</li>\n                      <li><strong>Rule 2 (Exponential Backoff):</strong> Upon every retransmission timeout, double the RTO:\n                        $$RTO_{\\text{new}} = 2 \\times RTO_{\\text{old}}$$\n                        Once an ACK arrives for an un-retransmitted segment, normal Jacobson calculation resumes.\n                      </li>\n                    </ol>\n                    ",
+          "children": [
+            {
+              "name": "Retransmission Ambiguity Flaw",
+              "details": "Inability to determine if an ACK corresponds to the original or retransmitted segment."
+            },
+            {
+              "name": "Karn's Solution: Discard Sample & Double RTO",
+              "details": "Never measure SampleRTT on retransmissions; back off timer exponentially (2x RTO) on timeout."
+            }
+          ]
+        },
+        {
+          "name": "7.3 The 4 Essential TCP Timers",
+          "details": "\n                    <h3>The 4 Essential TCP Timers & Operating Scenarios</h3>\n                    <ul>\n                      <li><strong>1. Retransmission Timer (RTO):</strong> Detects lost segments. Backs off exponentially on repeated loss.</li>\n                      <li><strong>2. Persistence Timer:</strong> Prevents zero-window deadlock when receiver ACK update is lost. Sends 1-byte probes.</li>\n                      <li><strong>3. Keepalive Timer:</strong> Detects dead clients in established connections. Default: 2 hours idle -> 10 probes at 75s intervals -> reset connection if no reply.</li>\n                      <li><strong>4. TIME_WAIT Timer:</strong> Runs for $2 \\times \\text{MSL}$ (60\u2013120s) after active close to drain old packets and guarantee final ACK reception.</li>\n                    </ul>\n                    ",
+          "children": [
+            {
+              "name": "Retransmission Timer (RTO)",
+              "details": "Recovers from lost segments. Backs off exponentially upon retransmissions."
+            },
+            {
+              "name": "Persistence Timer",
+              "details": "Probes zero-window condition to break deadlocks."
+            },
+            {
+              "name": "Keepalive Timer (2 Hours)",
+              "details": "Cleans up orphaned connections where client crashed without sending FIN."
+            },
+            {
+              "name": "TIME_WAIT Timer (2MSL)",
+              "details": "Quarantines socket pair for 2MSL to prevent ghost packet collisions."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "8. User Datagram Protocol (UDP) & Connectionless Transport",
+      "domain_id": 8,
+      "details": "\n            <h3>UDP Architecture & Minimal Transport Abstraction (RFC 768)</h3>\n            <p>UDP provides bare-bones, connectionless multiplexing and integrity check over IP.</p>\n            ",
+      "children": [
+        {
+          "name": "8.1 TCP vs UDP Deep Disambiguation",
+          "details": "\n                    <h3>Deep Architectural Disambiguation: TCP vs UDP</h3>\n                    <table style=\"width:100%; border-collapse:collapse; margin-top:8px; font-size:12px;\">\n                      <tr style=\"background:#1e293b; color:#38bdf8;\">\n                        <th style=\"padding:6px; border:1px solid #334155;\">Property</th>\n                        <th style=\"padding:6px; border:1px solid #334155;\">TCP</th>\n                        <th style=\"padding:6px; border:1px solid #334155;\">UDP</th>\n                      </tr>\n                      <tr>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Connection State</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Connection-oriented (3-way handshake, state maintained in TCB).</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Connectionless (zero setup latency, stateless).</td>\n                      </tr>\n                      <tr style=\"background:#0f172a;\">\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Reliability</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Reliable, in-order byte stream. Retransmits missing bytes.</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Unreliable datagrams. Packets may be lost, duplicated, or reordered.</td>\n                      </tr>\n                      <tr>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Header Overhead</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">20 \u2013 60 Bytes</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>8 Bytes</strong> fixed</td>\n                      </tr>\n                      <tr style=\"background:#0f172a;\">\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Congestion Control</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Throttles transmission rate during network congestion.</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">No throttling. Sends at application rate (ideal for real-time audio/video and DNS).</td>\n                      </tr>\n                    </table>\n                    ",
+          "children": [
+            {
+              "name": "Stateless vs Stateful TCB",
+              "details": "UDP holds no connection context; TCP allocates ~10-20KB buffers and control blocks per socket."
+            },
+            {
+              "name": "Unregulated Sending Rate",
+              "details": "UDP transmits as fast as the application generates data, without AIMD rate reduction."
+            }
+          ]
+        },
+        {
+          "name": "8.2 UDP 8-Byte Header & Checksum Architecture",
+          "details": "\n                    <h3>UDP Header Fields & 1's Complement Checksum</h3>\n                    <ul>\n                      <li><strong>8-Byte Header:</strong>\n                        <ol>\n                          <li>Source Port (16 bits) - Optional, 0 if unused.</li>\n                          <li>Destination Port (16 bits) - Mandatory for demux.</li>\n                          <li>Length (16 bits) - Total bytes of UDP header + data (minimum 8).</li>\n                          <li>Checksum (16 bits) - Error detection over pseudo-header + header + data.</li>\n                        </ol>\n                      </li>\n                      <li><strong>Pseudo-Header Inclusion:</strong> Checksum includes 12 bytes from IP header (Source IP, Dest IP, 0x00, Protocol 17, UDP Length). Prevents misrouted packets from being accepted by wrong host!</li>\n                    </ul>\n                    ",
+          "children": [
+            {
+              "name": "8-Byte Header Layout",
+              "details": "Source Port (2B), Destination Port (2B), Length (2B), Checksum (2B)."
+            },
+            {
+              "name": "Pseudo-Header & 1's Complement Sum",
+              "details": "Calculates checksum over IP endpoints to catch misrouted packets."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "9. Transport Layer Security (TLS/SSL) & Cryptography",
+      "domain_id": 9,
+      "details": "\n            <h3>Transport Layer Security Architecture</h3>\n            <p>TLS secures transport layer communication by providing Confidentiality (Symmetric Encryption), Integrity (HMAC), and Endpoint Authentication (X.509 Certificates / Asymmetric Key Cryptography).</p>\n            ",
+      "children": [
+        {
+          "name": "9.1 The 4-Phase TLS Handshake (Slide 359 Diagram)",
+          "details": "\n                    <h3>The 4-Phase TLS Handshake Progression</h3>\n                    <ol>\n                      <li><strong>Phase 1: Establish Security Capabilities:</strong>\n                        <ul>\n                          <li><code>ClientHello</code>: Supported cipher suites, client random ($R_c$), TLS version.</li>\n                          <li><code>ServerHello</code>: Chosen cipher suite, server random ($R_s$), Session ID.</li>\n                        </ul>\n                      </li>\n                      <li><strong>Phase 2: Server Authentication & Key Exchange:</strong>\n                        <ul>\n                          <li><code>Certificate</code>: Server's X.509 public key certificate signed by CA.</li>\n                          <li><code>ServerKeyExchange</code>: Diffie-Hellman parameters (if ephemeral DH used).</li>\n                          <li><code>ServerHelloDone</code>: Signals end of server negotiation messages.</li>\n                        </ul>\n                      </li>\n                      <li><strong>Phase 3: Client Authentication & Key Exchange:</strong>\n                        <ul>\n                          <li><code>ClientKeyExchange</code>: Client sends <strong>Pre-Master Secret (PMS)</strong> encrypted with Server's RSA public key (or Client DH share).</li>\n                        </ul>\n                      </li>\n                      <li><strong>Phase 4: Cipher Activation & Finish:</strong>\n                        <ul>\n                          <li><code>ChangeCipherSpec</code>: Both sides activate negotiated cryptographic algorithms.</li>\n                          <li><code>Finished</code>: First encrypted message containing HMAC over all prior handshake messages to prevent tampering / downgrade attacks.</li>\n                        </ul>\n                      </li>\n                    </ol>\n                    ",
+          "children": [
+            {
+              "name": "Phase 1: Security Capabilities",
+              "details": "ClientHello & ServerHello negotiate cipher suite and exchange random nonces Rc, Rs."
+            },
+            {
+              "name": "Phase 2: Server Auth & Key Exchange",
+              "details": "Server presents X.509 certificate and optional Diffie-Hellman parameters."
+            },
+            {
+              "name": "Phase 3: Client Key Exchange",
+              "details": "Client generates and transmits 48-byte Pre-Master Secret encrypted under server's public key."
+            },
+            {
+              "name": "Phase 4: Finished & Cipher Activation",
+              "details": "ChangeCipherSpec activates encryption; Finished validates handshake integrity via HMAC."
+            }
+          ]
+        },
+        {
+          "name": "9.2 Key Derivation Hierarchy",
+          "details": "\n                    <h3>Master Secret & 4 Session Keys Derivation</h3>\n                    <p>Both client and server independently compute the 48-byte Master Secret using the Pseudo-Random Function (PRF):</p>\n                    $$\\text{Master Secret} = \\text{PRF}(\\text{Pre-Master Secret}, \\text{\"master secret\"}, R_c + R_s)$$\n                    <p>The Master Secret is expanded into a key block sliced into <strong>4 distinct operational keys</strong>:</p>\n                    <ol>\n                      <li><code>Client Write MAC Key</code>: Client integrity generation; Server integrity verification.</li>\n                      <li><code>Server Write MAC Key</code>: Server integrity generation; Client integrity verification.</li>\n                      <li><code>Client Write Encryption Key</code>: Client data encryption; Server decryption.</li>\n                      <li><code>Server Write Encryption Key</code>: Server data encryption; Client decryption.</li>\n                    </ol>\n                    ",
+          "children": [
+            {
+              "name": "Pre-Master Secret -> 48-Byte Master Secret",
+              "details": "Calculated via PRF over Pre-Master Secret and random nonces Rc, Rs."
+            },
+            {
+              "name": "4 Sliced Operational Keys",
+              "details": "Client/Server Write MAC keys (integrity) and Client/Server Write Encryption keys (confidentiality)."
+            }
+          ]
+        },
+        {
+          "name": "9.3 TLS 1.2 vs TLS 1.3 Disambiguation (Slide 366 Diagram)",
+          "details": "\n                    <h3>Disambiguation: TLS 1.2 vs TLS 1.3 Architecture</h3>\n                    <table style=\"width:100%; border-collapse:collapse; margin-top:8px; font-size:12px;\">\n                      <tr style=\"background:#1e293b; color:#38bdf8;\">\n                        <th style=\"padding:6px; border:1px solid #334155;\">Metric</th>\n                        <th style=\"padding:6px; border:1px solid #334155;\">TLS 1.2 (RFC 5246)</th>\n                        <th style=\"padding:6px; border:1px solid #334155;\">TLS 1.3 (RFC 8446)</th>\n                      </tr>\n                      <tr>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Handshake Latency</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>2 RTT</strong> (after TCP handshake)</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>1 RTT</strong> (0-RTT with PSK resumption!)</td>\n                      </tr>\n                      <tr style=\"background:#0f172a;\">\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Key Exchange Mechanism</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">RSA static key transport allowed. Server communicates key in Phase 2.</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Ephemeral Diffie-Hellman only (DHE/ECDHE).</strong> Client sends key share speculatively in ClientHello.</td>\n                      </tr>\n                      <tr>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Forward Secrecy</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Optional (compromised RSA private key decrypts past recorded traffic).</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Mandatory Perfect Forward Secrecy (PFS).</strong></td>\n                      </tr>\n                      <tr style=\"background:#0f172a;\">\n                        <td style=\"padding:6px; border:1px solid #334155;\"><strong>Permitted Cipher Suites</strong></td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">30+ legacy suites including RC4, 3DES, CBC-mode ciphers.</td>\n                        <td style=\"padding:6px; border:1px solid #334155;\">Only <strong>5 AEAD ciphers</strong> (AES-GCM, ChaCha20-Poly1305). Stripped insecure ciphers.</td>\n                      </tr>\n                    </table>\n                    ",
+          "children": [
+            {
+              "name": "1-RTT Handshake & 0-RTT Resumption",
+              "details": "Client sends key shares speculatively in ClientHello, cutting handshake latency by half."
+            },
+            {
+              "name": "Mandatory Forward Secrecy (PFS)",
+              "details": "Bans static RSA key exchange; ephemeral Diffie-Hellman guarantees past sessions cannot be decrypted."
+            },
+            {
+              "name": "AEAD Only Ciphers",
+              "details": "Bans vulnerable CBC, RC4, and 3DES modes; mandates authenticated encryption."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "10. The Master Disambiguation Matrix",
+      "domain_id": 10,
+      "details": "\n            <h3>The Master Networking Disambiguation Matrix</h3>\n            <p>Direct head-to-head comparisons resolving frequently confused networking mechanisms, protocols, and algorithmic boundaries.</p>\n            ",
+      "children": [
+        {
+          "name": "10.1 Flow Control vs Congestion Control",
+          "details": "\n                    <h3>Disambiguation 1: Flow Control vs Congestion Control</h3>\n                    <p><strong>Flow Control:</strong> Protects the receiver host buffer. Advertised in TCP header as <code>rwnd</code>.</p>\n                    <p><strong>Congestion Control:</strong> Protects network routers from queue collapse. Maintained locally as <code>cwnd</code>.</p>\n                    <p><strong>Governing Equation:</strong> Effective Window $W = \\min(\\text{rwnd}, \\text{cwnd})$.</p>\n                    "
+        },
+        {
+          "name": "10.2 Go-Back-N vs Selective Repeat",
+          "details": "\n                    <h3>Disambiguation 2: Go-Back-N vs Selective Repeat</h3>\n                    <ul>\n                      <li><strong>GBN:</strong> Cumulative ACK, single timer for oldest packet, discards out-of-order packets, retransmits entire window $N$. Window constraint $N \\le 2^k - 1$.</li>\n                      <li><strong>SR:</strong> Individual ACKs, independent timer per unacked packet, buffers out-of-order packets, retransmits only lost packets. Window constraint $N \\le 2^{k-1}$.</li>\n                    </ul>\n                    "
+        },
+        {
+          "name": "10.3 TCP vs UDP",
+          "details": "\n                    <h3>Disambiguation 3: TCP vs UDP</h3>\n                    <ul>\n                      <li><strong>TCP:</strong> Connection-oriented, 4-tuple demux, reliable byte stream, flow & congestion control, 20-60B header.</li>\n                      <li><strong>UDP:</strong> Connectionless, 2-tuple demux, unreliable datagrams, application-driven rate, 8B fixed header.</li>\n                    </ul>\n                    "
+        },
+        {
+          "name": "10.4 TCP Tahoe vs TCP Reno vs TCP NewReno",
+          "details": "\n                    <h3>Disambiguation 4: Tahoe vs Reno vs NewReno</h3>\n                    <ul>\n                      <li><strong>Tahoe (1988):</strong> On any loss (timeout or 3 dup ACKs) -> <code>ssthresh = cwnd/2</code>, <code>cwnd = 1</code>, enters Slow Start.</li>\n                      <li><strong>Reno (1990):</strong> On 3 dup ACKs -> Fast Recovery: <code>ssthresh = cwnd/2</code>, <code>cwnd = ssthresh + 3</code>, skips Slow Start.</li>\n                      <li><strong>NewReno (1999):</strong> Resolves Reno flaw on multiple packet losses using Partial ACKs to keep retransmitting without timing out.</li>\n                    </ul>\n                    "
+        },
+        {
+          "name": "10.5 HTTP/1.1 vs HTTP/2 vs HTTP/3",
+          "details": "\n                    <h3>Disambiguation 5: Web Protocol Evolution & HOL Blocking</h3>\n                    <ul>\n                      <li><strong>HTTP/1.1:</strong> Persistent TCP; suffers from Application-level Head-of-Line blocking.</li>\n                      <li><strong>HTTP/2:</strong> Multiplexed binary streams over 1 TCP connection; suffers from TCP-level Head-of-Line blocking.</li>\n                      <li><strong>HTTP/3:</strong> Independent streams over QUIC/UDP; completely eliminates Head-of-Line blocking.</li>\n                    </ul>\n                    "
+        },
+        {
+          "name": "10.6 Nagle's Algorithm vs Clark's Solution",
+          "details": "\n                    <h3>Disambiguation 6: Silly Window Syndrome Solutions</h3>\n                    <ul>\n                      <li><strong>Nagle's Algorithm (Sender):</strong> Buffer small outgoing packets until full MSS is formed or until previous ACK returns.</li>\n                      <li><strong>Clark's Solution (Receiver):</strong> Do not advertise window until space is at least $\\min(\\text{MSS}, \\text{Buffer}/2)$.</li>\n                    </ul>\n                    "
+        },
+        {
+          "name": "10.7 Karn's Algorithm (Retransmission Ambiguity)",
+          "details": "\n                    <h3>Disambiguation 7: The Retransmission Ambiguity Flaw</h3>\n                    <ul>\n                      <li><strong>The Flaw:</strong> ACKs for retransmitted packets cannot be correlated with the 1st or 2nd transmission, corrupting RTT estimates.</li>\n                      <li><strong>Karn's Solution:</strong> Never calculate SampleRTT on retransmissions; exponentially double RTO ($RTO_{\\text{new}} = 2 \\times RTO_{\\text{old}}$) upon timeout.</li>\n                    </ul>\n                    "
+        },
+        {
+          "name": "10.8 TLS 1.2 vs TLS 1.3",
+          "details": "\n                    <h3>Disambiguation 8: TLS Handshake Latency & Cipher Hardening</h3>\n                    <ul>\n                      <li><strong>TLS 1.2:</strong> 2 RTT handshake latency; permits legacy vulnerable ciphers (RC4, DES, CBC).</li>\n                      <li><strong>TLS 1.3:</strong> 1 RTT handshake latency (with 0-RTT resumption); client sends key share speculatively in ClientHello; mandates AEAD ciphers.</li>\n                    </ul>\n                    "
+        }
+      ]
+    }
+  ]
+}

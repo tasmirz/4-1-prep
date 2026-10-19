@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Machine Learning & Nature-Inspired Optimization</title>
+<style>
+  :root {
+    --bg-color: #121314;
+    --canvas-bg: #121314;
+    --grid-minor: rgba(255, 255, 255, 0.04);
+    --grid-major: rgba(255, 255, 255, 0.09);
+    --panel-bg: #1a1b1d;
+    --panel-border: #555555;
+    --text-primary: #f0f0ea;
+    --text-secondary: #b0b0a8;
+    --text-muted: #808078;
+    --node-bg: #1a1b1d;
+    --node-border: #555555;
+    --link-color: rgba(160, 160, 160, 0.35);
+    --link-pulse: #f0f0ea;
+    --drawer-bg: #1a1b1d;
+    --table-head-bg: #242528;
+    --table-border: #555555;
+    --table-stripe: #1e1f22;
+    --btn-bg: #1e1f22;
+    --btn-hover: #2a2b2f;
+    --icon-color: #b0b0a8;
+    --icon-hover: #f0f0ea;
+    --font-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "JetBrains Mono", "Courier New", Courier, monospace;
+  }
+
+  body.light-theme {
+    --bg-color: #f5f5f0;
+    --canvas-bg: #f5f5f0;
+    --grid-minor: rgba(0, 0, 0, 0.04);
+    --grid-major: rgba(0, 0, 0, 0.09);
+    --panel-bg: #ffffff;
+    --panel-border: #111111;
+    --text-primary: #111111;
+    --text-secondary: #444444;
+    --text-muted: #666666;
+    --node-bg: #ffffff;
+    --node-border: #111111;
+    --link-color: rgba(60, 60, 60, 0.35);
+    --link-pulse: #111111;
+    --drawer-bg: #ffffff;
+    --table-head-bg: #f5f5f0;
+    --table-border: #111111;
+    --table-stripe: #fafaf8;
+    --btn-bg: #f9f9f6;
+    --btn-hover: #eaeae4;
+    --icon-color: #444444;
+    --icon-hover: #111111;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border-radius: 0 !important;
+  }
+
+  ::selection {
+    background: var(--text-primary);
+    color: var(--panel-bg);
+  }
+  ::-moz-selection {
+    background: var(--text-primary);
+    color: var(--panel-bg);
+  }
+
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    font-family: var(--font-serif);
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  #canvas-container {
+    flex: 1;
+    height: 100%;
+    position: relative;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    overflow: hidden;
+  }
+  #canvas-container:active { cursor: grabbing; }
+
+  svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* Minimalist Graph Paper Grid */
+  .grid-bg {
+    transition: opacity 0.2s ease;
+  }
+  .grid-bg.hidden { opacity: 0; }
+
+  /* Moving Organic Links */
+  .link-path {
+    fill: none;
+    stroke: var(--link-color);
+    stroke-width: 1.5px;
+    stroke-linecap: square;
+    transition: stroke 0.2s ease, stroke-width 0.2s ease;
+  }
+  .link-path.highlighted {
+    stroke-width: 2.5px;
+    stroke: var(--text-primary);
+  }
+
+  /* Draggable Node Pills / Wireframe Rectangles */
+  .node-group {
+    cursor: grab;
+    transition: filter 0.15s ease;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .node-group:active { cursor: grabbing; }
+
+  .node-capsule {
+    rx: 0px !important;
+    ry: 0px !important;
+    stroke-width: 1.5px;
+    transition: stroke 0.2s ease, stroke-width 0.2s ease, filter 0.2s ease;
+  }
+  .node-capsule:hover {
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.25));
+  }
+  body:not(.light-theme) .node-capsule:hover {
+    filter: drop-shadow(0 4px 10px rgba(255, 255, 255, 0.25));
+  }
+  .node-capsule.selected {
+    stroke-width: 2.5px !important;
+    stroke: var(--text-primary) !important;
+    filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.4)) !important;
+  }
+  body:not(.light-theme) .node-capsule.selected {
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.4)) !important;
+  }
+  .node-capsule.matched {
+    stroke: var(--text-primary) !important;
+    stroke-width: 3px !important;
+    stroke-dasharray: 4 2;
+  }
+
+  .node-label {
+    font-size: 13px;
+    font-weight: 500;
+    fill: var(--text-primary);
+    font-family: var(--font-serif);
+    pointer-events: none;
+    letter-spacing: 0.1px;
+  }
+  .node-label.root-label {
+    font-size: 14.5px;
+    font-weight: 700;
+    font-style: italic;
+    fill: var(--text-primary);
+  }
+  .node-label.domain-label {
+    font-size: 13.5px;
+    font-weight: 600;
+  }
+
+  .status-dot {
+    pointer-events: none;
+  }
+
+  .badge-count {
+    font-size: 11px;
+    font-weight: 700;
+    fill: #ffffff;
+    font-family: var(--font-mono);
+    pointer-events: none;
+  }
+
+  /* Minimalist Floating Toolbar with Pure Monochrome Icons */
+  .toolbar {
+    position: absolute;
+    top: 16px;
+    left: 20px;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 0 !important;
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 2px 2px 0px var(--panel-border);
+    z-index: 10;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-right: 10px;
+    border-right: 1px solid var(--panel-border);
+    font-size: 13.5px;
+    font-weight: 700;
+    font-family: var(--font-serif);
+    color: var(--text-primary);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .live-dot {
+    width: 7.5px;
+    height: 7.5px;
+    background: var(--text-primary);
+    border-radius: 0 !important;
+  }
+
+  .search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .search-wrap input {
+    background: var(--btn-bg);
+    border: 1px solid var(--panel-border);
+    color: var(--text-primary);
+    font-family: var(--font-serif);
+    border-radius: 0 !important;
+    padding: 5px 10px 5px 28px;
+    font-size: 12.5px;
+    width: 190px;
+    outline: none !important;
+    transition: all 0.15s ease;
+  }
+  .search-wrap input:focus {
+    width: 240px;
+    border-color: var(--text-primary);
+    background: var(--panel-bg);
+  }
+  .search-ico {
+    position: absolute;
+    left: 9px;
+    display: flex;
+    align-items: center;
+    color: var(--icon-color);
+    pointer-events: none;
+  }
+
+  .search-badge {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--panel-bg);
+    background: var(--text-primary);
+    border: 1px solid var(--panel-border);
+    border-radius: 0 !important;
+    padding: 2px 7px;
+    display: none;
+    white-space: nowrap;
+  }
+
+  /* Monochrome Icon Buttons (No text!) */
+  .mono-btn {
+    background: var(--btn-bg);
+    border: 1px solid var(--panel-border);
+    color: var(--icon-color);
+    border-radius: 0 !important;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.1s ease;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    outline: none !important;
+  }
+  .mono-btn svg {
+    width: 15px;
+    height: 15px;
+    stroke: currentColor;
+    display: block;
+  }
+  .mono-btn:hover {
+    background: var(--text-primary);
+    color: var(--panel-bg);
+    border-color: var(--text-primary);
+  }
+  .mono-btn.active {
+    background: var(--text-primary) !important;
+    color: var(--panel-bg) !important;
+    border-color: var(--text-primary) !important;
+  }
+
+  /* Backdrop Overlay when Details Drawer is Open */
+  .drawer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.48);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 15;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .drawer-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  body.light-theme .drawer-overlay {
+    background: rgba(0, 0, 0, 0.25);
+  }
+
+  /* Sleek Slide-over Details Drawer */
+  .details-drawer {
+    width: 500px;
+    max-width: 92vw;
+    height: 100%;
+    background: var(--drawer-bg);
+    border-left: 2px solid var(--panel-border);
+    border-radius: 0 !important;
+    box-shadow: -10px 0 30px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    z-index: 20;
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+  .details-drawer.open {
+    transform: translateX(0);
+  }
+
+  .drawer-head {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--panel-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .drawer-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 0 !important;
+    border: 1px solid var(--panel-border);
+    font-size: 11px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .drawer-title {
+    font-size: 16px;
+    font-weight: 700;
+    font-family: var(--font-serif);
+    line-height: 1.35;
+    color: var(--text-primary);
+  }
+
+  .drawer-bar {
+    padding: 8px 20px;
+    border-bottom: 1px solid var(--panel-border);
+    display: flex;
+    gap: 8px;
+    background: var(--btn-bg);
+  }
+
+  .drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 22px;
+    font-size: 14px;
+    line-height: 1.65;
+    font-family: var(--font-serif);
+    color: var(--text-secondary);
+  }
+  .drawer-body h3 {
+    color: var(--text-primary);
+    margin: 16px 0 8px 0;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: var(--font-serif);
+  }
+  .drawer-body p { margin-bottom: 12px; }
+  .drawer-body ul, .drawer-body ol { padding-left: 22px; margin-bottom: 12px; }
+  .drawer-body li { margin-bottom: 6px; }
+  .drawer-body strong { color: var(--text-primary); font-family: var(--font-serif); }
+  .drawer-body em { font-style: italic; }
+  .drawer-body code {
+    background: var(--btn-bg);
+    color: var(--text-primary);
+    padding: 2px 6px;
+    border: 1px solid var(--panel-border);
+    border-radius: 0 !important;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  /* Clean Academic Tables */
+  .drawer-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0 18px 0;
+    font-size: 13px;
+    border-radius: 0 !important;
+    overflow: hidden;
+    font-family: var(--font-serif);
+    border: 1px solid var(--table-border);
+  }
+  .drawer-body th, .drawer-body td {
+    padding: 8px 11px;
+    border: 1px solid var(--table-border);
+    text-align: left;
+    vertical-align: top;
+  }
+  .drawer-body th {
+    background: var(--table-head-bg);
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+  .drawer-body tr:nth-child(even) { background: var(--table-stripe); }
+
+  /* Concept Pills */
+  .concept-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin: 10px 0 16px 0;
+  }
+  .concept-pill {
+    background: var(--btn-bg);
+    border: 1px solid var(--panel-border);
+    color: var(--text-secondary);
+    font-family: var(--font-serif);
+    border-radius: 0 !important;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.1s ease;
+  }
+  .concept-pill:hover {
+    background: var(--text-primary);
+    color: var(--panel-bg);
+    border-color: var(--text-primary);
+  }
+
+  /* Minimalist Footer Hint */
+  .hint-pill {
+    position: absolute;
+    bottom: 16px;
+    left: 20px;
+    font-size: 12px;
+    font-family: var(--font-serif);
+    color: var(--text-muted);
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 0 !important;
+    padding: 4px 12px;
+    pointer-events: none;
+    box-shadow: 2px 2px 0px var(--panel-border);
+  }
+
+  /* Robust Drawer Theme Adaptations */
+  body.light-theme .drawer-body div[style*="background"] {
+    background: var(--btn-bg) !important;
+    border-color: var(--panel-border) !important;
+    color: var(--text-primary) !important;
+  }
+  body.light-theme .drawer-body span[style*="color:#38bdf8"],
+  body.light-theme .drawer-body p[style*="color:#38bdf8"],
+  body.light-theme .drawer-body a[style*="color:#38bdf8"] {
+    color: var(--text-primary) !important;
+  }
+  body.light-theme .drawer-body p[style*="color:#cbd5e1"],
+  body.light-theme .drawer-body ul[style*="color:#94a3b8"] {
+    color: var(--text-secondary) !important;
+  }
+  body.light-theme .drawer-body tr[style*="background:#1e293b"] {
+    background: var(--table-head-bg) !important;
+    color: var(--text-primary) !important;
+  }
+  body.light-theme .drawer-body tr[style*="background:#1e293b"] th {
+    color: var(--text-primary) !important;
+  }
+  body.light-theme .drawer-body tr[style*="background:#0f172a"] {
+    background: var(--table-stripe) !important;
+  }
+  body.light-theme .drawer-body a[style*="background"] {
+    background: var(--text-primary) !important;
+    color: var(--panel-bg) !important;
+    border: 1px solid var(--panel-border) !important;
+  }
+
+  /* Retro Monochrome Emojis */
+  .mono-emoji {
+    display: inline-block;
+    vertical-align: -0.1em;
+    line-height: 1;
+    filter: grayscale(100%) brightness(0.65) contrast(160%);
+    -webkit-filter: grayscale(100%) brightness(0.65) contrast(160%);
+    transition: filter 0.1s ease;
+  }
+  body:not(.light-theme) .mono-emoji {
+    filter: grayscale(100%) brightness(1.75) contrast(140%);
+    -webkit-filter: grayscale(100%) brightness(1.75) contrast(140%);
+  }
+  body.light-theme .drawer-body a[style*="background"] .mono-emoji,
+  body.light-theme .btn:hover .mono-emoji,
+  body.light-theme button:hover .mono-emoji {
+    filter: grayscale(100%) brightness(2.2) contrast(150%) !important;
+    -webkit-filter: grayscale(100%) brightness(2.2) contrast(150%) !important;
+  }
+</style>
+</head>
+<body>
+
+<div id="canvas-container">
+  <div class="toolbar">
+    <div class="brand">
+      <div class="live-dot"></div>
+      <span>Machine Learning & Nature-Inspired Optimization</span>
+    </div>
+
+    <div class="search-wrap">
+      <span class="search-ico">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      </span>
+      <input type="text" id="search-input" placeholder="Search concepts (Tahoe, Karn, AIMD)...">
+    </div>
+    <span class="search-badge" id="search-badge">0</span>
+
+    <!-- Search Prev/Next (Monochrome Icons) -->
+    <button class="mono-btn" id="search-prev" style="display:none;" title="Previous Match">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="18 15 12 9 6 15"></polyline></svg>
+    </button>
+    <button class="mono-btn" id="search-next" style="display:none;" title="Next Match">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+    </button>
+
+    <!-- Theme Switcher (Monochrome Sun/Moon Icon) -->
+    <button class="mono-btn" id="btn-theme" title="Toggle Light / Dark Mode">
+      <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+    </button>
+
+    <!-- Grid Toggle (Monochrome Grid Icon) -->
+    <button class="mono-btn active" id="btn-grid" title="Toggle Graph Paper Grid">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>
+    </button>
+
+    <!-- Reset Layout (Monochrome Reset Icon) -->
+    <button class="mono-btn" id="btn-reset" title="Reset Layout to Default Radial Grid">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
+    </button>
+
+    <!-- Fit View (Monochrome Crosshairs / Fit Icon) -->
+    <button class="mono-btn" id="btn-fit" title="Zoom to Fit">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><polyline points="21 15 21 21 15 21"></polyline><polyline points="3 9 3 3 9 3"></polyline></svg>
+    </button>
+
+    <!-- Expand All (Monochrome Tree Expand Icon) -->
+    <button class="mono-btn" id="btn-expand" title="Expand All Branches">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+    </button>
+
+    <!-- Collapse All (Monochrome Tree Fold Icon) -->
+    <button class="mono-btn" id="btn-collapse" title="Collapse to Domains">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+    </button>
+  </div>
+
+  <svg id="svg-canvas">
+    <defs>
+      <!-- Engineering Graph Paper Grid -->
+      <pattern id="grid-pattern-minor" width="24" height="24" patternUnits="userSpaceOnUse">
+        <path d="M 24 0 L 0 0 0 24" fill="none" stroke="var(--grid-minor)" stroke-width="0.75" />
+      </pattern>
+      <pattern id="grid-pattern-major" width="120" height="120" patternUnits="userSpaceOnUse">
+        <rect width="120" height="120" fill="url(#grid-pattern-minor)" />
+        <path d="M 120 0 L 0 0 0 120" fill="none" stroke="var(--grid-major)" stroke-width="1.2" />
+      </pattern>
+    </defs>
+
+    <g id="viewport">
+      <!-- Infinite Graph Paper Grid Plane -->
+      <rect id="grid-plane" class="grid-bg" x="-10000" y="-10000" width="20000" height="20000" fill="url(#grid-pattern-major)" />
+
+      <!-- Moving Links Layer -->
+      <g id="links-layer"></g>
+
+      <!-- Movable Nodes Layer -->
+      <g id="nodes-layer"></g>
+    </g>
+  </svg>
+
+  <div class="hint-pill">
+    Drag nodes to reposition • Scroll to zoom • Click +/- to toggle branch • Click node for details
+  </div>
+</div>
+
+<!-- Backdrop Overlay for Details Drawer -->
+<div class="drawer-overlay" id="drawer-overlay"></div>
+
+<div class="details-drawer" id="details-drawer">
+  <div class="drawer-head">
+    <div style="display: flex; align-items: flex-start; gap: 10px; flex: 1;">
+      <!-- Monochrome Back Button -->
+      <button class="mono-btn" id="drawer-back" title="Go Back to Previous Concept" disabled style="margin-top: 2px; flex-shrink: 0; opacity: 0.35; cursor: not-allowed; pointer-events: none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+      </button>
+      <div style="flex: 1; min-width: 0;">
+        <div class="drawer-badge" id="drawer-badge">Overview</div>
+        <div class="drawer-title" id="drawer-title">Node Title</div>
+      </div>
+    </div>
+    <!-- Monochrome Close Button -->
+    <button class="mono-btn" id="drawer-close" title="Close Panel" style="flex-shrink: 0;">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </button>
+  </div>
+  <div class="drawer-bar">
+    <!-- Monochrome Back Button in Action Bar -->
+    <button class="mono-btn" id="bar-btn-back" title="Go Back to Previous Concept" disabled style="opacity: 0.35; cursor: not-allowed; pointer-events: none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+    </button>
+    <!-- Monochrome Center/Focus Button -->
+    <button class="mono-btn" id="bar-btn-focus" title="Center in View">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
+    </button>
+    <!-- Monochrome Pin/Unpin Button -->
+    <button class="mono-btn" id="bar-btn-pin" title="Pin / Unpin Node Position">
+      <svg id="pin-icon" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+    </button>
+    <!-- Monochrome Copy Notes Button -->
+    <button class="mono-btn" id="bar-btn-copy" title="Copy Notes to Clipboard">
+      <svg id="copy-icon" viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+    </button>
+  </div>
+  <div class="drawer-body" id="drawer-body">
+    Select any node to view comprehensive disambiguation notes, architecture tables, and formulas.
+  </div>
+</div>
+
+<script>
+const rawData = {"name": "Machine Learning & Nature-Inspired Optimization", "details": "\n    <div style=\"margin: 14px 0 16px 0; padding: 12px; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important; box-shadow: 2px 2px 0px rgba(0,0,0,0.3);\">\n      <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;\">\n        <span style=\"font-size:13px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">🎓</span> University Exam Intelligence (CSE 4111)</span>\n        <span style=\"font-size:11px; font-weight:bold; background:#0284c7; color:#fff; padding:2px 8px; border-radius:0 !important;\">241 Questions Analyzed</span>\n      </div>\n      <p style=\"font-size:12px; color:#cbd5e1; margin-bottom:10px; line-height:1.5;\">\n        Complete historical coverage from <strong>2015 to 2024</strong> (1729 Total Marks). Every question includes faculty expectations, topic alignment, and original printed university exam scans.\n      </p>\n      <div style=\"display:flex; gap:8px; flex-wrap:wrap;\">\n        <a href=\"../question-browser/machine-learning-akhand-sir-rocky-sir.html\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:6px; padding:7px 14px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-weight:bold; font-size:12px; transition:background 0.2s ease;\">\n          <span class=\"mono-emoji\">📚</span> Open Question Analyzer (241 Qs · 1729M) &rarr;\n        </a>\n        <a href=\"../final/ml-rocky-sir.pdf\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:6px; padding:7px 14px; background:#059669; color:#ffffff; text-decoration:none; border-radius:0 !important; font-weight:bold; font-size:12px; transition:background 0.2s ease;\">\n          <span class=\"mono-emoji\">📖</span> Open Merged PDF Book (181 Pages) &rarr;\n        </a>\n      </div>\n    </div>\n    \n        <h3>Machine Learning & Metaheuristic Optimization Systems</h3>\n        <p>This interactive mind map explores foundational learning paradigms alongside population-based evolutionary algorithms and swarm intelligence: Genetic Algorithms (GA), Particle Swarm Optimization (PSO), Ant Colony Optimization (ACO), and Artificial Bee Colony (ABC).</p>\n        <div style=\"margin-top: 10px; padding: 10px; background: rgba(56, 189, 248, 0.1); border-left: 3px solid #38bdf8; border-radius: 4px;\">\n          <strong>Core Focus:</strong> Exact mathematical update equations, exploration vs exploitation balances, combinatorial TSP operators (Enhanced Edge Recombination), velocity clamping, and stigmergic collective intelligence.\n        </div>\n        <ul style=\"margin-top: 12px;\">\n          <li><strong>Source:</strong> Course Lectures (Rocky Sir), Mitchell (GA), Kennedy & Eberhart (PSO), Dorigo (ACO), Karaboga (ABC).</li>\n          <li><strong>Coverage:</strong> 6 Major Domains across 185 lecture slides.</li>\n        </ul>\n        ", "children": [{"name": "📝 Exam Questions (113 Patterns · 1729M)", "details": "\n        <h3>University Exam Question Archive & Patterns</h3>\n        <p>Comprehensive historical recurrence analysis across KUET Term Examinations (2015–2024).</p>\n        <p style=\"margin-top:8px;\">Click any specific pattern node on this branch to view recurring exam questions, frequency metrics, and exact marks.</p>\n        <div style=\"margin-top:12px;\">\n          <a href=\"../question-browser/machine-learning-akhand-sir-rocky-sir.html\" target=\"_blank\" style=\"display:inline-block; padding:8px 14px; background:#2563eb; color:#fff; text-decoration:none; border-radius:0 !important; font-weight:bold; font-size:12px;\">\n            <span class=\"mono-emoji\">📚</span> Launch Full Interactive Question Browser (241 Questions) &rarr;\n          </a>\n        </div>\n        ", "children": [{"name": "Q: \"Pheromone evaporation pushes ACO conv... (3x)", "details": "\n        <h4>Exam Pattern: \"Pheromone evaporation pushes ACO convergence.\" is it true? Justify your opinion.</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: rgba(30, 41, 59, 0.7); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:#38bdf8; font-weight:bold; margin-bottom:4px;\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 3 Times Asked · 7 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:#cbd5e1; margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2015, 2017, 2020\n          </p>\n          <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2020)</strong>  <em>\"Pheromone evaporation pushes ACO convergence- — Is it we? Justifi:- your opinion....</em></li><li style='margin-bottom:5px;'><strong>(2017)</strong> [7M] <em>\"Pheromone evaporation pushes ACO convergence.\" is it true? Justify your opinion....</em></li><li style='margin-bottom:5px;'><strong>(2015)</strong>  <em>\"Pheromone evaporation pushes ACO convergenee\"-is it true? Justit.\\• opinion....</em></li>\n          </ul>\n          <a href=\"../question-browser/machine-learning-akhand-sir-rocky-sir.html?search=\"Pheromone%20evaporation%20pushes%20\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#2563eb; color:#fff; text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold;\">\n            <span class=\"mono-emoji\">🔍</span> View in Question Browser (with Original Exam Scans) &rarr;\n          </a>\n        </div>\n        "}, {"name": "Q: What are support vectors in Support Ve... (2x)", "details": "\n        <h4>Exam Pattern: What are support vectors in Support Vector Machine (SVM)? How does Linear SVM work? Explain.</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: rgba(30, 41, 59, 0.7); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:#38bdf8; font-weight:bold; margin-bottom:4px;\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 2 Times Asked · 22 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:#cbd5e1; margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2019, 2024\n          </p>\n          <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2024)</strong> [12M] <em>What are support vectors in Support Vector Machine (SVM)? How does Linear SVM\nwork?...</em></li><li style='margin-bottom:5px;'><strong>(2019)</strong> [10M] <em>What are support vectors in Support Vector Machine (SVM)? How does Linear SVM work?\nExplain....</em></li>\n          </ul>\n          <a href=\"../question-browser/machine-learning-akhand-sir-rocky-sir.html?search=What%20are%20support%20vectors%20in%20Su\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#2563eb; color:#fff; text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold;\">\n            <span class=\"mono-emoji\">🔍</span> View in Question Browser (with Original Exam Scans) &rarr;\n          </a>\n        </div>\n        "}, {"name": "Q: Explain exploration and exploitation w... (2x)", "details": "\n        <h4>Exam Pattern: Explain exploration and exploitation with suitable example.</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: rgba(30, 41, 59, 0.7); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:#38bdf8; font-weight:bold; margin-bottom:4px;\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 2 Times Asked · 10 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:#cbd5e1; margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2017, 2024\n          </p>\n          <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2024)</strong> [10M] <em>Explain exploration and exploitation with suitable example....</em></li><li style='margin-bottom:5px;'><strong>(2017)</strong>  <em>Explain exploitation and exploration with examples....</em></li>\n          </ul>\n          <a href=\"../question-browser/machine-learning-akhand-sir-rocky-sir.html?search=Explain%20exploration%20and%20exploi\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#2563eb; color:#fff; text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold;\">\n            <span class=\"mono-emoji\">🔍</span> View in Question Browser (with Original Exam Scans) &rarr;\n          </a>\n        </div>\n        "}, {"name": "Q: What is Swarm? Write properties ofa Sw... (2x)", "details": "\n        <h4>Exam Pattern: What is Swarm? Write properties ofa Swarm Intelligence (SI) system.</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: rgba(30, 41, 59, 0.7); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:#38bdf8; font-weight:bold; margin-bottom:4px;\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 2 Times Asked · 15 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:#cbd5e1; margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2017, 2024\n          </p>\n          <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2024)</strong> [5M] <em>What is Swarm? Write properties ofa Swarm Intelligence (SI) system....</em></li><li style='margin-bottom:5px;'><strong>(2017)</strong> [10M] <em>What is Swarm Intelligence (SI)? What are the properties of SI system?...</em></li>\n          </ul>\n          <a href=\"../question-browser/machine-learning-akhand-sir-rocky-sir.html?search=What%20is%20Swarm?%20Write%20propertie\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#2563eb; color:#fff; text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold;\">\n            <span class=\"mono-emoji\">🔍</span> View in Question Browser (with Original Exam Scans) &rarr;\n          </a>\n        </div>\n        "}, {"name": "Q: In Ant Colony Optimization (ACO), how ... (2x)", "details": "\n        <h4>Exam Pattern: In Ant Colony Optimization (ACO), how an ant complete a tour in solving Travelling Salesman Problem</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: rgba(30, 41, 59, 0.7); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:#38bdf8; font-weight:bold; margin-bottom:4px;\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 2 Times Asked · 18 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:#cbd5e1; margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2019, 2024\n          </p>\n          <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2024)</strong> [10M] <em>Explain Ant Colony Optimization (ACO) to solve Traveling Salesman Problem (TSP). (10)...</em></li><li style='margin-bottom:5px;'><strong>(2019)</strong> [8M] <em>In Ant Colony Optimization (ACO), how an ant complete a tour in solving Travelling\nSalesman Problem (TSP)?...</em></li>\n          </ul>\n          <a href=\"../question-browser/machine-learning-akhand-sir-rocky-sir.html?search=In%20Ant%20Colony%20Optimization%20(AC\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#2563eb; color:#fff; text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold;\">\n            <span class=\"mono-emoji\">🔍</span> View in Question Browser (with Original Exam Scans) &rarr;\n          </a>\n        </div>\n        "}, {"name": "Q: Can SVM be over trained? What can be t... (2x)", "details": "\n        <h4>Exam Pattern: Can SVM be over trained? What can be the effect of over training? How will you detect over fitting o</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: rgba(30, 41, 59, 0.7); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:#38bdf8; font-weight:bold; margin-bottom:4px;\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 2 Times Asked · 15 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:#cbd5e1; margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2019, 2023\n          </p>\n          <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2023)</strong> [7M] <em>Can SVM be over trained? What can be the effect of over training? I low can over-fitting (07)\nbe detected Ibr a SVM model?...</em></li><li style='margin-bottom:5px;'><strong>(2019)</strong> [8M] <em>Can SVM be over trained? What can be the effect of over training? How will you detect over\nfitting ofa SVM model?...</em></li>\n          </ul>\n          <a href=\"../question-browser/machine-learning-akhand-sir-rocky-sir.html?search=Can%20SVM%20be%20over%20trained?%20What%20\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#2563eb; color:#fff; text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold;\">\n            <span class=\"mono-emoji\">🔍</span> View in Question Browser (with Original Exam Scans) &rarr;\n          </a>\n        </div>\n        "}, {"name": "Q: Explain the employee bee phase, on loo... (2x)", "details": "\n        <h4>Exam Pattern: Explain the employee bee phase, on looker bee phasc and scout bee phase in ABC (10)  optimimtion alg</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: rgba(30, 41, 59, 0.7); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:#38bdf8; font-weight:bold; margin-bottom:4px;\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 2 Times Asked · 20 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:#cbd5e1; margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2017, 2023\n          </p>\n          <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2023)</strong> [10M] <em>Explain the employee bee phase, on looker bee phasc and scout bee phase in ABC (10) \noptimimtion algorithm....</em></li><li style='margin-bottom:5px;'><strong>(2017)</strong> [10M] <em>Explain the employed bee phase, on looker bee phase and scout bee phase in ABC\noptimization algorithm.\n2 of2...</em></li>\n          </ul>\n          <a href=\"../question-browser/machine-learning-akhand-sir-rocky-sir.html?search=Explain%20the%20employee%20bee%20phase\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#2563eb; color:#fff; text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold;\">\n            <span class=\"mono-emoji\">🔍</span> View in Question Browser (with Original Exam Scans) &rarr;\n          </a>\n        </div>\n        "}, {"name": "Q: \"In PSO, each and every particle chang... (2x)", "details": "\n        <h4>Exam Pattern: \"In PSO, each and every particle changes position in each iteration even the particle is thc global</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: rgba(30, 41, 59, 0.7); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:#38bdf8; font-weight:bold; margin-bottom:4px;\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 2 Times Asked · 17 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:#cbd5e1; margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2018, 2020\n          </p>\n          <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2020)</strong> [9M] <em>\"In PSO, each and every particle changes position in each iteration even the particle is the (09)\nglobal best (G)\" — do you agree with the s...</em></li><li style='margin-bottom:5px;'><strong>(2018)</strong> [8M] <em>\"In PSO, each and every particle changes position in each iteration even the particle is thc\nglobal best (G)\"— are you agree with the statem...</em></li>\n          </ul>\n          <a href=\"../question-browser/machine-learning-akhand-sir-rocky-sir.html?search=\"In%20PSO,%20each%20and%20every%20partic\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#2563eb; color:#fff; text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold;\">\n            <span class=\"mono-emoji\">🔍</span> View in Question Browser (with Original Exam Scans) &rarr;\n          </a>\n        </div>\n        "}]}, {"name": "1. ML Paradigms & Evolutionary Trajectory", "details": "\n                <h3>Machine Learning Paradigms & Foundation Models</h3>\n                <p>Categorizes learning problems by the availability and nature of supervisory feedback signals.</p>\n                <table style=\"width:100%; border-collapse:collapse; margin-top:8px; font-size:12px;\">\n                  <tr style=\"background:#1e293b; color:#38bdf8;\">\n                    <th style=\"padding:6px; border:1px solid #334155;\">Paradigm</th>\n                    <th style=\"padding:6px; border:1px solid #334155;\">Feedback Signal</th>\n                    <th style=\"padding:6px; border:1px solid #334155;\">Primary Tasks</th>\n                  </tr>\n                  <tr>\n                    <td style=\"padding:6px; border:1px solid #334155;\"><strong>Supervised Learning</strong></td>\n                    <td style=\"padding:6px; border:1px solid #334155;\">Direct ground-truth labels $(x_i, y_i)$.</td>\n                    <td style=\"padding:6px; border:1px solid #334155;\">Classification (discrete labels) & Regression (continuous values).</td>\n                  </tr>\n                  <tr style=\"background:#0f172a;\">\n                    <td style=\"padding:6px; border:1px solid #334155;\"><strong>Unsupervised Learning</strong></td>\n                    <td style=\"padding:6px; border:1px solid #334155;\">Zero labels; discovers intrinsic data structure.</td>\n                    <td style=\"padding:6px; border:1px solid #334155;\">Clustering ($k$-means, hierarchical) & Dimensionality Reduction (PCA).</td>\n                  </tr>\n                  <tr>\n                    <td style=\"padding:6px; border:1px solid #334155;\"><strong>Reinforcement Learning</strong></td>\n                    <td style=\"padding:6px; border:1px solid #334155;\">Scalar reward/penalty signal from environment interaction.</td>\n                    <td style=\"padding:6px; border:1px solid #334155;\">Sequential decision making, policy optimization, game agents.</td>\n                  </tr>\n                </table>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 23x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 23 subquestions across 8 exam sessions (2020, 2021, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Differentiate learning and generalization in the contexts of machine learning. Which one is (08) mor</em></li><li><em>\"In Machine Learning (ML), explicit programming.i$ not performed to solve a (08)  particular problem</em></li>\n              </ul>\n              <a href=\"../question-browser/machine-learning-akhand-sir-rocky-sir.html?search=Learning\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            ", "children": [{"name": "Pre-training, Fine-Tuning & Transfer Learning", "details": "\n                        <h4>The Modern Foundation Model Workflow</h4>\n                        <ul>\n                          <li><strong>Pre-training:</strong> Self-supervised training over massive uncurated corpora (e.g., masked language modeling, next-token prediction). Learns general representations.</li>\n                          <li><strong>Transfer Learning:</strong> Adapting pre-trained representations to specific target domains with minimal downstream data.</li>\n                          <li><strong>Fine-tuning:</strong> Task-specific gradient updates on downstream task heads (e.g., LoRA parameter-efficient fine-tuning).</li>\n                        </ul>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 23x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 23 subquestions across 8 exam sessions (2020, 2021, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Differentiate learning and generalization in the contexts of machine learning. Which one is (08) mor</em></li><li><em>\"In Machine Learning (ML), explicit programming.i$ not performed to solve a (08)  particular problem</em></li>\n              </ul>\n              <a href=\"../question-browser/machine-learning-akhand-sir-rocky-sir.html?search=Learning\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}]}, {"name": "2. Genetic Algorithms (GA) Foundations", "details": "\n                <h3>Darwinian Natural Selection in Optimization</h3>\n                <p>Iterative population-based stochastic search inspired by genetic inheritance and survival of the fittest.</p>\n                <div style=\"margin-top:8px;\">\n                  <strong>Nature to Computation Mapping:</strong>\n                  <ul>\n                    <li>Individual / Chromosome &harr; Candidate solution vector.</li>\n                    <li>Gene &harr; Parameter or feature dimension.</li>\n                    <li>Population &harr; Set of candidate solutions in search space.</li>\n                    <li>Fitness Function &harr; Objective evaluation metric to maximize.</li>\n                  </ul>\n                </div>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 23x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 23 subquestions across 7 exam sessions (2020, 2021, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>\"Crossover and mutation are not always beneficial\" — is it true? If so, justify with a numeric examp</em></li><li><em>Write simple Genetic Algorithm (GA). Why is choosing proper fitness Rinction important in GA? Explai</em></li>\n              </ul>\n              <a href=\"../question-browser/machine-learning-akhand-sir-rocky-sir.html?search=Genetic\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            ", "children": [{"name": "Chromosome Encodings & Life Cycle", "details": "\n                        <h4>Genotype Representation & Evolution Cycle</h4>\n                        <ol style=\"margin-left:16px;\">\n                          <li><strong>Encoding:</strong> Binary string (`1011001`), Real-valued vectors ($[1.42, -0.31]$), or Permutation orders ($[3, 1, 4, 2]$ for routing).</li>\n                          <li><strong>Initialization:</strong> Generate random initial population of size $N$.</li>\n                          <li><strong>Fitness Evaluation:</strong> Assign scalar quality score $f(x)$ to each individual.</li>\n                          <li><strong>Selection:</strong> Favor fitter individuals for mating pool.</li>\n                          <li><strong>Crossover:</strong> Recombine parent genes to create offspring.</li>\n                          <li><strong>Mutation:</strong> Randomly perturb genes to preserve population diversity.</li>\n                          <li><strong>Termination:</strong> Max generations or fitness plateau reached.</li>\n                        </ol>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#3b82f6; color:#000;\">MEDIUM PRIORITY · 19x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 19 subquestions across 8 exam sessions (2020, 2021, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>What are support vectors in Support Vector Machine (SVM)? How does Linear SVM work? Explain.</em></li><li><em>Can SVM be over trained? What can be the effect of over training? How will you detect over fitting o</em></li>\n              </ul>\n              <a href=\"../question-browser/machine-learning-akhand-sir-rocky-sir.html?search=Support\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}]}, {"name": "3. Selection Operators & Combinatorial TSP", "details": "\n                <h3>Selection Mechanisms & Permutation Crossover</h3>\n                <p>Balances selection pressure with genetic diversity, and addresses combinatorial permutation constraints.</p>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 23x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 23 subquestions across 7 exam sessions (2020, 2021, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>\"Crossover and mutation are not always beneficial\" — is it true? If so, justify with a numeric examp</em></li><li><em>Write simple Genetic Algorithm (GA). Why is choosing proper fitness Rinction important in GA? Explai</em></li>\n              </ul>\n              <a href=\"../question-browser/machine-learning-akhand-sir-rocky-sir.html?search=Genetic\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            ", "children": [{"name": "Selection Strategies: Roulette vs Tournament", "details": "\n                        <h4>Selection Operator Disambiguation</h4>\n                        <ul>\n                          <li><strong>Roulette Wheel Selection:</strong> Probability proportional to fitness: $p_i = \\frac{f_i}{\\sum_{j=1}^N f_j}$. Suffers from premature convergence when a super-fit individual dominates early.</li>\n                          <li><strong>Tournament Selection:</strong> Pick $k$ individuals uniformly at random; best individual among the $k$ wins. Easily controlled selection pressure via tournament size $k$; works with negative fitness values.</li>\n                          <li><strong>Elitism:</strong> Unconditionally copies top $E$ fittest individuals directly into the next generation, guaranteeing that best solution found never deteriorates.</li>\n                        </ul>\n                        "}, {"name": "TSP Permutation Constraints & ERO Operator", "details": "\n                        <h4>Enhanced Edge Recombination Operator (ERO)</h4>\n                        <div style=\"padding:6px; background:rgba(239, 68, 68, 0.1); border-left:2px solid #ef4444; margin-bottom:6px;\">\n                          <strong>Single-Point Crossover Failure:</strong> In Traveling Salesman Problem (TSP), single-point crossover creates duplicate cities and omits others, producing invalid tours.\n                        </div>\n                        <p><strong>ERO Algorithm for TSP:</strong></p>\n                        <ol style=\"margin-left:16px;\">\n                          <li>Construct an <strong>Edge Table</strong> listing all connected neighbors for each city from both parents (up to 4 edges).</li>\n                          <li>Choose initial city $C$ present in parents.</li>\n                          <li>Select next city from $C$'s neighbor list having the <em>fewest remaining available edges</em> (preserves adjacency links while avoiding dead ends).</li>\n                          <li>Remove $C$ from all remaining neighbor lists and repeat.</li>\n                        </ol>\n                        "}]}, {"name": "4. Particle Swarm Optimization (PSO)", "details": "\n                <h3>Swarm Intelligence & Velocity-Position Dynamics</h3>\n                <p>Simulates collective flocking behaviors (birds/fish) where particles navigate a continuous multi-dimensional objective landscape.</p>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 21x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 21 subquestions across 8 exam sessions (2020, 2021, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>\"In PSO, each and every particle changes position in each iteration even the particle is thc global</em></li><li><em>Explain Particle Swarm Optimization (PSO) technique. What are the drawbacks of (12) this technique?</em></li>\n              </ul>\n              <a href=\"../question-browser/machine-learning-akhand-sir-rocky-sir.html?search=Particle\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            ", "children": [{"name": "Particle Kinematic Update Equations", "details": "\n                        <h4>Velocity & Position Recurrence (Kennedy & Eberhart 1995)</h4>\n                        <p style=\"text-align:center; font-weight:bold;\">$$V_i^{t+1} = w V_i^t + c_1 r_1 (P_{best,i} - X_i^t) + c_2 r_2 (G_{best} - X_i^t)$$</p>\n                        <p style=\"text-align:center; font-weight:bold;\">$$X_i^{t+1} = X_i^t + V_i^{t+1}$$</p>\n                        <ul>\n                          <li><strong>Inertia Term ($w V_i^t$):</strong> Momentum preserving current flight direction ($w \\in [0.4, 0.9]$ linearly decreasing).</li>\n                          <li><strong>Cognitive Component ($c_1 r_1 (P_{best} - X)$):</strong> Pulls particle back toward its own personal historical best experience ($c_1 \\approx 2.05$).</li>\n                          <li><strong>Social Component ($c_2 r_2 (G_{best} - X)$):</strong> Pulls particle toward the global best experience found by the entire swarm ($c_2 \\approx 2.05$).</li>\n                          <li>$r_1, r_2 \\sim U(0, 1)$: Stochastic random perturbations.</li>\n                        </ul>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 21x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 21 subquestions across 8 exam sessions (2020, 2021, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>\"In PSO, each and every particle changes position in each iteration even the particle is thc global</em></li><li><em>Explain Particle Swarm Optimization (PSO) technique. What are the drawbacks of (12) this technique?</em></li>\n              </ul>\n              <a href=\"../question-browser/machine-learning-akhand-sir-rocky-sir.html?search=Particle\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}, {"name": "Velocity Clamping & Neighborhood Topologies", "details": "\n                        <h4>Controlling Swarm Convergence</h4>\n                        <ul>\n                          <li><strong>Velocity Clamping:</strong> Bounds velocities to $[-V_{\\max}, V_{\\max}]$ to prevent particles from flying out of valid solution boundaries.</li>\n                          <li><strong>Global Best ($G_{best}$):</strong> All particles connected to single best; fast convergence but vulnerable to local minima traps.</li>\n                          <li><strong>Local Best ($L_{best}$):</strong> Particles informed only by immediate topological ring neighbors; slower convergence but superior exploration on multimodal landscapes.</li>\n                        </ul>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 21x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 21 subquestions across 8 exam sessions (2020, 2021, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>\"In PSO, each and every particle changes position in each iteration even the particle is thc global</em></li><li><em>Explain Particle Swarm Optimization (PSO) technique. What are the drawbacks of (12) this technique?</em></li>\n              </ul>\n              <a href=\"../question-browser/machine-learning-akhand-sir-rocky-sir.html?search=Particle\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}]}, {"name": "5. Ant Colony Optimization (ACO)", "details": "\n                <h3>Stigmergy & Artificial Pheromone Trails</h3>\n                <p>Metaheuristic optimization inspired by Argentine ant foraging behavior: ants communicate indirectly through environment chemical cues (stigmergy).</p>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 21x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 21 subquestions across 8 exam sessions (2020, 2021, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>\"In PSO, each and every particle changes position in each iteration even the particle is thc global</em></li><li><em>Explain Particle Swarm Optimization (PSO) technique. What are the drawbacks of (12) this technique?</em></li>\n              </ul>\n              <a href=\"../question-browser/machine-learning-akhand-sir-rocky-sir.html?search=Particle\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            ", "children": [{"name": "Probabilistic Tour Construction & Transition Law", "details": "\n                        <h4>Transition Probability Formula</h4>\n                        <p>Probability that ant $k$ currently at city $i$ chooses next city $j$:</p>\n                        <p style=\"text-align:center; font-weight:bold;\">$$p_{ij}^k = \\frac{[\\tau_{ij}]^\\alpha [\\eta_{ij}]^\\beta}{\\sum_{l \\in \\text{allowed}_k} [\\tau_{il}]^\\alpha [\\eta_{il}]^\\beta}$$</p>\n                        <ul>\n                          <li>$\\tau_{ij}$: Pheromone trail intensity on edge $(i, j)$ (historical collective experience).</li>\n                          <li>$\\eta_{ij} = \\frac{1}{d_{ij}}$: Heuristic visibility (greedy local desirability: inverse distance).</li>\n                          <li>$\\alpha$: Pheromone weight parameter (bias toward collective trail).</li>\n                          <li>$\\beta$: Heuristic weight parameter (bias toward short immediate distance).</li>\n                        </ul>\n                        "}, {"name": "Pheromone Evaporation & Trail Reinforcement", "details": "\n                        <h4>Pheromone Dynamics & Avoiding Stagnation</h4>\n                        <p>Evaporation prevents premature convergence on sub-optimal tours:</p>\n                        <p style=\"text-align:center; font-weight:bold;\">$$\\tau_{ij} \\leftarrow (1 - \\rho) \\tau_{ij} + \\sum_{k=1}^m \\Delta \\tau_{ij}^k$$</p>\n                        <ul>\n                          <li>$\\rho \\in (0, 1]$: Pheromone evaporation rate.</li>\n                          <li>$\\Delta \\tau_{ij}^k = \\frac{Q}{L_k}$ if ant $k$ used edge $(i, j)$ in its tour of length $L_k$, else $0$.</li>\n                        </ul>\n                        <p>Shorter tours receive higher pheromone deposits $Q/L_k$, causing subsequent ants to preferentially follow shorter paths!</p>\n                        "}]}, {"name": "6. Artificial Bee Colony (ABC) Algorithm", "details": "\n                <h3>Foraging Behavior & Swarm Task Allocation</h3>\n                <p>Simulates honeybee colony intelligent foraging (Dervis Karaboga 2005). The position of a food source represents a candidate solution; nectar amount corresponds to solution fitness.</p>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 21x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 21 subquestions across 8 exam sessions (2020, 2021, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>\"In PSO, each and every particle changes position in each iteration even the particle is thc global</em></li><li><em>Explain Particle Swarm Optimization (PSO) technique. What are the drawbacks of (12) this technique?</em></li>\n              </ul>\n              <a href=\"../question-browser/machine-learning-akhand-sir-rocky-sir.html?search=Particle\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            ", "children": [{"name": "Colony Phases: Employed, Onlooker & Scout Bees", "details": "\n                        <h4>Three Foraging Bee Roles in ABC</h4>\n                        <table style=\"width:100%; border-collapse:collapse; margin-top:8px; font-size:12px;\">\n                          <tr style=\"background:#1e293b; color:#38bdf8;\">\n                            <th style=\"padding:6px; border:1px solid #334155;\">Bee Role</th>\n                            <th style=\"padding:6px; border:1px solid #334155;\">Search Operation</th>\n                            <th style=\"padding:6px; border:1px solid #334155;\">Behavioral Mechanism</th>\n                          </tr>\n                          <tr>\n                            <td style=\"padding:6px; border:1px solid #334155;\"><strong>Employed Bees</strong></td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">Local neighborhood perturbation: $v_{ij} = x_{ij} + \\phi_{ij}(x_{ij} - x_{kj})$.</td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">Exploits current food source; shares nectar information with onlooker bees via waggle dance.</td>\n                          </tr>\n                          <tr style=\"background:#0f172a;\">\n                            <td style=\"padding:6px; border:1px solid #334155;\"><strong>Onlooker Bees</strong></td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">Probabilistic selection: $p_i = \\frac{\\text{fit}_i}{\\sum \\text{fit}}$.</td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">Selects promising food sources based on dance; performs local search around superior solutions.</td>\n                          </tr>\n                          <tr>\n                            <td style=\"padding:6px; border:1px solid #334155;\"><strong>Scout Bees</strong></td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">Global random reset: $x_{ij} = x_{\\min, j} + \\text{rand}(x_{\\max, j} - x_{\\min, j})$.</td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">When trial counter exceeds <code>limit</code> without improvement, source is abandoned. Scout searches for new source.</td>\n                          </tr>\n                        </table>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 21x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 21 subquestions across 7 exam sessions (2019, 2021, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Explain exploration and exploitation with suitable example.</em></li><li><em>What is Swarm? Write properties ofa Swarm Intelligence (SI) system.</em></li>\n              </ul>\n              <a href=\"../question-browser/machine-learning-akhand-sir-rocky-sir.html?search=Search\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}, {"name": "ABC Control Parameters: SN, MCN & Limit", "details": "\n                        <h4>Balance Between Exploration & Exploitation</h4>\n                        <ul>\n                          <li><strong>$SN$:</strong> Colony size (Number of food sources = $SN/2$).</li>\n                          <li><strong>$MCN$:</strong> Maximum Cycle Number (total iterations).</li>\n                          <li><strong><code>limit</code>:</strong> Number of consecutive trials before an unimproved food source is abandoned ($limit = SN \\times D$). Controls exploration intensity.</li>\n                        </ul>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#3b82f6; color:#000;\">MEDIUM PRIORITY · 18x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 18 subquestions across 8 exam sessions (2020, 2021, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>\"Pheromone evaporation pushes ACO convergence.\" is it true? Justify your opinion.</em></li><li><em>In Ant Colony Optimization (ACO), how an ant complete a tour in solving Travelling Salesman Problem</em></li>\n              </ul>\n              <a href=\"../question-browser/machine-learning-akhand-sir-rocky-sir.html?search=Ant\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}]}]};
+
+// 10 Distinct Harmonious Minimalist Domain Themes
+const DOMAIN_THEMES = [
+  { stroke: "#38bdf8", fill: "#0369a1", lightStroke: "#0284c7", lightFill: "#e0f2fe", badgeText: "#38bdf8" },  // D1: Sky
+  { stroke: "#818cf8", fill: "#3730a3", lightStroke: "#4f46e5", lightFill: "#ede9fe", badgeText: "#818cf8" },  // D2: Indigo
+  { stroke: "#34d399", fill: "#065f46", lightStroke: "#059669", lightFill: "#d1fae5", badgeText: "#34d399" },  // D3: Emerald
+  { stroke: "#a78bfa", fill: "#5b21b6", lightStroke: "#7c3aed", lightFill: "#f3e8ff", badgeText: "#a78bfa" },  // D4: Violet
+  { stroke: "#22d3ee", fill: "#155e75", lightStroke: "#0891b2", lightFill: "#cffafe", badgeText: "#22d3ee" },  // D5: Cyan
+  { stroke: "#fb923c", fill: "#9a3412", lightStroke: "#ea580c", lightFill: "#ffedd5", badgeText: "#fb923c" },  // D6: Orange
+  { stroke: "#fb7185", fill: "#9f1239", lightStroke: "#e11d48", lightFill: "#ffe4e6", badgeText: "#fb7185" },  // D7: Rose
+  { stroke: "#2dd4bf", fill: "#115e59", lightStroke: "#0d9488", lightFill: "#ccfbf1", badgeText: "#2dd4bf" },  // D8: Teal
+  { stroke: "#e879f9", fill: "#86198f", lightStroke: "#c026d3", lightFill: "#fae8ff", badgeText: "#e879f9" },  // D9: Fuchsia
+  { stroke: "#facc15", fill: "#854d0e", lightStroke: "#d97706", lightFill: "#fef9c3", badgeText: "#facc15" },  // D10: Gold Matrix
+];
+
+const ROOT_THEME = {
+  stroke: "#f0f0ea",
+  fill: "#1e1f22",
+  lightStroke: "#111111",
+  lightFill: "#f5f5f0",
+  badgeText: "#111111"
+};
+
+// Physics state & node registry
+const nodes = [];
+const links = [];
+const nodeMap = new Map();
+let idCounter = 0;
+
+let storedTheme = localStorage.getItem("hub_theme") || localStorage.getItem("networks_theme");
+let isLightTheme = storedTheme ? storedTheme === "light" : true;
+try {
+  if (window.parent && window.parent.document && window.parent.document.documentElement) {
+    isLightTheme = !window.parent.document.documentElement.classList.contains("dark");
+  }
+} catch (e) {}
+
+if (isLightTheme) {
+  document.body.classList.add("light-theme");
+} else {
+  document.body.classList.remove("light-theme");
+}
+
+window.addEventListener("message", (e) => {
+  if (e.data && e.data.type === "THEME_CHANGE") {
+    const shouldBeLight = e.data.theme === "light";
+    if (isLightTheme !== shouldBeLight) {
+      isLightTheme = shouldBeLight;
+      document.body.classList.toggle("light-theme", isLightTheme);
+      localStorage.setItem("hub_theme", isLightTheme ? "light" : "dark");
+      localStorage.setItem("networks_theme", isLightTheme ? "light" : "dark");
+      updateThemeIcon();
+      buildDOMElements();
+      updatePositionsDOM();
+      highlightSelectedNode();
+    }
+  }
+});
+
+const EMOJI_REGEX = /([\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}\u{2B50}\u{2B55}\u{203C}\u{2049}\u{2139}\u{1FA00}-\u{1FAFF}\u{1F000}-\u{1F2FF}])/gu;
+
+function makeEmojisMonochrome(root) {
+  if (!root) root = document.body;
+  if (!root) return;
+  const walker = document.createTreeWalker(
+    root,
+    NodeFilter.SHOW_TEXT,
+    {
+      acceptNode: function(node) {
+        if (!node.nodeValue || !node.nodeValue.match(EMOJI_REGEX)) {
+          return NodeFilter.FILTER_SKIP;
+        }
+        const parent = node.parentElement;
+        if (!parent) return NodeFilter.FILTER_SKIP;
+        const tag = parent.tagName;
+        if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'TEXTAREA' || tag === 'INPUT') {
+          return NodeFilter.FILTER_REJECT;
+        }
+        if (parent.classList && parent.classList.contains('mono-emoji')) {
+          return NodeFilter.FILTER_SKIP;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    }
+  );
+
+  const nodesToProcess = [];
+  while (walker.nextNode()) {
+    nodesToProcess.push(walker.currentNode);
+  }
+
+  nodesToProcess.forEach(textNode => {
+    const parent = textNode.parentNode;
+    if (!parent) return;
+    const text = textNode.nodeValue;
+    const parts = text.split(EMOJI_REGEX);
+    if (parts.length <= 1) return;
+
+    const fragment = document.createDocumentFragment();
+    parts.forEach(part => {
+      if (!part) return;
+      if (part.match(EMOJI_REGEX)) {
+        const span = document.createElement('span');
+        span.className = 'mono-emoji';
+        span.textContent = part;
+        fragment.appendChild(span);
+      } else {
+        fragment.appendChild(document.createTextNode(part));
+      }
+    });
+    parent.replaceChild(fragment, textNode);
+  });
+}
+
+function buildGraphData(rawNode, depth = 0, domainIdx = 0, parent = null) {
+  const node = {
+    id: ++idCounter,
+    name: rawNode.name,
+    details: rawNode.details || "",
+    depth: depth,
+    domainIdx: depth === 0 ? -1 : (depth === 1 ? domainIdx : parent.domainIdx),
+    parent: parent,
+    _children: [],
+    children: [],
+    collapsed: depth >= 2, // Subtopics start collapsed
+    x: 0,
+    y: 0,
+    targetX: 0,
+    targetY: 0,
+    width: 200,
+    height: 36,
+    radius: 20
+  };
+
+  // Dimensions with ample room for Times New Roman font
+  const len = node.name.length;
+  if (depth === 0) {
+    node.width = 410;
+    node.height = 46;
+  } else if (depth === 1) {
+    node.width = Math.min(370, Math.max(240, len * 7.7 + 56));
+    node.height = 40;
+  } else if (depth === 2) {
+    node.width = Math.min(330, Math.max(210, len * 7.4 + 52));
+    node.height = 36;
+  } else {
+    node.width = Math.min(300, Math.max(180, len * 7.0 + 48));
+    node.height = 32;
+  }
+  node.radius = node.width / 2;
+
+  nodeMap.set(node.id, node);
+  nodes.push(node);
+
+  if (parent) {
+    links.push({ source: parent, target: node, length: depth === 1 ? 380 : (depth === 2 ? 300 : 220) });
+  }
+
+  const rawChildren = rawNode.children || [];
+  rawChildren.forEach((childRaw, idx) => {
+    const childNode = buildGraphData(childRaw, depth + 1, depth === 0 ? idx : domainIdx, node);
+    node._children.push(childNode);
+    if (!node.collapsed) {
+      node.children.push(childNode);
+    }
+  });
+
+  return node;
+}
+
+const rootNode = buildGraphData(rawData);
+
+// Compute 360-degree Radial Staggered Multi-Orbit Geometry
+function calculateRadialPositions() {
+  rootNode.targetX = 0;
+  rootNode.targetY = 0;
+  rootNode.x = 0;
+  rootNode.y = 0;
+
+  // 10 Domains distributed with weighted sector widths based on child count and text lengths
+  const domains = rootNode._children;
+  const numDomains = domains.length;
+
+  // Proportional sector weights giving domains with extensive text and subtopics ample room
+  const weights = domains.map(d => {
+    const subs = d._children || [];
+    const totLen = subs.reduce((acc, s) => acc + (s.name.length || 20), 0);
+    return Math.max(4.0, subs.length * 1.8 + totLen * 0.05);
+  });
+  const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+
+  let currentAngle = -Math.PI / 2;
+  domains.forEach((dom, i) => {
+    const domainSpan = (weights[i] / totalWeight) * (2 * Math.PI);
+    const domainCenterAngle = currentAngle + domainSpan / 2;
+    currentAngle += domainSpan;
+
+    // Widescreen elliptical radial geometry to match horizontal capsule dimensions
+    const r1x = 660;
+    const r1y = 470;
+    dom.targetX = r1x * Math.cos(domainCenterAngle);
+    dom.targetY = r1y * Math.sin(domainCenterAngle);
+    if (dom.x === 0 && dom.y === 0) {
+      dom.x = dom.targetX;
+      dom.y = dom.targetY;
+    }
+
+    // Subtopics fanning out in domain sector with 3-tier radial staggering
+    const subtopics = dom._children || [];
+    const numSub = subtopics.length;
+    const subSector = domainSpan * 0.82;
+    const tiers = numSub >= 3 ? 3 : (numSub >= 2 ? 2 : 1);
+
+    subtopics.forEach((sub, j) => {
+      const subOffset = numSub > 1 ? ((j - (numSub - 1) / 2) / (numSub - 1)) * subSector : 0;
+      const subAngle = domainCenterAngle + subOffset;
+      const tierIdx = (j + (i % 2)) % tiers;
+
+      const r2x = 1100 + tierIdx * 350;
+      const r2y = 800 + tierIdx * 250;
+      sub.targetX = r2x * Math.cos(subAngle);
+      sub.targetY = r2y * Math.sin(subAngle);
+      if (sub.x === 0 && sub.y === 0) {
+        sub.x = sub.targetX;
+        sub.y = sub.targetY;
+      }
+
+      // Concepts / Leaves fanning out with staggered radius relative to parent subtopic
+      const concepts = sub._children || [];
+      const numConcepts = concepts.length;
+      const leafSector = 0.28;
+      const leafTiers = numConcepts >= 4 ? 2 : 1;
+
+      concepts.forEach((con, k) => {
+        const conOffset = numConcepts > 1 ? ((k - (numConcepts - 1) / 2) / (numConcepts - 1)) * leafSector : 0;
+        const conAngle = subAngle + conOffset;
+        const ltIdx = (k % leafTiers);
+        const r3x = r2x + 400 + ltIdx * 220;
+        const r3y = r2y + 300 + ltIdx * 160;
+        con.targetX = r3x * Math.cos(conAngle);
+        con.targetY = r3y * Math.sin(conAngle);
+        if (con.x === 0 && con.y === 0) {
+          con.x = con.targetX;
+          con.y = con.targetY;
+        }
+      });
+    });
+  });
+
+  // Run geometric overlap removal on all initial positions to guarantee zero collisions
+  resolveOverlaps(false);
+
+  // Store settled positions as targetX / targetY for reset button
+  nodes.forEach(n => {
+    n.targetX = n.x;
+    n.targetY = n.y;
+  });
+}
+
+// Deterministic Non-Physics Overlap Removal Pass (Executes once upon render/toggle)
+function resolveOverlaps(onlyVisible = true) {
+  const targetNodes = onlyVisible ? nodes.filter(isVisible) : nodes;
+  const maxIters = 60;
+  for (let it = 0; it < maxIters; it++) {
+    let moved = false;
+    for (let a = 0; a < targetNodes.length; a++) {
+      for (let b = a + 1; b < targetNodes.length; b++) {
+        const nA = targetNodes[a];
+        const nB = targetNodes[b];
+
+        // Safety margins: horizontal width + 36px, vertical height + 24px
+        const minDx = (nA.width + nB.width) / 2 + 36;
+        const minDy = (nA.height + nB.height) / 2 + 24;
+        const dx = nB.x - nA.x;
+        const dy = nB.y - nA.y;
+        const absDx = Math.abs(dx);
+        const absDy = Math.abs(dy);
+
+        if (absDx < minDx && absDy < minDy) {
+          const overlapX = minDx - absDx;
+          const overlapY = minDy - absDy;
+
+          // Push along the axis of smaller relative penetration
+          if (overlapX / minDx < overlapY / minDy) {
+            const pushX = (overlapX / 2) * (dx >= 0 ? 1 : -1);
+            if (nA.depth > 0 && !nA.isPinned) nA.x -= pushX;
+            if (nB.depth > 0 && !nB.isPinned) nB.x += pushX;
+          } else {
+            const pushY = (overlapY / 2) * (dy >= 0 ? 1 : -1);
+            if (nA.depth > 0 && !nA.isPinned) nA.y -= pushY;
+            if (nB.depth > 0 && !nB.isPinned) nB.y += pushY;
+          }
+          moved = true;
+        }
+      }
+    }
+    if (!moved) break;
+  }
+}
+
+calculateRadialPositions();
+
+// Viewport & Pan-Zoom State
+let transform = { x: window.innerWidth / 2, y: window.innerHeight / 2, k: 0.82 };
+let isPanning = false;
+let startPan = { x: 0, y: 0 };
+
+const svg = document.getElementById("svg-canvas");
+const viewport = document.getElementById("viewport");
+const linksLayer = document.getElementById("links-layer");
+const nodesLayer = document.getElementById("nodes-layer");
+
+function updateTransform() {
+  viewport.setAttribute("transform", `translate(${transform.x}, ${transform.y}) scale(${transform.k})`);
+}
+updateTransform();
+
+// Canvas pan
+const container = document.getElementById("canvas-container");
+container.addEventListener("mousedown", (e) => {
+  if (e.target.closest(".node-group") || e.target.closest(".toolbar") || e.target.closest(".details-drawer")) return;
+  isPanning = true;
+  startPan = { x: e.clientX - transform.x, y: e.clientY - transform.y };
+});
+
+window.addEventListener("mousemove", (e) => {
+  if (!isPanning) return;
+  transform.x = e.clientX - startPan.x;
+  transform.y = e.clientY - startPan.y;
+  updateTransform();
+});
+
+window.addEventListener("mouseup", () => isPanning = false);
+
+// Canvas zoom
+container.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  const zoomFactor = 1.14;
+  const direction = e.deltaY < 0 ? 1 : -1;
+  const factor = direction > 0 ? zoomFactor : 1 / zoomFactor;
+
+  const mouseX = e.clientX;
+  const mouseY = e.clientY;
+
+  transform.x = mouseX - (mouseX - transform.x) * factor;
+  transform.y = mouseY - (mouseY - transform.y) * factor;
+  transform.k *= factor;
+  transform.k = Math.max(0.12, Math.min(transform.k, 3.0));
+  updateTransform();
+}, { passive: false });
+
+let draggedNode = null;
+
+function isVisible(node) {
+  let curr = node.parent;
+  while (curr) {
+    if (curr.collapsed) return false;
+    curr = curr.parent;
+  }
+  return true;
+}
+
+// Render Elements (Nodes & Moving Links)
+let selectedNodeId = null;
+
+function buildDOMElements() {
+  linksLayer.innerHTML = "";
+  nodesLayer.innerHTML = "";
+
+  const visibleNodes = nodes.filter(isVisible);
+
+  // Render Links
+  links.forEach(l => {
+    if (!isVisible(l.source) || !isVisible(l.target)) return;
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("class", "link-path");
+    path.id = `link-${l.source.id}-${l.target.id}`;
+    path.dataset.source = l.source.id;
+    path.dataset.target = l.target.id;
+    linksLayer.appendChild(path);
+  });
+
+  // Render Nodes
+  visibleNodes.forEach(n => {
+    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    g.setAttribute("class", "node-group");
+    g.id = `node-${n.id}`;
+
+    const theme = n.depth === 0 ? ROOT_THEME : DOMAIN_THEMES[n.domainIdx % DOMAIN_THEMES.length];
+    const strokeColor = isLightTheme ? theme.lightStroke : theme.stroke;
+    const fillColor = isLightTheme ? theme.lightFill : "var(--node-bg)";
+
+    // Capsule Pill Background (Strict zero-radius rectangle)
+    const capsule = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    capsule.setAttribute("class", "node-capsule" + (n.id === selectedNodeId ? " selected" : ""));
+    capsule.setAttribute("x", -n.width / 2);
+    capsule.setAttribute("y", -n.height / 2);
+    capsule.setAttribute("width", n.width);
+    capsule.setAttribute("height", n.height);
+    capsule.setAttribute("rx", "0");
+    capsule.setAttribute("ry", "0");
+    capsule.setAttribute("fill", fillColor);
+    capsule.setAttribute("stroke", strokeColor);
+    g.appendChild(capsule);
+
+    // Indicator Dot (Retro Square)
+    const dot = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    dot.setAttribute("class", "status-dot");
+    dot.setAttribute("x", -n.width / 2 + 11);
+    dot.setAttribute("y", -3.5);
+    dot.setAttribute("width", 7);
+    dot.setAttribute("height", 7);
+    dot.setAttribute("fill", strokeColor);
+    g.appendChild(dot);
+
+    // Node Text Label in Times New Roman
+    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    let textClass = "node-label";
+    if (n.depth === 0) textClass += " root-label";
+    else if (n.depth === 1) textClass += " domain-label";
+    text.setAttribute("class", textClass);
+    text.setAttribute("x", -n.width / 2 + 28);
+    text.setAttribute("y", 4.5);
+    text.textContent = n.name;
+    g.appendChild(text);
+
+    // Child count badge / Expand indicator
+    if (n._children && n._children.length > 0) {
+      const badgeG = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      badgeG.setAttribute("class", "node-badge");
+      badgeG.setAttribute("transform", `translate(${n.width / 2 - 14}, 0)`);
+      badgeG.style.cursor = "pointer";
+
+      const badgeCircle = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      badgeCircle.setAttribute("x", -7.5);
+      badgeCircle.setAttribute("y", -7.5);
+      badgeCircle.setAttribute("width", 15);
+      badgeCircle.setAttribute("height", 15);
+      badgeCircle.setAttribute("fill", strokeColor);
+      badgeCircle.setAttribute("opacity", "0.9");
+      badgeG.appendChild(badgeCircle);
+
+      const sign = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      sign.setAttribute("class", "badge-count");
+      sign.setAttribute("text-anchor", "middle");
+      sign.setAttribute("y", 4);
+      sign.textContent = n.collapsed ? "+" : "−";
+      badgeG.appendChild(sign);
+
+      badgeG.addEventListener("mousedown", (e) => {
+        e.stopPropagation();
+      });
+
+      badgeG.addEventListener("mouseup", (e) => {
+        e.stopPropagation();
+      });
+
+      badgeG.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleNode(n);
+      });
+
+      g.appendChild(badgeG);
+    }
+
+    // Node drag & click handlers
+    g.addEventListener("mousedown", (e) => {
+      e.stopPropagation();
+      draggedNode = n;
+      const startMouseX = e.clientX;
+      const startMouseY = e.clientY;
+      let hasMoved = false;
+
+      function onMouseMove(moveEvent) {
+        const dx = moveEvent.clientX - startMouseX;
+        const dy = moveEvent.clientY - startMouseY;
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasMoved = true;
+
+        const worldX = (moveEvent.clientX - transform.x) / transform.k;
+        const worldY = (moveEvent.clientY - transform.y) / transform.k;
+        draggedNode.x = worldX;
+        draggedNode.y = worldY;
+        updatePositionsDOM();
+      }
+
+      function onMouseUp() {
+        window.removeEventListener("mousemove", onMouseMove);
+        window.removeEventListener("mouseup", onMouseUp);
+        if (!hasMoved) {
+          selectNode(n);
+        }
+        draggedNode = null;
+      }
+
+      window.addEventListener("mousemove", onMouseMove);
+      window.addEventListener("mouseup", onMouseUp);
+    });
+
+    g.addEventListener("dblclick", (e) => {
+      e.stopPropagation();
+      if (n._children && n._children.length > 0) {
+        toggleNode(n);
+      }
+    });
+
+    nodesLayer.appendChild(g);
+  });
+}
+
+function updatePositionsDOM() {
+  const visibleNodes = nodes.filter(isVisible);
+
+  // 1. Update node capsule positions
+  visibleNodes.forEach(n => {
+    const g = document.getElementById(`node-${n.id}`);
+    if (g) {
+      g.setAttribute("transform", `translate(${n.x}, ${n.y})`);
+    }
+  });
+
+  // 2. Update curved movable links in real time
+  links.forEach(l => {
+    if (!isVisible(l.source) || !isVisible(l.target)) return;
+
+    const path = document.getElementById(`link-${l.source.id}-${l.target.id}`);
+    if (!path) return;
+
+    const sx = l.source.x;
+    const sy = l.source.y;
+    const tx = l.target.x;
+    const ty = l.target.y;
+
+    // Organic S-curve Bezier
+    const dx = tx - sx;
+    const dy = ty - sy;
+    const cx1 = sx + dx * 0.45;
+    const cy1 = sy + dy * 0.1;
+    const cx2 = sx + dx * 0.55;
+    const cy2 = sy + dy * 0.9;
+
+    path.setAttribute("d", `M ${sx} ${sy} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${tx} ${ty}`);
+  });
+}
+
+buildDOMElements();
+updatePositionsDOM();
+setTimeout(fitView, 60);
+
+// Node Selection & Details Drawer History
+const navHistory = [];
+
+function selectNode(n, recordHistory = true) {
+  if (recordHistory && selectedNodeId && selectedNodeId !== n.id) {
+    navHistory.push(selectedNodeId);
+  }
+  selectedNodeId = n.id;
+  highlightSelectedNode();
+  showDrawer(n);
+  updateBackButton();
+}
+
+function goBack() {
+  if (navHistory.length > 0) {
+    const prevId = navHistory.pop();
+    const prevNode = nodeMap.get(prevId);
+    if (prevNode) {
+      // Ensure ancestors of prevNode are expanded
+      let p = prevNode.parent;
+      let needsRebuild = false;
+      while (p) {
+        if (p.collapsed) {
+          p.collapsed = false;
+          needsRebuild = true;
+        }
+        p = p.parent;
+      }
+      if (needsRebuild) {
+        resolveOverlaps(true);
+        buildDOMElements();
+        updatePositionsDOM();
+      }
+      selectNode(prevNode, false);
+      focusNode(prevNode);
+      return;
+    }
+  }
+
+  // Fallback: If no history, navigate to parent if exists
+  if (selectedNodeId) {
+    const curr = nodeMap.get(selectedNodeId);
+    if (curr && curr.parent) {
+      selectNode(curr.parent, false);
+      focusNode(curr.parent);
+    }
+  }
+}
+
+function updateBackButton() {
+  const backBtn = document.getElementById("drawer-back");
+  const barBackBtn = document.getElementById("bar-btn-back");
+  const curr = selectedNodeId ? nodeMap.get(selectedNodeId) : null;
+  const canGoBack = navHistory.length > 0 || (curr && curr.parent);
+
+  [backBtn, barBackBtn].forEach(btn => {
+    if (!btn) return;
+    btn.disabled = !canGoBack;
+    btn.style.opacity = canGoBack ? "1" : "0.35";
+    btn.style.cursor = canGoBack ? "pointer" : "not-allowed";
+    btn.style.pointerEvents = canGoBack ? "auto" : "none";
+    if (navHistory.length > 0) {
+      const prev = nodeMap.get(navHistory[navHistory.length - 1]);
+      btn.setAttribute("title", prev ? `Back to "${prev.name}"` : "Back to Previous");
+    } else if (curr && curr.parent) {
+      btn.setAttribute("title", `Back to Parent "${curr.parent.name}"`);
+    } else {
+      btn.setAttribute("title", "No Previous Concept");
+    }
+  });
+}
+
+function highlightSelectedNode() {
+  document.querySelectorAll(".node-capsule").forEach(r => r.classList.remove("selected"));
+  document.querySelectorAll(".link-path").forEach(l => l.classList.remove("highlighted"));
+
+  if (!selectedNodeId) return;
+
+  const g = document.getElementById(`node-${selectedNodeId}`);
+  if (g) {
+    const cap = g.querySelector(".node-capsule");
+    if (cap) cap.classList.add("selected");
+  }
+
+  // Highlight ancestor links up to root
+  let curr = nodeMap.get(selectedNodeId);
+  while (curr && curr.parent) {
+    const lPath = document.getElementById(`link-${curr.parent.id}-${curr.id}`);
+    if (lPath) lPath.classList.add("highlighted");
+    curr = curr.parent;
+  }
+}
+
+function toggleNode(n) {
+  n.collapsed = !n.collapsed;
+  resolveOverlaps(true);
+  buildDOMElements();
+  updatePositionsDOM();
+  highlightSelectedNode();
+}
+
+function showDrawer(n) {
+  const drawer = document.getElementById("details-drawer");
+  const drawerBadge = document.getElementById("drawer-badge");
+  const drawerTitle = document.getElementById("drawer-title");
+  const drawerBody = document.getElementById("drawer-body");
+
+  const theme = n.depth === 0 ? ROOT_THEME : DOMAIN_THEMES[n.domainIdx % DOMAIN_THEMES.length];
+  const color = isLightTheme ? theme.lightStroke : theme.stroke;
+
+  drawerBadge.style.background = isLightTheme ? theme.lightFill : "rgba(255, 255, 255, 0.08)";
+  drawerBadge.style.color = color;
+  drawerBadge.style.borderColor = color;
+
+  if (n.depth === 0) drawerBadge.textContent = "Root System Overview";
+  else if (n.depth === 1) drawerBadge.textContent = `Domain ${n.domainIdx + 1} Architecture`;
+  else if (n.depth === 2) drawerBadge.textContent = `Subtopic • Domain ${n.domainIdx + 1}`;
+  else drawerBadge.textContent = "Deep Concept Disambiguation";
+
+  drawerTitle.textContent = n.name;
+  drawerTitle.style.color = color;
+
+  let html = "";
+  if (n.details) {
+    html += `<div>${n.details}</div>`;
+  } else {
+    html += `<p style="color: var(--text-muted);">Explore child concepts or surrounding domain modules for specific architectural models and disambiguation matrices.</p>`;
+  }
+
+  // Clickable Subtopic / Concept Pills
+  if (n._children && n._children.length > 0) {
+    html += `<h3 style="margin-top: 20px; border-top: 1px solid var(--panel-border); padding-top: 14px;">Direct Subtopics & Concepts (${n._children.length}):</h3>`;
+    html += `<div class="concept-pills">`;
+    n._children.forEach(c => {
+      html += `<div class="concept-pill" data-id="${c.id}">📍 ${c.name}</div>`;
+    });
+    html += `</div>`;
+  }
+
+  drawerBody.innerHTML = html;
+  makeEmojisMonochrome(drawer);
+
+  // Subtopic pill click listeners
+  drawerBody.querySelectorAll(".concept-pill").forEach(pill => {
+    pill.addEventListener("click", () => {
+      const targetId = parseInt(pill.dataset.id, 10);
+      const targetNode = nodeMap.get(targetId);
+      if (targetNode) {
+        if (n.collapsed) toggleNode(n);
+        selectNode(targetNode);
+        focusNode(targetNode);
+      }
+    });
+  });
+
+  drawer.classList.add("open");
+  const overlay = document.getElementById("drawer-overlay");
+  if (overlay) overlay.classList.add("active");
+}
+
+function closeDrawer() {
+  const drawer = document.getElementById("details-drawer");
+  const overlay = document.getElementById("drawer-overlay");
+  if (drawer) drawer.classList.remove("open");
+  if (overlay) overlay.classList.remove("active");
+}
+
+function focusNode(n) {
+  transform.x = window.innerWidth / 2 - n.x * transform.k - 100;
+  transform.y = window.innerHeight / 2 - n.y * transform.k;
+  updateTransform();
+}
+
+const drawerBackBtn = document.getElementById("drawer-back");
+if (drawerBackBtn) drawerBackBtn.addEventListener("click", goBack);
+
+const barBackBtn = document.getElementById("bar-btn-back");
+if (barBackBtn) barBackBtn.addEventListener("click", goBack);
+
+document.getElementById("drawer-close").addEventListener("click", closeDrawer);
+
+const drawerOverlay = document.getElementById("drawer-overlay");
+if (drawerOverlay) {
+  drawerOverlay.addEventListener("click", closeDrawer);
+}
+
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    closeDrawer();
+  } else if ((e.altKey && e.key === "ArrowLeft") || (e.key === "Backspace" && document.activeElement.tagName !== "INPUT" && document.activeElement.tagName !== "TEXTAREA")) {
+    const drawer = document.getElementById("details-drawer");
+    if (drawer && drawer.classList.contains("open")) {
+      e.preventDefault();
+      goBack();
+    }
+  }
+});
+
+document.getElementById("bar-btn-focus").addEventListener("click", () => {
+  if (selectedNodeId) {
+    const n = nodeMap.get(selectedNodeId);
+    if (n) focusNode(n);
+  }
+});
+
+document.getElementById("bar-btn-pin").addEventListener("click", () => {
+  if (selectedNodeId) {
+    const n = nodeMap.get(selectedNodeId);
+    if (n) {
+      n.isPinned = !n.isPinned;
+      const pinBtn = document.getElementById("bar-btn-pin");
+      pinBtn.classList.toggle("active", n.isPinned);
+      pinBtn.setAttribute("title", n.isPinned ? "Node Pinned (Click to unpin)" : "Pin Node");
+    }
+  }
+});
+
+document.getElementById("bar-btn-copy").addEventListener("click", () => {
+  if (selectedNodeId) {
+    const n = nodeMap.get(selectedNodeId);
+    if (n) {
+      const text = `${n.name}
+
+${n.details ? n.details.replace(/<[^>]+>/g, '') : ''}`;
+      navigator.clipboard.writeText(text).then(() => {
+        const copyIcon = document.getElementById("copy-icon");
+        copyIcon.innerHTML = `<polyline points="20 6 9 17 4 12"></polyline>`;
+        setTimeout(() => {
+          copyIcon.innerHTML = `<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>`;
+        }, 1500);
+      });
+    }
+  }
+});
+
+// Fit View to Visible Nodes
+function fitView() {
+  const visibleNodes = nodes.filter(isVisible);
+  if (visibleNodes.length === 0) return;
+
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  visibleNodes.forEach(n => {
+    minX = Math.min(minX, n.x - n.width / 2);
+    maxX = Math.max(maxX, n.x + n.width / 2);
+    minY = Math.min(minY, n.y - n.height / 2);
+    maxY = Math.max(maxY, n.y + n.height / 2);
+  });
+
+  const spanW = maxX - minX;
+  const spanH = maxY - minY;
+  const availW = window.innerWidth - 120;
+  const availH = window.innerHeight - 120;
+
+  const k = Math.min(availW / spanW, availH / spanH, 1.05);
+  transform.k = Math.max(0.18, k);
+  transform.x = window.innerWidth / 2 - ((minX + maxX) / 2) * transform.k - 40;
+  transform.y = window.innerHeight / 2 - ((minY + maxY) / 2) * transform.k;
+  updateTransform();
+}
+
+document.getElementById("btn-fit").addEventListener("click", fitView);
+
+// Expand All
+document.getElementById("btn-expand").addEventListener("click", () => {
+  nodes.forEach(n => {
+    n.collapsed = false;
+  });
+  resolveOverlaps(true);
+  buildDOMElements();
+  updatePositionsDOM();
+  highlightSelectedNode();
+  setTimeout(fitView, 50);
+});
+
+// Collapse to Domains
+document.getElementById("btn-collapse").addEventListener("click", () => {
+  nodes.forEach(n => {
+    if (n.depth >= 1) n.collapsed = true;
+  });
+  resolveOverlaps(true);
+  buildDOMElements();
+  updatePositionsDOM();
+  highlightSelectedNode();
+  setTimeout(fitView, 50);
+});
+
+// Theme Switcher (Monochrome Sun/Moon Toggle)
+const themeBtn = document.getElementById("btn-theme");
+const themeIcon = document.getElementById("theme-icon");
+
+function updateThemeIcon() {
+  if (isLightTheme) {
+    // Moon icon for switching back to dark
+    themeIcon.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
+    themeBtn.setAttribute("title", "Switch to Dark Mode");
+  } else {
+    // Sun icon for switching to light
+    themeIcon.innerHTML = `<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>`;
+    themeBtn.setAttribute("title", "Switch to Light Mode");
+  }
+}
+updateThemeIcon();
+
+themeBtn.addEventListener("click", () => {
+  isLightTheme = !isLightTheme;
+  document.body.classList.toggle("light-theme", isLightTheme);
+  localStorage.setItem("hub_theme", isLightTheme ? "light" : "dark");
+  localStorage.setItem("networks_theme", isLightTheme ? "light" : "dark");
+  updateThemeIcon();
+  buildDOMElements();
+  updatePositionsDOM();
+  highlightSelectedNode();
+});
+
+// Grid Visibility Toggle
+const gridBtn = document.getElementById("btn-grid");
+const gridPlane = document.getElementById("grid-plane");
+gridBtn.addEventListener("click", () => {
+  gridPlane.classList.toggle("hidden");
+  gridBtn.classList.toggle("active", !gridPlane.classList.contains("hidden"));
+});
+
+// Reset Layout to Default Radial Grid
+const resetBtn = document.getElementById("btn-reset");
+if (resetBtn) {
+  resetBtn.addEventListener("click", () => {
+    nodes.forEach(n => {
+      n.x = n.targetX;
+      n.y = n.targetY;
+    });
+    resolveOverlaps(true);
+    updatePositionsDOM();
+    fitView();
+  });
+}
+
+// Real-Time Search & Match Cycling
+let matchedNodes = [];
+let currentMatchIdx = -1;
+
+const searchInput = document.getElementById("search-input");
+const searchBadge = document.getElementById("search-badge");
+const searchPrev = document.getElementById("search-prev");
+const searchNext = document.getElementById("search-next");
+
+searchInput.addEventListener("input", (e) => {
+  const query = e.target.value.trim().toLowerCase();
+  document.querySelectorAll(".node-capsule").forEach(r => r.classList.remove("matched"));
+
+  matchedNodes = [];
+  currentMatchIdx = -1;
+
+  if (!query) {
+    searchBadge.style.display = "none";
+    searchPrev.style.display = "none";
+    searchNext.style.display = "none";
+    return;
+  }
+
+  nodes.forEach(n => {
+    const isMatch = n.name.toLowerCase().includes(query) || (n.details && n.details.toLowerCase().includes(query));
+    if (isMatch) {
+      matchedNodes.push(n);
+      // Auto expand ancestors so match is rendered
+      let curr = n.parent;
+      while (curr) {
+        curr.collapsed = false;
+        curr = curr.parent;
+      }
+    }
+  });
+
+  buildDOMElements();
+  highlightSelectedNode();
+
+  if (matchedNodes.length > 0) {
+    searchBadge.style.display = "inline-block";
+    searchPrev.style.display = "inline-flex";
+    searchNext.style.display = "inline-flex";
+    currentMatchIdx = 0;
+    updateSearchMatch();
+  } else {
+    searchBadge.style.display = "inline-block";
+    searchBadge.textContent = "0";
+    searchPrev.style.display = "none";
+    searchNext.style.display = "none";
+  }
+});
+
+function updateSearchMatch() {
+  document.querySelectorAll(".node-capsule").forEach(r => r.classList.remove("matched"));
+  searchBadge.textContent = `${currentMatchIdx + 1}/${matchedNodes.length}`;
+
+  matchedNodes.forEach(mn => {
+    const g = document.getElementById(`node-${mn.id}`);
+    if (g) {
+      const cap = g.querySelector(".node-capsule");
+      if (cap) cap.classList.add("matched");
+    }
+  });
+
+  const target = matchedNodes[currentMatchIdx];
+  if (target) {
+    focusNode(target);
+    selectNode(target);
+  }
+}
+
+searchNext.addEventListener("click", () => {
+  if (matchedNodes.length > 0) {
+    currentMatchIdx = (currentMatchIdx + 1) % matchedNodes.length;
+    updateSearchMatch();
+  }
+});
+
+searchPrev.addEventListener("click", () => {
+  if (matchedNodes.length > 0) {
+    currentMatchIdx = (currentMatchIdx - 1 + matchedNodes.length) % matchedNodes.length;
+    updateSearchMatch();
+  }
+});
+
+// Initial View Fit
+setTimeout(() => {
+  fitView();
+  makeEmojisMonochrome(document.body);
+}, 120);
+
+// URL Search & Node Deep-linking
+setTimeout(() => {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const qSearch = params.get("search") || params.get("q") || params.get("topic") || params.get("node");
+    if (qSearch && searchInput) {
+      searchInput.value = decodeURIComponent(qSearch);
+      searchInput.dispatchEvent(new Event("input"));
+    }
+  } catch (e) {
+    console.error("URL search init error:", e);
+  }
+}, 250);
+
+window.addEventListener("resize", () => {
+  fitView();
+});
+</script>
+</body>
+</html>

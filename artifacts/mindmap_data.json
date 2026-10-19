@@ -1,0 +1,168 @@
+{
+  "name": "Computer Networks (Part 1)",
+  "details": "<h3>Computer Networks & Data Communications</h3><p>Comprehensive knowledge map based on Sadi Sir's lectures covering Chapter 2 (Application Layer) and Lectures 7 to 14 (Transport Layer, Protocols, Flow/Congestion Control, and Security).</p><ul><li><strong>Scope:</strong> Application Layer & Transport Layer</li><li><strong>Reference:</strong> Kurose & Ross (8e) + Forouzan (5e)</li><li><strong>Total Slides:</strong> 366 slides</li></ul>",
+  "children": [
+    {
+      "name": "Chapter 2: Application Layer",
+      "details": "<h3>Application Layer Core</h3><p>Principles of network applications, client-server vs P2P architectures, socket abstraction, transport layer service requirements (throughput, delay, loss sensitivity).</p>",
+      "children": [
+        {
+          "name": "Principles of Network Apps",
+          "details": "<h3>Application Architectures</h3><ul><li><strong>Client-Server:</strong> Dedicated server host, always-on, fixed IP; clients communicate through server (Web, Email).</li><li><strong>P2P (Peer-to-Peer):</strong> Minimal/no dedicated servers; direct communication between peers; self-scalability (BitTorrent).</li><li><strong>Socket Interface:</strong> API door between application process and transport layer.</li><li><strong>Addressing:</strong> IP address (identifies host) + 16-bit Port number (identifies specific process).</li></ul>"
+        },
+        {
+          "name": "Web & HTTP",
+          "details": "<h3>Hypertext Transfer Protocol (HTTP)</h3><ul><li><strong>Port:</strong> 80 (HTTP), 443 (HTTPS) over TCP.</li><li><strong>Stateless:</strong> Server maintains no info about past client requests.</li><li><strong>HTTP/1.0 vs HTTP/1.1:</strong> Non-persistent (1 RTT per object) vs Persistent (multiple objects over 1 TCP connection, pipelining).</li><li><strong>HTTP/2 & HTTP/3:</strong> Binary framing, multiplexing streams over single connection, HOL blocking solved in HTTP/3 via QUIC (UDP).</li><li><strong>Cookies:</strong> Set-Cookie in server header, Cookie in client header for session state.</li><li><strong>Caching & Conditional GET:</strong> <code>If-modified-since</code> returns <code>304 Not Modified</code> if fresh.</li></ul>"
+        },
+        {
+          "name": "Electronic Mail (SMTP/IMAP)",
+          "details": "<h3>Email Protocols</h3><ul><li><strong>SMTP (RFC 5321):</strong> Push protocol, port 25, uses TCP to transfer mail between servers. 7-bit ASCII limitation (MIME extensions).</li><li><strong>Mail Access Protocols:</strong> POP3 (authorization, download-and-delete or keep, stateless), IMAP (manipulate messages in folders on server, stateful), Webmail (HTTP).</li></ul>"
+        },
+        {
+          "name": "Domain Name System (DNS)",
+          "details": "<h3>DNS Architecture</h3><ul><li><strong>Role:</strong> Hostname to IP translation, host/mail server aliasing, load distribution.</li><li><strong>Hierarchy:</strong> Root DNS servers -> Top-Level Domain (TLD: .com, .edu) -> Authoritative servers.</li><li><strong>Queries:</strong> Iterative (local server queries hierarchy) vs Recursive (burden pushed to queried server).</li><li><strong>Resource Records (RR):</strong> (Name, Value, Type, TTL). Type A (host->IP), Type NS (domain->authoritative server), Type CNAME (alias->canonical name), Type MX (mail server).</li></ul>"
+        },
+        {
+          "name": "Video Streaming & CDNs",
+          "details": "<h3>Video Distribution</h3><ul><li><strong>DASH:</strong> Dynamic Adaptive Streaming over HTTP. Server divides video into chunks encoded at multiple bitrates; client dynamically requests quality based on bandwidth.</li><li><strong>CDNs:</strong> Content Distribution Networks. <em>Enter Deep</em> (servers close to users in access networks) vs <em>Bring Home</em> (fewer clusters at IXPs).</li></ul>"
+        }
+      ]
+    },
+    {
+      "name": "L7: Transport Layer Intro",
+      "details": "<h3>Transport Layer Role</h3><p>Provides logical end-to-end communication between application processes on different hosts.</p>",
+      "children": [
+        {
+          "name": "Transport vs Network Layer",
+          "details": "<h3>Scope Comparison</h3><ul><li><strong>Network Layer:</strong> Logical communication between <em>hosts</em> (IP routing).</li><li><strong>Transport Layer:</strong> Logical communication between <em>processes</em> (Port addressing).</li><li>Analogy: 12 kids writing letters in 2 houses (Network = postal service, Transport = Ann & Bill collecting and distributing letters to kids).</li></ul>"
+        },
+        {
+          "name": "Multiplexing & Demux",
+          "details": "<h3>Ports & Demultiplexing</h3><ul><li><strong>Multiplexing (Sender):</strong> Gathering data chunks from multiple sockets, adding transport headers, passing to network layer.</li><li><strong>Demultiplexing (Receiver):</strong> Examining header fields to direct received segments to the correct socket.</li><li><strong>Port Ranges (16 bits):</strong> 0-1023 (Well-known/System), 1024-49151 (Registered), 49152-65535 (Dynamic/Private/Ephemeral).</li><li><strong>Connectionless Demux (UDP):</strong> Uses 2-tuple <code>(dest IP, dest port)</code>.</li><li><strong>Connection-Oriented Demux (TCP):</strong> Uses 4-tuple <code>(src IP, src port, dest IP, dest port)</code>.</li></ul>"
+        }
+      ]
+    },
+    {
+      "name": "L8: Reliable Data Transfer (RDT)",
+      "details": "<h3>RDT Framework & Evolution</h3><p>Building reliable transport over inherently unreliable underlying network layers.</p>",
+      "children": [
+        {
+          "name": "RDT Protocol Evolution",
+          "details": "<h3>RDT Versions</h3><ul><li><strong>rdt 1.0:</strong> Completely reliable underlying channel (no bit errors, no loss).</li><li><strong>rdt 2.0:</strong> Channel with bit errors. Introduces Checksums, ACKs, and NAKs (Stop-and-Wait). Fatal flaw: what if ACK/NAK is corrupted?</li><li><strong>rdt 2.1:</strong> Adds sequence numbers (0 and 1) to packets. Handles duplicate packets when ACK/NAK is garbled.</li><li><strong>rdt 2.2:</strong> NAK-free protocol. Sender uses duplicate ACKs instead of explicit NAKs.</li><li><strong>rdt 3.0:</strong> Channel with errors and packet loss. Adds countdown timer. Retransmits on timeout. Stop-and-Wait suffers from poor performance.</li></ul>"
+        },
+        {
+          "name": "Pipelining & Sliding Window",
+          "details": "<h3>Pipelined Protocols</h3><ul><li>Sender allows multiple in-flight, unacknowledged packets.</li><li><strong>Sender Utilization:</strong> {sender} = \frac{N \times (L/R)}{RTT + (L/R)}$. Dramatically increases link throughput.</li><li>Two primary sliding window protocols: Go-Back-N and Selective Repeat.</li></ul>"
+        },
+        {
+          "name": "Go-Back-N (GBN)",
+          "details": "<h3>Go-Back-N Protocol</h3><ul><li>Window size $.</li><li><strong>Cumulative ACK:</strong> <code>ACK(n)</code> acknowledges all packets up to and including $.</li><li>Single timer for oldest unacknowledged packet.</li><li>Out-of-order packets are discarded by receiver.</li><li>On timeout, sender retransmits ALL $ packets in current window.</li></ul>"
+        },
+        {
+          "name": "Selective Repeat (SR)",
+          "details": "<h3>Selective Repeat Protocol</h3><ul><li>Receiver acknowledges each packet individually.</li><li>Receiver maintains buffer for out-of-order packets.</li><li>Sender maintains independent timer for EACH unacknowledged packet.</li><li>Retransmits only the specifically unacknowledged/timed-out packet.</li><li><strong>Window Size Constraint:</strong> Window size must be $\\le 2^{k-1}$ (half of sequence number space) to avoid sequence number overlap ambiguity.</li></ul>"
+        }
+      ]
+    },
+    {
+      "name": "L9: TCP Fundamentals & Connection",
+      "details": "<h3>Transmission Control Protocol</h3><p>RFC 793, 1122. Connection-oriented, point-to-point, full duplex, stream delivery with reliable in-order byte stream.</p>",
+      "children": [
+        {
+          "name": "TCP Segment Format",
+          "details": "<h3>TCP Header Fields (20-60 bytes)</h3><ul><li><strong>Source & Destination Ports:</strong> 16 bits each.</li><li><strong>Sequence Number:</strong> 32 bits (Byte stream number of first byte in segment).</li><li><strong>Acknowledgment Number:</strong> 32 bits (Next expected byte number from other side - Cumulative).</li><li><strong>HLEN (Header Length):</strong> 4 bits (number of 4-byte words, 20-60 bytes).</li><li><strong>Reserved:</strong> 6 bits.</li><li><strong>Control Flags (6 bits):</strong> URG, ACK, PSH, RST, SYN, FIN.</li><li><strong>Window Size:</strong> 16 bits (Flow control advertised receive window <code>rwnd</code>).</li><li><strong>Checksum:</strong> 16 bits (mandatory, calculated with pseudo-header).</li><li><strong>Urgent Pointer:</strong> 16 bits.</li></ul>"
+        },
+        {
+          "name": "Connection Establishment (3-Way Handshake)",
+          "details": "<h3>Three-Way Handshake</h3><ul><li><strong>Step 1 (Client->Server):</strong> <code>SYN=1, seq=client_isn</code>. No data payload.</li><li><strong>Step 2 (Server->Client):</strong> <code>SYN=1, ACK=1, seq=server_isn, ack=client_isn + 1</code>. Allocates buffers.</li><li><strong>Step 3 (Client->Server):</strong> <code>ACK=1, seq=client_isn + 1, ack=server_isn + 1</code>. Can contain data payload!</li><li><strong>SYN Flood Attack:</strong> Attacker sends bogus SYNs without completing handshake; server exhausts half-open connection tables. Countermeasure: <em>SYN Cookies</em>.</li></ul>"
+        },
+        {
+          "name": "Connection Termination",
+          "details": "<h3>Connection Tear-Down</h3><ul><li><strong>Step 1:</strong> Client sends <code>FIN=1, seq=u</code>.</li><li><strong>Step 2:</strong> Server sends <code>ACK=1, ack=u + 1</code> (Client enters FIN_WAIT_2).</li><li><strong>Step 3:</strong> Server finishes sending data, sends <code>FIN=1, seq=w</code>.</li><li><strong>Step 4:</strong> Client sends <code>ACK=1, ack=w + 1</code>.</li><li><strong>TIME_WAIT State:</strong> Client waits  \times \text{MSL}$ (Maximum Segment Lifetime, typically 1-2 min) to allow ACK to reach server and cleanly drain stale packets from network.</li></ul>"
+        }
+      ]
+    },
+    {
+      "name": "L10: TCP Flow Control",
+      "details": "<h3>Flow Control Mechanics</h3><p>Prevents a fast sender from overflowing a slow receiver buffer. End-to-end speed matching mechanism.</p>",
+      "children": [
+        {
+          "name": "Sliding Window (rwnd)",
+          "details": "<h3>Receiver Window Dynamics</h3><ul><li>Receiver advertises free buffer space in <code>Window size</code> header:  = RcvBuffer - [LastByteRcvd - LastByteRead]$.</li><li>Sender guarantees:  - LastByteAcked \\le rwnd$.</li><li>Window operations: Window <em>closes</em> (as data sent/received), <em>shrinks</em> (buffer reduced), and <em>opens</em> (as application reads bytes).</li><li><strong>Zero Window Probing:</strong> When  = 0$, sender sends 1-byte probe segments to trigger ACKs and discover when window reopens.</li></ul>"
+        },
+        {
+          "name": "Silly Window Syndrome",
+          "details": "<h3>Preventing Micro-Segments</h3><ul><li>Problem: Either sender transmits 1-byte data or receiver advertises tiny 1-byte windows, causing massive header overhead (40 bytes header for 1 byte payload!).</li><li><strong>Sender Solution (Nagle's Algorithm):</strong> Send first piece immediately; buffer subsequent data until previous ACK arrives OR full MSS accumulated.</li><li><strong>Receiver Solution (Clark's Solution / Delayed ACK):</strong> Do not advertise window until  \\ge \\min(MSS, \text{Buffer}/2)$. Delay sending ACKs up to 200ms.</li></ul>"
+        }
+      ]
+    },
+    {
+      "name": "L11: TCP Error & Congestion Control",
+      "details": "<h3>Error Recovery & Congestion Avoidance</h3><p>Distinction: Flow control protects receiver buffer; Congestion control protects intermediate network routers and links.</p>",
+      "children": [
+        {
+          "name": "Error Control & Retransmission",
+          "details": "<h3>Retransmission Triggers</h3><ul><li><strong>Timeout (RTO expiration):</strong> Coarse-grained timer expires. Conservative response.</li><li><strong>Fast Retransmission:</strong> Triggered on receipt of 3 duplicate ACKs (4 identical ACKs total). Sender infers lost segment and retransmits immediately without waiting for timeout!</li><li>Cumulative ACK generation rules: Delayed ACK (wait 200ms for 2nd segment), immediate ACK for out-of-order segment.</li></ul>"
+        },
+        {
+          "name": "Congestion Control Principles (AIMD)",
+          "details": "<h3>AIMD Mechanism</h3><ul><li>Sender limits unacked data by: $\\min(cwnd, rwnd)$.</li><li><strong>Additive Increase:</strong> Increase $ by \text{ MSS}$ every RTT until loss occurs (probing for bandwidth).</li><li><strong>Multiplicative Decrease:</strong> Cut $ in half after loss event (3 duplicate ACKs), or reset to \text{ MSS}$ on timeout.</li><li>Sawtooth transmission pattern achieves distributed efficiency and fairness.</li></ul>"
+        },
+        {
+          "name": "TCP Tahoe vs Reno vs NewReno",
+          "details": "<h3>Congestion Phases</h3><ul><li><strong>Slow Start:</strong>  = 1\text{ MSS}$. Doubles exponentially every RTT until  \\ge ssthresh$.</li><li><strong>Congestion Avoidance:</strong> When  \\ge ssthresh$, increases linearly by \text{ MSS}/\text{RTT}$.</li><li><strong>On Loss Event:</strong><ul><li><em>Tahoe:</em> Sets  = cwnd/2$, resets  = 1\text{ MSS}$ (always enters Slow Start).</li><li><em>Reno:</em> On 3 dup ACKs, sets  = cwnd/2$, sets  = ssthresh + 3\text{ MSS}$ (Fast Recovery), skips slow start! On timeout resets  = 1$.</li></ul></li></ul>"
+        }
+      ]
+    },
+    {
+      "name": "L12: TCP RTT Estimation & Timers",
+      "details": "<h3>Adaptive Retransmission Timeout</h3><p>Calculating dynamic RTO in a fluctuating network environment to avoid premature timeouts or sluggish recovery.</p>",
+      "children": [
+        {
+          "name": "Jacobson's EWMA Algorithm",
+          "details": "<h3>RTT Estimation Formulas</h3><ul><li><strong>EstimatedRTT (EWMA):</strong>  = (1 - \u0007lpha) EstimatedRTT + \u0007lpha SampleRTT$ (typically $\u0007lpha = 0.125$).</li><li><strong>DevRTT (Safety Margin):</strong>  = (1 - \beta) DevRTT + \beta |SampleRTT - EstimatedRTT|$ (typically $\beta = 0.25$).</li><li><strong>RTO Setting:</strong>  = EstimatedRTT + 4 \times DevRTT$.</li></ul>"
+        },
+        {
+          "name": "Karn's Algorithm",
+          "details": "<h3>The Ambiguity Flaw & Solution</h3><ul><li><strong>Problem:</strong> When a segment is retransmitted and an ACK arrives, does the ACK belong to the 1st or 2nd transmission? Calculating SampleRTT on retransmissions severely corrupts RTO.</li><li><strong>Rule 1:</strong> NEVER compute SampleRTT for any segment that has been retransmitted.</li><li><strong>Rule 2 (Exponential Backoff):</strong> Whenever a timeout occurs, double the RTO: {new} = 2 \times RTO_{old}$. Backs off aggressively under network congestion.</li></ul>"
+        },
+        {
+          "name": "TCP Timers Summary",
+          "details": "<h3>4 Core TCP Timers</h3><ul><li><strong>Retransmission Timer (RTO):</strong> Tracks unacknowledged segments.</li><li><strong>Persistence Timer:</strong> Prevents deadlock when receiver advertises  = 0$; periodic 1-byte probes sent.</li><li><strong>Keepalive Timer:</strong> Detects dead peer on idle connections (typically 2 hours).</li><li><strong>TIME_WAIT (2MSL) Timer:</strong> Holds connection closed state for 2 MSL after sending final ACK.</li></ul>"
+        }
+      ]
+    },
+    {
+      "name": "L13: UDP (User Datagram Protocol)",
+      "details": "<h3>Connectionless Unreliable Transport (RFC 768)</h3><p>Minimalist multiplexing/demultiplexing wrapper around IP datagrams.</p>",
+      "children": [
+        {
+          "name": "UDP Characteristics",
+          "details": "<h3>Why Use UDP?</h3><ul><li>No connection establishment handshake (0 RTT startup latency).</li><li>No connection state (server holds no buffers, timers, or seq numbers - highly scalable).</li><li>Small header overhead: only 8 bytes vs 20-60 bytes for TCP.</li><li>No congestion control throttling: sends at constant rate dictated by application.</li><li>Ideal for: DNS, SNMP, DHCP, VoIP, video conferencing, online gaming.</li></ul>"
+        },
+        {
+          "name": "UDP Header & Checksum",
+          "details": "<h3>Header & Checksum Details</h3><ul><li><strong>8-Byte Header:</strong> Source Port (16b), Destination Port (16b), Length (16b), Checksum (16b).</li><li><strong>Checksum Algorithm:</strong> Treats header, payload, and a 12-byte IP pseudo-header (Source IP, Dest IP, Protocol 17, UDP Length) as 16-bit words. Computes 1's complement sum. Detects transmission bit errors.</li></ul>"
+        }
+      ]
+    },
+    {
+      "name": "L14: Transport Layer Security (TLS/SSL)",
+      "details": "<h3>Securing the Transport Layer</h3><p>Providing end-to-end confidentiality, data integrity, and mutual/server authentication on top of TCP.</p>",
+      "children": [
+        {
+          "name": "Security Goals & Placement",
+          "details": "<h3>Security Architecture</h3><ul><li><strong>Confidentiality:</strong> Symmetric encryption (AES, ChaCha20) prevents eavesdropping.</li><li><strong>Integrity:</strong> Message Authentication Code (HMAC / AEAD) prevents tampering.</li><li><strong>Authentication:</strong> X.509 digital certificates and public key cryptography (RSA, ECDSA).</li><li><strong>Placement:</strong> Implemented at the application layer above TCP (sockets wrap TLS), providing a secure socket interface.</li></ul>"
+        },
+        {
+          "name": "TLS Handshake Protocol",
+          "details": "<h3>4-Phase Handshake</h3><ul><li><strong>Phase I:</strong> ClientHello (cipher suites, nonce) & ServerHello (chosen cipher, server nonce).</li><li><strong>Phase II:</strong> Server sends Certificate, ServerKeyExchange (Diffie-Hellman parameters), ServerHelloDone.</li><li><strong>Phase III:</strong> Client verifies certificate, sends ClientKeyExchange (pre-master secret encrypted with server public key or DH key share).</li><li><strong>Phase IV:</strong> ChangeCipherSpec & Finished messages encrypted with new session keys.</li><li><strong>Key Derivation:</strong> Master secret (8\text{ bytes}$) derived via pseudo-random function from pre-master secret + client nonce + server nonce.</li></ul>"
+        },
+        {
+          "name": "TLS 1.2 vs TLS 1.3 Evolution",
+          "details": "<h3>Modern TLS Improvements</h3><ul><li><strong>TLS 1.2 ECDHE:</strong> Requires 2 full RTTs before application data (HTTP request) can be sent. Supports legacy vulnerable ciphers (RC4, DES, CBC).</li><li><strong>TLS 1.3 (RFC 8446):</strong> Reduces handshake to 1 RTT! Client sends key share in initial ClientHello. Eliminates obsolete crypto, mandates AEAD ciphers.</li><li><strong>0-RTT Resumption:</strong> Returning clients can send encrypted application data on first flight.</li></ul>"
+        }
+      ]
+    }
+  ]
+}

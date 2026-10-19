@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digital Image Processing: Core Theory & Algorithms</title>
+<style>
+  :root {
+    --bg-color: #121314;
+    --canvas-bg: #121314;
+    --grid-minor: rgba(255, 255, 255, 0.04);
+    --grid-major: rgba(255, 255, 255, 0.09);
+    --panel-bg: #1a1b1d;
+    --panel-border: #555555;
+    --text-primary: #f0f0ea;
+    --text-secondary: #b0b0a8;
+    --text-muted: #808078;
+    --node-bg: #1a1b1d;
+    --node-border: #555555;
+    --link-color: rgba(160, 160, 160, 0.35);
+    --link-pulse: #f0f0ea;
+    --drawer-bg: #1a1b1d;
+    --table-head-bg: #242528;
+    --table-border: #555555;
+    --table-stripe: #1e1f22;
+    --btn-bg: #1e1f22;
+    --btn-hover: #2a2b2f;
+    --icon-color: #b0b0a8;
+    --icon-hover: #f0f0ea;
+    --font-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "JetBrains Mono", "Courier New", Courier, monospace;
+  }
+
+  body.light-theme {
+    --bg-color: #f5f5f0;
+    --canvas-bg: #f5f5f0;
+    --grid-minor: rgba(0, 0, 0, 0.04);
+    --grid-major: rgba(0, 0, 0, 0.09);
+    --panel-bg: #ffffff;
+    --panel-border: #111111;
+    --text-primary: #111111;
+    --text-secondary: #444444;
+    --text-muted: #666666;
+    --node-bg: #ffffff;
+    --node-border: #111111;
+    --link-color: rgba(60, 60, 60, 0.35);
+    --link-pulse: #111111;
+    --drawer-bg: #ffffff;
+    --table-head-bg: #f5f5f0;
+    --table-border: #111111;
+    --table-stripe: #fafaf8;
+    --btn-bg: #f9f9f6;
+    --btn-hover: #eaeae4;
+    --icon-color: #444444;
+    --icon-hover: #111111;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border-radius: 0 !important;
+  }
+
+  ::selection {
+    background: var(--text-primary);
+    color: var(--panel-bg);
+  }
+  ::-moz-selection {
+    background: var(--text-primary);
+    color: var(--panel-bg);
+  }
+
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    font-family: var(--font-serif);
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  #canvas-container {
+    flex: 1;
+    height: 100%;
+    position: relative;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    overflow: hidden;
+  }
+  #canvas-container:active { cursor: grabbing; }
+
+  svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* Minimalist Graph Paper Grid */
+  .grid-bg {
+    transition: opacity 0.2s ease;
+  }
+  .grid-bg.hidden { opacity: 0; }
+
+  /* Moving Organic Links */
+  .link-path {
+    fill: none;
+    stroke: var(--link-color);
+    stroke-width: 1.5px;
+    stroke-linecap: square;
+    transition: stroke 0.2s ease, stroke-width 0.2s ease;
+  }
+  .link-path.highlighted {
+    stroke-width: 2.5px;
+    stroke: var(--text-primary);
+  }
+
+  /* Draggable Node Pills / Wireframe Rectangles */
+  .node-group {
+    cursor: grab;
+    transition: filter 0.15s ease;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .node-group:active { cursor: grabbing; }
+
+  .node-capsule {
+    rx: 0px !important;
+    ry: 0px !important;
+    stroke-width: 1.5px;
+    transition: stroke 0.2s ease, stroke-width 0.2s ease, filter 0.2s ease;
+  }
+  .node-capsule:hover {
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.25));
+  }
+  body:not(.light-theme) .node-capsule:hover {
+    filter: drop-shadow(0 4px 10px rgba(255, 255, 255, 0.25));
+  }
+  .node-capsule.selected {
+    stroke-width: 2.5px !important;
+    stroke: var(--text-primary) !important;
+    filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.4)) !important;
+  }
+  body:not(.light-theme) .node-capsule.selected {
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.4)) !important;
+  }
+  .node-capsule.matched {
+    stroke: var(--text-primary) !important;
+    stroke-width: 3px !important;
+    stroke-dasharray: 4 2;
+  }
+
+  .node-label {
+    font-size: 13px;
+    font-weight: 500;
+    fill: var(--text-primary);
+    font-family: var(--font-serif);
+    pointer-events: none;
+    letter-spacing: 0.1px;
+  }
+  .node-label.root-label {
+    font-size: 14.5px;
+    font-weight: 700;
+    font-style: italic;
+    fill: var(--text-primary);
+  }
+  .node-label.domain-label {
+    font-size: 13.5px;
+    font-weight: 600;
+  }
+
+  .status-dot {
+    pointer-events: none;
+  }
+
+  .badge-count {
+    font-size: 11px;
+    font-weight: 700;
+    fill: #ffffff;
+    font-family: var(--font-mono);
+    pointer-events: none;
+  }
+
+  /* Minimalist Floating Toolbar with Pure Monochrome Icons */
+  .toolbar {
+    position: absolute;
+    top: 16px;
+    left: 20px;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 0 !important;
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 2px 2px 0px var(--panel-border);
+    z-index: 10;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-right: 10px;
+    border-right: 1px solid var(--panel-border);
+    font-size: 13.5px;
+    font-weight: 700;
+    font-family: var(--font-serif);
+    color: var(--text-primary);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .live-dot {
+    width: 7.5px;
+    height: 7.5px;
+    background: var(--text-primary);
+    border-radius: 0 !important;
+  }
+
+  .search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .search-wrap input {
+    background: var(--btn-bg);
+    border: 1px solid var(--panel-border);
+    color: var(--text-primary);
+    font-family: var(--font-serif);
+    border-radius: 0 !important;
+    padding: 5px 10px 5px 28px;
+    font-size: 12.5px;
+    width: 190px;
+    outline: none !important;
+    transition: all 0.15s ease;
+  }
+  .search-wrap input:focus {
+    width: 240px;
+    border-color: var(--text-primary);
+    background: var(--panel-bg);
+  }
+  .search-ico {
+    position: absolute;
+    left: 9px;
+    display: flex;
+    align-items: center;
+    color: var(--icon-color);
+    pointer-events: none;
+  }
+
+  .search-badge {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--panel-bg);
+    background: var(--text-primary);
+    border: 1px solid var(--panel-border);
+    border-radius: 0 !important;
+    padding: 2px 7px;
+    display: none;
+    white-space: nowrap;
+  }
+
+  /* Monochrome Icon Buttons (No text!) */
+  .mono-btn {
+    background: var(--btn-bg);
+    border: 1px solid var(--panel-border);
+    color: var(--icon-color);
+    border-radius: 0 !important;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.1s ease;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    outline: none !important;
+  }
+  .mono-btn svg {
+    width: 15px;
+    height: 15px;
+    stroke: currentColor;
+    display: block;
+  }
+  .mono-btn:hover {
+    background: var(--text-primary);
+    color: var(--panel-bg);
+    border-color: var(--text-primary);
+  }
+  .mono-btn.active {
+    background: var(--text-primary) !important;
+    color: var(--panel-bg) !important;
+    border-color: var(--text-primary) !important;
+  }
+
+  /* Backdrop Overlay when Details Drawer is Open */
+  .drawer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.48);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 15;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .drawer-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  body.light-theme .drawer-overlay {
+    background: rgba(0, 0, 0, 0.25);
+  }
+
+  /* Sleek Slide-over Details Drawer */
+  .details-drawer {
+    width: 500px;
+    max-width: 92vw;
+    height: 100%;
+    background: var(--drawer-bg);
+    border-left: 2px solid var(--panel-border);
+    border-radius: 0 !important;
+    box-shadow: -10px 0 30px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    z-index: 20;
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+  .details-drawer.open {
+    transform: translateX(0);
+  }
+
+  .drawer-head {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--panel-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .drawer-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 0 !important;
+    border: 1px solid var(--panel-border);
+    font-size: 11px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .drawer-title {
+    font-size: 16px;
+    font-weight: 700;
+    font-family: var(--font-serif);
+    line-height: 1.35;
+    color: var(--text-primary);
+  }
+
+  .drawer-bar {
+    padding: 8px 20px;
+    border-bottom: 1px solid var(--panel-border);
+    display: flex;
+    gap: 8px;
+    background: var(--btn-bg);
+  }
+
+  .drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 22px;
+    font-size: 14px;
+    line-height: 1.65;
+    font-family: var(--font-serif);
+    color: var(--text-secondary);
+  }
+  .drawer-body h3 {
+    color: var(--text-primary);
+    margin: 16px 0 8px 0;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: var(--font-serif);
+  }
+  .drawer-body p { margin-bottom: 12px; }
+  .drawer-body ul, .drawer-body ol { padding-left: 22px; margin-bottom: 12px; }
+  .drawer-body li { margin-bottom: 6px; }
+  .drawer-body strong { color: var(--text-primary); font-family: var(--font-serif); }
+  .drawer-body em { font-style: italic; }
+  .drawer-body code {
+    background: var(--btn-bg);
+    color: var(--text-primary);
+    padding: 2px 6px;
+    border: 1px solid var(--panel-border);
+    border-radius: 0 !important;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  /* Clean Academic Tables */
+  .drawer-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0 18px 0;
+    font-size: 13px;
+    border-radius: 0 !important;
+    overflow: hidden;
+    font-family: var(--font-serif);
+    border: 1px solid var(--table-border);
+  }
+  .drawer-body th, .drawer-body td {
+    padding: 8px 11px;
+    border: 1px solid var(--table-border);
+    text-align: left;
+    vertical-align: top;
+  }
+  .drawer-body th {
+    background: var(--table-head-bg);
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+  .drawer-body tr:nth-child(even) { background: var(--table-stripe); }
+
+  /* Concept Pills */
+  .concept-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin: 10px 0 16px 0;
+  }
+  .concept-pill {
+    background: var(--btn-bg);
+    border: 1px solid var(--panel-border);
+    color: var(--text-secondary);
+    font-family: var(--font-serif);
+    border-radius: 0 !important;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.1s ease;
+  }
+  .concept-pill:hover {
+    background: var(--text-primary);
+    color: var(--panel-bg);
+    border-color: var(--text-primary);
+  }
+
+  /* Minimalist Footer Hint */
+  .hint-pill {
+    position: absolute;
+    bottom: 16px;
+    left: 20px;
+    font-size: 12px;
+    font-family: var(--font-serif);
+    color: var(--text-muted);
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 0 !important;
+    padding: 4px 12px;
+    pointer-events: none;
+    box-shadow: 2px 2px 0px var(--panel-border);
+  }
+
+  /* Robust Drawer Theme Adaptations */
+  body.light-theme .drawer-body div[style*="background"] {
+    background: var(--btn-bg) !important;
+    border-color: var(--panel-border) !important;
+    color: var(--text-primary) !important;
+  }
+  body.light-theme .drawer-body span[style*="color:#38bdf8"],
+  body.light-theme .drawer-body p[style*="color:#38bdf8"],
+  body.light-theme .drawer-body a[style*="color:#38bdf8"] {
+    color: var(--text-primary) !important;
+  }
+  body.light-theme .drawer-body p[style*="color:#cbd5e1"],
+  body.light-theme .drawer-body ul[style*="color:#94a3b8"] {
+    color: var(--text-secondary) !important;
+  }
+  body.light-theme .drawer-body tr[style*="background:#1e293b"] {
+    background: var(--table-head-bg) !important;
+    color: var(--text-primary) !important;
+  }
+  body.light-theme .drawer-body tr[style*="background:#1e293b"] th {
+    color: var(--text-primary) !important;
+  }
+  body.light-theme .drawer-body tr[style*="background:#0f172a"] {
+    background: var(--table-stripe) !important;
+  }
+  body.light-theme .drawer-body a[style*="background"] {
+    background: var(--text-primary) !important;
+    color: var(--panel-bg) !important;
+    border: 1px solid var(--panel-border) !important;
+  }
+
+  /* Retro Monochrome Emojis */
+  .mono-emoji {
+    display: inline-block;
+    vertical-align: -0.1em;
+    line-height: 1;
+    filter: grayscale(100%) brightness(0.65) contrast(160%);
+    -webkit-filter: grayscale(100%) brightness(0.65) contrast(160%);
+    transition: filter 0.1s ease;
+  }
+  body:not(.light-theme) .mono-emoji {
+    filter: grayscale(100%) brightness(1.75) contrast(140%);
+    -webkit-filter: grayscale(100%) brightness(1.75) contrast(140%);
+  }
+  body.light-theme .drawer-body a[style*="background"] .mono-emoji,
+  body.light-theme .btn:hover .mono-emoji,
+  body.light-theme button:hover .mono-emoji {
+    filter: grayscale(100%) brightness(2.2) contrast(150%) !important;
+    -webkit-filter: grayscale(100%) brightness(2.2) contrast(150%) !important;
+  }
+</style>
+</head>
+<body>
+
+<div id="canvas-container">
+  <div class="toolbar">
+    <div class="brand">
+      <div class="live-dot"></div>
+      <span>Digital Image Processing: Core Theory & Algorithms</span>
+    </div>
+
+    <div class="search-wrap">
+      <span class="search-ico">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      </span>
+      <input type="text" id="search-input" placeholder="Search concepts (Tahoe, Karn, AIMD)...">
+    </div>
+    <span class="search-badge" id="search-badge">0</span>
+
+    <!-- Search Prev/Next (Monochrome Icons) -->
+    <button class="mono-btn" id="search-prev" style="display:none;" title="Previous Match">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="18 15 12 9 6 15"></polyline></svg>
+    </button>
+    <button class="mono-btn" id="search-next" style="display:none;" title="Next Match">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+    </button>
+
+    <!-- Theme Switcher (Monochrome Sun/Moon Icon) -->
+    <button class="mono-btn" id="btn-theme" title="Toggle Light / Dark Mode">
+      <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+    </button>
+
+    <!-- Grid Toggle (Monochrome Grid Icon) -->
+    <button class="mono-btn active" id="btn-grid" title="Toggle Graph Paper Grid">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>
+    </button>
+
+    <!-- Reset Layout (Monochrome Reset Icon) -->
+    <button class="mono-btn" id="btn-reset" title="Reset Layout to Default Radial Grid">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
+    </button>
+
+    <!-- Fit View (Monochrome Crosshairs / Fit Icon) -->
+    <button class="mono-btn" id="btn-fit" title="Zoom to Fit">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><polyline points="21 15 21 21 15 21"></polyline><polyline points="3 9 3 3 9 3"></polyline></svg>
+    </button>
+
+    <!-- Expand All (Monochrome Tree Expand Icon) -->
+    <button class="mono-btn" id="btn-expand" title="Expand All Branches">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+    </button>
+
+    <!-- Collapse All (Monochrome Tree Fold Icon) -->
+    <button class="mono-btn" id="btn-collapse" title="Collapse to Domains">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+    </button>
+  </div>
+
+  <svg id="svg-canvas">
+    <defs>
+      <!-- Engineering Graph Paper Grid -->
+      <pattern id="grid-pattern-minor" width="24" height="24" patternUnits="userSpaceOnUse">
+        <path d="M 24 0 L 0 0 0 24" fill="none" stroke="var(--grid-minor)" stroke-width="0.75" />
+      </pattern>
+      <pattern id="grid-pattern-major" width="120" height="120" patternUnits="userSpaceOnUse">
+        <rect width="120" height="120" fill="url(#grid-pattern-minor)" />
+        <path d="M 120 0 L 0 0 0 120" fill="none" stroke="var(--grid-major)" stroke-width="1.2" />
+      </pattern>
+    </defs>
+
+    <g id="viewport">
+      <!-- Infinite Graph Paper Grid Plane -->
+      <rect id="grid-plane" class="grid-bg" x="-10000" y="-10000" width="20000" height="20000" fill="url(#grid-pattern-major)" />
+
+      <!-- Moving Links Layer -->
+      <g id="links-layer"></g>
+
+      <!-- Movable Nodes Layer -->
+      <g id="nodes-layer"></g>
+    </g>
+  </svg>
+
+  <div class="hint-pill">
+    Drag nodes to reposition • Scroll to zoom • Click +/- to toggle branch • Click node for details
+  </div>
+</div>
+
+<!-- Backdrop Overlay for Details Drawer -->
+<div class="drawer-overlay" id="drawer-overlay"></div>
+
+<div class="details-drawer" id="details-drawer">
+  <div class="drawer-head">
+    <div style="display: flex; align-items: flex-start; gap: 10px; flex: 1;">
+      <!-- Monochrome Back Button -->
+      <button class="mono-btn" id="drawer-back" title="Go Back to Previous Concept" disabled style="margin-top: 2px; flex-shrink: 0; opacity: 0.35; cursor: not-allowed; pointer-events: none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+      </button>
+      <div style="flex: 1; min-width: 0;">
+        <div class="drawer-badge" id="drawer-badge">Overview</div>
+        <div class="drawer-title" id="drawer-title">Node Title</div>
+      </div>
+    </div>
+    <!-- Monochrome Close Button -->
+    <button class="mono-btn" id="drawer-close" title="Close Panel" style="flex-shrink: 0;">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </button>
+  </div>
+  <div class="drawer-bar">
+    <!-- Monochrome Back Button in Action Bar -->
+    <button class="mono-btn" id="bar-btn-back" title="Go Back to Previous Concept" disabled style="opacity: 0.35; cursor: not-allowed; pointer-events: none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+    </button>
+    <!-- Monochrome Center/Focus Button -->
+    <button class="mono-btn" id="bar-btn-focus" title="Center in View">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
+    </button>
+    <!-- Monochrome Pin/Unpin Button -->
+    <button class="mono-btn" id="bar-btn-pin" title="Pin / Unpin Node Position">
+      <svg id="pin-icon" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+    </button>
+    <!-- Monochrome Copy Notes Button -->
+    <button class="mono-btn" id="bar-btn-copy" title="Copy Notes to Clipboard">
+      <svg id="copy-icon" viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+    </button>
+  </div>
+  <div class="drawer-body" id="drawer-body">
+    Select any node to view comprehensive disambiguation notes, architecture tables, and formulas.
+  </div>
+</div>
+
+<script>
+const rawData = {"name": "Digital Image Processing: Core Theory & Algorithms", "details": "\n    <div style=\"margin: 14px 0 16px 0; padding: 12px; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important; box-shadow: 2px 2px 0px rgba(0,0,0,0.3);\">\n      <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;\">\n        <span style=\"font-size:13px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">🎓</span> University Exam Intelligence (CSE 4125)</span>\n        <span style=\"font-size:11px; font-weight:bold; background:#0284c7; color:#fff; padding:2px 8px; border-radius:0 !important;\">213 Questions Analyzed</span>\n      </div>\n      <p style=\"font-size:12px; color:#cbd5e1; margin-bottom:10px; line-height:1.5;\">\n        Complete historical coverage from <strong>2016 to 2024</strong> (2029 Total Marks). Every question includes faculty expectations, topic alignment, and original printed university exam scans.\n      </p>\n      <div style=\"display:flex; gap:8px; flex-wrap:wrap;\">\n        <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:6px; padding:7px 14px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-weight:bold; font-size:12px; transition:background 0.2s ease;\">\n          <span class=\"mono-emoji\">📚</span> Open Question Analyzer (213 Qs · 2029M) &rarr;\n        </a>\n        <a href=\"../final/image-processing-masudul-ahsan.pdf\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:6px; padding:7px 14px; background:#059669; color:#ffffff; text-decoration:none; border-radius:0 !important; font-weight:bold; font-size:12px; transition:background 0.2s ease;\">\n          <span class=\"mono-emoji\">📖</span> Open Merged PDF Book (653 Pages) &rarr;\n        </a>\n      </div>\n    </div>\n    \n        <h3>Digital Image Processing & Vision Systems</h3>\n        <p>This interactive mind map explores the mathematical and algorithmic foundations of image processing: from continuous spatial sampling and intensity manipulation to frequency domain spectral analysis, inverse restoration, and segmentation.</p>\n        <div style=\"margin-top: 10px; padding: 10px; background: rgba(56, 189, 248, 0.1); border-left: 3px solid #38bdf8; border-radius: 4px;\">\n          <strong>Core Focus:</strong> Exact mathematical formulations, 2D convolution theorems, noise degradation models, optimal Wiener filtering, Otsu variance maximization, and Canny non-maximum suppression.\n        </div>\n        <ul style=\"margin-top: 12px;\">\n          <li><strong>Source:</strong> Course Lectures (Prof. Masudul Ahsan), Gonzalez & Woods (4th ed.), Castleman.</li>\n          <li><strong>Coverage:</strong> 11 Major Domains across 653 lecture slides.</li>\n        </ul>\n        ", "children": [{"name": "📝 Exam Questions (203 Patterns · 2029M)", "details": "\n        <h3>University Exam Question Archive & Patterns</h3>\n        <p>Comprehensive historical recurrence analysis across KUET Term Examinations (2016–2024).</p>\n        <p style=\"margin-top:8px;\">Click any specific pattern node on this branch to view recurring exam questions, frequency metrics, and exact marks.</p>\n        <div style=\"margin-top:12px;\">\n          <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html\" target=\"_blank\" style=\"display:inline-block; padding:8px 14px; background:#2563eb; color:#fff; text-decoration:none; border-radius:0 !important; font-weight:bold; font-size:12px;\">\n            <span class=\"mono-emoji\">📚</span> Launch Full Interactive Question Browser (213 Questions) &rarr;\n          </a>\n        </div>\n        ", "children": [{"name": "Q: Relate and differentiate between compu... (3x)", "details": "\n        <h4>Exam Pattern: Relate and differentiate between computer vision and image processing. Explain the possible (10) cha</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: rgba(30, 41, 59, 0.7); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:#38bdf8; font-weight:bold; margin-bottom:4px;\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 3 Times Asked · 32 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:#cbd5e1; margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2016, 2017, 2019\n          </p>\n          <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2019)</strong> [12M] <em>Compare between image processing and computer vision. Explain some typical challenges in (12)\nsolving a computer vision problem....</em></li><li style='margin-bottom:5px;'><strong>(2017)</strong> [10M] <em>Relate and differentiate between computer vision and image processing. Explain the possible (10)\nchallenges one has to face in solving a com...</em></li><li style='margin-bottom:5px;'><strong>(2016)</strong> [10M] <em>What is computer vision? How is image processing related to computer vision? Mention (10)\nsome challenges of computer vision problem....</em></li>\n          </ul>\n          <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Relate%20and%20differentiate%20betwe\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#2563eb; color:#fff; text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold;\">\n            <span class=\"mono-emoji\">🔍</span> View in Question Browser (with Original Exam Scans) &rarr;\n          </a>\n        </div>\n        "}, {"name": "Q: State the pros and cons of histogram b... (2x)", "details": "\n        <h4>Exam Pattern: State the pros and cons of histogram based texture descriptors with proper example.</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: rgba(30, 41, 59, 0.7); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:#38bdf8; font-weight:bold; margin-bottom:4px;\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 2 Times Asked · 24 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:#cbd5e1; margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2021, 2024\n          </p>\n          <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2024)</strong> [7M] <em>State the pros and cons of histogram based texture descriptors with proper example. (07)...</em></li><li style='margin-bottom:5px;'><strong>(2021)</strong> [17M] <em>State the pros and cons of histogram based texture descriptors with proper example....</em></li>\n          </ul>\n          <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=State%20the%20pros%20and%20cons%20of%20his\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#2563eb; color:#fff; text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold;\">\n            <span class=\"mono-emoji\">🔍</span> View in Question Browser (with Original Exam Scans) &rarr;\n          </a>\n        </div>\n        "}, {"name": "Q: Define morphological gradient. Discuss... (2x)", "details": "\n        <h4>Exam Pattern: Define morphological gradient. Discuss when do we use top-hat and bottom-hat (10)  transformation in</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: rgba(30, 41, 59, 0.7); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:#38bdf8; font-weight:bold; margin-bottom:4px;\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 2 Times Asked · 20 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:#cbd5e1; margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2017, 2023\n          </p>\n          <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2023)</strong> [10M] <em>Define morphological gradient. Discuss when do we use top-hat and bottom-hat (10) \ntransformation in grayscale image....</em></li><li style='margin-bottom:5px;'><strong>(2017)</strong> [10M] <em>Define morphological gradient. When do we use top-hat and bottom-hat transformation in (10)\ngrayscale image?...</em></li>\n          </ul>\n          <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Define%20morphological%20gradient.\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#2563eb; color:#fff; text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold;\">\n            <span class=\"mono-emoji\">🔍</span> View in Question Browser (with Original Exam Scans) &rarr;\n          </a>\n        </div>\n        "}, {"name": "Q: State and explain the data redundancie... (2x)", "details": "\n        <h4>Exam Pattern: State and explain the data redundancies that can be identified in an image and can be (10) exploited</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: rgba(30, 41, 59, 0.7); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:#38bdf8; font-weight:bold; margin-bottom:4px;\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 2 Times Asked · 19 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:#cbd5e1; margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2016, 2019\n          </p>\n          <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2019)</strong> [9M] <em>State and explain the data redundancies that can be identified in an image for the exploitation (09)\nof image compression....</em></li><li style='margin-bottom:5px;'><strong>(2016)</strong> [10M] <em>State and explain the data redundancies that can be identified in an image and can be (10)\nexploited for image compression....</em></li>\n          </ul>\n          <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=State%20and%20explain%20the%20data%20red\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#2563eb; color:#fff; text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold;\">\n            <span class=\"mono-emoji\">🔍</span> View in Question Browser (with Original Exam Scans) &rarr;\n          </a>\n        </div>\n        "}, {"name": "Q: Explain inverse filtering process to r... (2x)", "details": "\n        <h4>Exam Pattern: Explain inverse filtering process to restore a noisy image. What is the shortcoming of inverse filte</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: rgba(30, 41, 59, 0.7); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:#38bdf8; font-weight:bold; margin-bottom:4px;\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 2 Times Asked · 24 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:#cbd5e1; margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2017, 2018\n          </p>\n          <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2018)</strong> [12M] <em>Explain inverse filtering process to restore a noisy image. What is the shortcoming of inverse\nfilter? How does Wiener filter overcome such ...</em></li><li style='margin-bottom:5px;'><strong>(2017)</strong> [12M] <em>Explain inverse filtering process to restore a noisy image. What is the shortcoming of inverse (12)\nfilter? How does Wiener filter overcome ...</em></li>\n          </ul>\n          <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Explain%20inverse%20filtering%20proc\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#2563eb; color:#fff; text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold;\">\n            <span class=\"mono-emoji\">🔍</span> View in Question Browser (with Original Exam Scans) &rarr;\n          </a>\n        </div>\n        "}, {"name": "Q: What is digital image and digital imag... (2x)", "details": "\n        <h4>Exam Pattern: What is digital image and digital image processing? What are the fundamental steps in digital image</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: rgba(30, 41, 59, 0.7); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:#38bdf8; font-weight:bold; margin-bottom:4px;\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 2 Times Asked · 19 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:#cbd5e1; margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2016, 2018\n          </p>\n          <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2018)</strong> [10M] <em>What is digital image and digital image processing? What are the fundamental steps in digital\nimage processing?...</em></li><li style='margin-bottom:5px;'><strong>(2016)</strong> [9M] <em>What is digital. image processing? What are the fundamental steps in digital .image (09)\nprocessing?...</em></li>\n          </ul>\n          <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=What%20is%20digital%20image%20and%20digi\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#2563eb; color:#fff; text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold;\">\n            <span class=\"mono-emoji\">🔍</span> View in Question Browser (with Original Exam Scans) &rarr;\n          </a>\n        </div>\n        "}, {"name": "Q: Define Pseudo color image processing. ... (2x)", "details": "\n        <h4>Exam Pattern: Define Pseudo color image processing. Discuss about intensity slicing with appropriate diagram.</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: rgba(30, 41, 59, 0.7); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:#38bdf8; font-weight:bold; margin-bottom:4px;\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 2 Times Asked · 18 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:#cbd5e1; margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2016, 2018\n          </p>\n          <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2018)</strong> [10M] <em>Define Pseudo color image processing. Discuss about intensity slicing with appropriate\ndiagram....</em></li><li style='margin-bottom:5px;'><strong>(2016)</strong> [8M] <em>Define pseudo color image processing. Discuss about intensity slicing with appropriate (08)\ndiagram....</em></li>\n          </ul>\n          <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Define%20Pseudo%20color%20image%20proc\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#2563eb; color:#fff; text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold;\">\n            <span class=\"mono-emoji\">🔍</span> View in Question Browser (with Original Exam Scans) &rarr;\n          </a>\n        </div>\n        "}, {"name": "Q: Why pruning is necessary? Write down t... (2x)", "details": "\n        <h4>Exam Pattern: Why pruning is necessary? Write down the equations to compute pruning ofa binary image. (06)</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: rgba(30, 41, 59, 0.7); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:#38bdf8; font-weight:bold; margin-bottom:4px;\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 2 Times Asked · 11 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:#cbd5e1; margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2016, 2018\n          </p>\n          <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2018)</strong> [5M] <em>Write down the procedure to compute pruning ofa binary image....</em></li><li style='margin-bottom:5px;'><strong>(2016)</strong> [6M] <em>Why pruning is necessary? Write down the equations to compute pruning ofa binary image. (06)...</em></li>\n          </ul>\n          <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Why%20pruning%20is%20necessary?%20Writ\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#2563eb; color:#fff; text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold;\">\n            <span class=\"mono-emoji\">🔍</span> View in Question Browser (with Original Exam Scans) &rarr;\n          </a>\n        </div>\n        "}]}, {"name": "1. Image Formation, Sampling & Quantization", "details": "\n                <h3>Physical Image Formation & Digitization</h3>\n                <p>A continuous 2D light intensity function $f(x, y)$ is converted into a discrete matrix $f[m, n]$ through sampling (spatial discretization) and quantization (amplitude discretization).</p>\n                <div style=\"margin-top:8px;\">\n                  $$\\mathbf{f(x, y) = i(x, y) \\cdot r(x, y)}$$\n                  <ul>\n                    <li><strong>Illumination $i(x,y)$:</strong> Light incident on the scene ($0 < i(x,y) < \\infty$, low frequency).</li>\n                    <li><strong>Reflectance $r(x,y)$:</strong> Surface reflectivity ($0 \\le r(x,y) \\le 1$, high frequency details).</li>\n                  </ul>\n                </div>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 36x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 36 subquestions across 9 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>State the pros and cons of histogram based texture descriptors with proper example.</em></li><li><em>A lunar rover captured a 4-bit image of moon-surfacc under poor lighting condition, (20) IC03J then</em></li>\n              </ul>\n              <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Histograms\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            ", "children": [{"name": "Nyquist Sampling & Aliasing", "details": "\n                        <h4>Spatial Discretization Criteria</h4>\n                        <p>To avoid spatial aliasing (Moiré patterns and jagged false frequencies), sampling frequency $f_s$ must satisfy the Shannon-Nyquist rate: $f_s > 2 f_{\\max}$.</p>\n                        <p><strong>Quantization Levels:</strong> For $k$-bit depth, discrete intensity levels $L = 2^k$ (e.g., $k=8 \\implies L=256$ grayscale values $[0, 255]$).</p>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 36x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 36 subquestions across 9 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>State the pros and cons of histogram based texture descriptors with proper example.</em></li><li><em>A lunar rover captured a 4-bit image of moon-surfacc under poor lighting condition, (20) IC03J then</em></li>\n              </ul>\n              <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Histograms\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}]}, {"name": "2. Pixel Topology & Distance Metrics", "details": "\n                <h3>Pixel Adjacency, Connectivity & Distance Metrics</h3>\n                <p>Establishes neighborhood relationships between pixel $p(x, y)$ and adjacent pixels.</p>\n                <table style=\"width:100%; border-collapse:collapse; margin-top:8px; font-size:12px;\">\n                  <tr style=\"background:#1e293b; color:#38bdf8;\">\n                    <th style=\"padding:6px; border:1px solid #334155;\">Metric</th>\n                    <th style=\"padding:6px; border:1px solid #334155;\">Formula</th>\n                    <th style=\"padding:6px; border:1px solid #334155;\">Geometric Nature</th>\n                  </tr>\n                  <tr>\n                    <td style=\"padding:6px; border:1px solid #334155;\"><strong>Euclidean ($D_e$)</strong></td>\n                    <td style=\"padding:6px; border:1px solid #334155;\">$\\sqrt{(x-s)^2 + (y-t)^2}$</td>\n                    <td style=\"padding:6px; border:1px solid #334155;\">Standard straight-line circle contours.</td>\n                  </tr>\n                  <tr style=\"background:#0f172a;\">\n                    <td style=\"padding:6px; border:1px solid #334155;\"><strong>City-Block ($D_4$)</strong></td>\n                    <td style=\"padding:6px; border:1px solid #334155;\">$|x-s| + |y-t|$</td>\n                    <td style=\"padding:6px; border:1px solid #334155;\">Diamond contours; 4-connected grid steps.</td>\n                  </tr>\n                  <tr>\n                    <td style=\"padding:6px; border:1px solid #334155;\"><strong>Chessboard ($D_8$)</strong></td>\n                    <td style=\"padding:6px; border:1px solid #334155;\">$\\max(|x-s|, |y-t|)$</td>\n                    <td style=\"padding:6px; border:1px solid #334155;\">Square contours; 8-connected grid steps.</td>\n                  </tr>\n                </table>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 28x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 28 subquestions across 9 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Relate and differentiate between computer vision and image processing. Explain the possible (10) cha</em></li><li><em>What is digital image and digital image processing? What are the fundamental steps in digital image</em></li>\n              </ul>\n              <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Image\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            ", "children": [{"name": "Mixed Connectivity (m-connectivity)", "details": "\n                        <h4>Eliminating Ambiguous Boundary Paths</h4>\n                        <p>8-connectivity often yields multiple closed paths around a single object. <strong>$m$-connectivity</strong> (mixed connectivity) eliminates ambiguity:</p>\n                        <p>Two pixels $p$ and $q$ with values from set $V$ are $m$-connected if:</p>\n                        <ol style=\"margin-left:16px;\">\n                          <li>$q \\in N_4(p)$, OR</li>\n                          <li>$q \\in N_D(p)$ AND the set $N_4(p) \\cap N_4(q)$ has no pixels with values from $V$.</li>\n                        </ol>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 28x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 28 subquestions across 9 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Relate and differentiate between computer vision and image processing. Explain the possible (10) cha</em></li><li><em>What is digital image and digital image processing? What are the fundamental steps in digital image</em></li>\n              </ul>\n              <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Image\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}]}, {"name": "3. Intensity Transformations & Point Operations", "details": "\n                <h3>Point Processing: Spatial Intensity Mapping</h3>\n                <p>Maps input gray level $r$ to output gray level $s$ via function $s = T(r)$ applied independently to every pixel.</p>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 36x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 36 subquestions across 9 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>State the pros and cons of histogram based texture descriptors with proper example.</em></li><li><em>A lunar rover captured a 4-bit image of moon-surfacc under poor lighting condition, (20) IC03J then</em></li>\n              </ul>\n              <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Histograms\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            ", "children": [{"name": "Logarithmic & Power-Law (Gamma) Transforms", "details": "\n                        <h4>Dynamic Range Compression & Gamma Correction</h4>\n                        <ul>\n                          <li><strong>Log Transform:</strong> $s = c \\log(1 + r)$. Expands dark pixel values while compressing bright values (essential for visualizing dynamic ranges in Fourier spectra).</li>\n                          <li><strong>Power-Law (Gamma):</strong> $s = c r^\\gamma$.\n                            <ul>\n                              <li>$\\gamma < 1$: Expands dark regions, brightens image (enhances underexposed scenes).</li>\n                              <li>$\\gamma > 1$: Compresses dark regions, darkens image (CRT monitor calibration).</li>\n                            </ul>\n                          </li>\n                        </ul>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 28x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 28 subquestions across 9 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Relate and differentiate between computer vision and image processing. Explain the possible (10) cha</em></li><li><em>What is digital image and digital image processing? What are the fundamental steps in digital image</em></li>\n              </ul>\n              <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Image\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}, {"name": "Bit-Plane Slicing & Contrast Stretching", "details": "\n                        <h4>Structural Information Decomposition</h4>\n                        <ul>\n                          <li><strong>Bit-Plane Slicing:</strong> Decomposes an 8-bit image into 8 binary planes. Planes 0-3 (LSBs) contain mostly random visual noise; planes 6-7 (MSBs) contain >70% of structural energy.</li>\n                          <li><strong>Contrast Stretching:</strong> Piecewise linear mapping expanding a narrow input dynamic range $[r_{\\min}, r_{\\max}]$ to the full $[0, L-1]$ range.</li>\n                        </ul>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 28x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 28 subquestions across 9 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Relate and differentiate between computer vision and image processing. Explain the possible (10) cha</em></li><li><em>What is digital image and digital image processing? What are the fundamental steps in digital image</em></li>\n              </ul>\n              <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Image\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}]}, {"name": "4. Histogram Processing & Equalization", "details": "\n                <h3>Statistical Intensity Distribution & Uniform PDF Linearization</h3>\n                <p>The intensity histogram $h(r_k) = n_k$ records pixel frequencies. The normalized probability is $p_r(r_k) = \\frac{n_k}{MN}$.</p>\n                <div style=\"margin-top:8px;\">\n                  <strong>Continuous Transformation Law:</strong>\n                  $$s = T(r) = (L-1) \\int_0^r p_r(w) dw$$\n                  <p>Guarantees uniform output probability density function $p_s(s) = \\frac{1}{L-1}$.</p>\n                </div>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 36x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 36 subquestions across 9 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>State the pros and cons of histogram based texture descriptors with proper example.</em></li><li><em>A lunar rover captured a 4-bit image of moon-surfacc under poor lighting condition, (20) IC03J then</em></li>\n              </ul>\n              <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Histograms\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            ", "children": [{"name": "Discrete Histogram Equalization Derivation", "details": "\n                        <h4>Discrete Equalization Formulation</h4>\n                        <p>For discrete intensity levels $k \\in [0, L-1]$:</p>\n                        <p style=\"text-align:center; font-weight:bold;\">$$s_k = T(r_k) = \\text{round}\\left((L-1) \\sum_{j=0}^k p_r(r_j)\\right) = \\text{round}\\left(\\frac{L-1}{MN} \\sum_{j=0}^k n_j\\right)$$</p>\n                        <p>Completely autonomous contrast enhancement with zero user parameter tuning.</p>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 36x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 36 subquestions across 9 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>State the pros and cons of histogram based texture descriptors with proper example.</em></li><li><em>A lunar rover captured a 4-bit image of moon-surfacc under poor lighting condition, (20) IC03J then</em></li>\n              </ul>\n              <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Histograms\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}, {"name": "Histogram Matching (Specification) & CLAHE", "details": "\n                        <h4>Targeted Distribution Shaping</h4>\n                        <ul>\n                          <li><strong>Histogram Specification:</strong> Maps equalized input $s_k$ to a user-specified target distribution $z_k$ via inverse transformation: $z = G^{-1}(s)$.</li>\n                          <li><strong>CLAHE (Contrast Limited Adaptive Histogram Equalization):</strong> Equalizes local sub-tiles independently with a clip limit on histogram bins to prevent noise over-amplification.</li>\n                        </ul>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#3b82f6; color:#000;\">MEDIUM PRIORITY · 16x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 16 subquestions across 9 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Following figurc shows a RGB image with a white and a yellow region, •where values IC031 in the pare</em></li><li><em>During Hough transform based tine detection. generally get similar vote count ina (06) (COG) small n</em></li>\n              </ul>\n              <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Edge\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}]}, {"name": "5. Spatial Filtering & Linear Smoothing", "details": "\n                <h3>2D Spatial Convolution & Neighborhood Smoothing</h3>\n                <p>Filters move an $m \\times n$ mask across image $f(x, y)$.</p>\n                <div style=\"margin-top:8px;\">\n                  <strong>Correlation vs Convolution:</strong>\n                  <ul>\n                    <li><strong>Correlation:</strong> $w(x, y) \\star f(x, y) = \\sum_{s} \\sum_{t} w(s, t) f(x+s, y+t)$.</li>\n                    <li><strong>Convolution:</strong> $w(x, y) * f(x, y) = \\sum_{s} \\sum_{t} w(s, t) f(x-s, y-t)$ (Rotates mask 180&deg;).</li>\n                  </ul>\n                </div>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 28x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 28 subquestions across 9 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Relate and differentiate between computer vision and image processing. Explain the possible (10) cha</em></li><li><em>What is digital image and digital image processing? What are the fundamental steps in digital image</em></li>\n              </ul>\n              <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Image\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            ", "children": [{"name": "Box Average vs Gaussian Smoothing", "details": "\n                        <h4>Smoothing Kernels Comparison</h4>\n                        <ul>\n                          <li><strong>Box Filter:</strong> All weights equal: $\\frac{1}{9}\\mathbf{1}_{3\\times3}$. Produces prominent horizontal and vertical edge blurring artifacts.</li>\n                          <li><strong>Gaussian Filter:</strong> Circularly symmetric weights: $h(x, y) = \\frac{1}{2\\pi\\sigma^2} e^{-\\frac{x^2+y^2}{2\\sigma^2}}$. Smooth isotropic blurring with zero directional bias.</li>\n                        </ul>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#3b82f6; color:#000;\">MEDIUM PRIORITY · 16x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 16 subquestions across 9 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Following figurc shows a RGB image with a white and a yellow region, •where values IC031 in the pare</em></li><li><em>During Hough transform based tine detection. generally get similar vote count ina (06) (COG) small n</em></li>\n              </ul>\n              <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Edge\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}]}, {"name": "6. Spatial Sharpening & Derivative Filters", "details": "\n                <h3>Image Sharpening via First & Second Derivatives</h3>\n                <p>Sharpening highlights fine transitions and edges by computing spatial intensity derivatives.</p>\n                <table style=\"width:100%; border-collapse:collapse; margin-top:8px; font-size:12px;\">\n                  <tr style=\"background:#1e293b; color:#38bdf8;\">\n                    <th style=\"padding:6px; border:1px solid #334155;\">Property</th>\n                    <th style=\"padding:6px; border:1px solid #334155;\">First Derivative (Gradient)</th>\n                    <th style=\"padding:6px; border:1px solid #334155;\">Second Derivative (Laplacian)</th>\n                  </tr>\n                  <tr>\n                    <td style=\"padding:6px; border:1px solid #334155;\"><strong>Response to Ramp</strong></td>\n                    <td style=\"padding:6px; border:1px solid #334155;\">Constant non-zero response along ramp.</td>\n                    <td style=\"padding:6px; border:1px solid #334155;\">Zero response along constant slope; spikes at ramp start/end.</td>\n                  </tr>\n                  <tr style=\"background:#0f172a;\">\n                    <td style=\"padding:6px; border:1px solid #334155;\"><strong>Response to Step Edge</strong></td>\n                    <td style=\"padding:6px; border:1px solid #334155;\">Thick single response profile.</td>\n                    <td style=\"padding:6px; border:1px solid #334155;\">Double response with Zero-Crossing at exact edge boundary.</td>\n                  </tr>\n                  <tr>\n                    <td style=\"padding:6px; border:1px solid #334155;\"><strong>Noise Sensitivity</strong></td>\n                    <td style=\"padding:6px; border:1px solid #334155;\">Moderate.</td>\n                    <td style=\"padding:6px; border:1px solid #334155;\">Extremely high (amplifies isolated noise points).</td>\n                  </tr>\n                </table>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 36x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 36 subquestions across 9 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>State the pros and cons of histogram based texture descriptors with proper example.</em></li><li><em>A lunar rover captured a 4-bit image of moon-surfacc under poor lighting condition, (20) IC03J then</em></li>\n              </ul>\n              <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Histograms\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            ", "children": [{"name": "Laplacian Mask Formulation", "details": "\n                        <h4>Isotropic Second-Order Operator</h4>\n                        <p>Discrete Laplacian formulation:</p>\n                        <p style=\"text-align:center;\">$$\\nabla^2 f = [f(x+1, y) + f(x-1, y) + f(x, y+1) + f(x, y-1)] - 4f(x, y)$$</p>\n                        <p><strong>Sharpening Enhancement Equation:</strong></p>\n                        <p style=\"text-align:center; font-weight:bold;\">$$g(x, y) = f(x, y) - \\nabla^2 f(x, y) \\quad (\\text{when center is } -4)$$</p>\n                        "}, {"name": "Unsharp Masking & High-Boost Filtering", "details": "\n                        <h4>Edge Subtraction Pipeline</h4>\n                        <ol style=\"margin-left:16px;\">\n                          <li>Blur original image: $\\bar{f}(x, y)$.</li>\n                          <li>Subtract blur to generate mask: $g_{mask}(x, y) = f(x, y) - \\bar{f}(x, y)$.</li>\n                          <li>Add weighted mask back to original: $g(x, y) = f(x, y) + k \\cdot g_{mask}(x, y)$.</li>\n                        </ol>\n                        <p>Where $k = 1$ is standard unsharp masking; $k > 1$ is <strong>High-Boost filtering</strong>.</p>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 28x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 28 subquestions across 9 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Relate and differentiate between computer vision and image processing. Explain the possible (10) cha</em></li><li><em>What is digital image and digital image processing? What are the fundamental steps in digital image</em></li>\n              </ul>\n              <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Image\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}]}, {"name": "7. 1D & 2D Discrete Fourier Transform (DFT)", "details": "\n                <h3>Frequency Domain Representation & Convolution Theorem</h3>\n                <p>Transforms discrete spatial pixel intensities into sinusoidal frequency basis functions.</p>\n                <div style=\"margin-top:8px;\">\n                  <strong>2D Discrete Fourier Transform Pair ($M \\times N$):</strong>\n                  $$F(u, v) = \\sum_{x=0}^{M-1} \\sum_{y=0}^{N-1} f(x, y) e^{-j 2\\pi \\left(\\frac{ux}{M} + \\frac{vy}{N}\\right)}$$\n                  $$f(x, y) = \\frac{1}{MN} \\sum_{u=0}^{M-1} \\sum_{v=0}^{N-1} F(u, v) e^{j 2\\pi \\left(\\frac{ux}{M} + \\frac{vy}{N}\\right)}$$\n                </div>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 27x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 27 subquestions across 9 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Explain inverse filtering process to restore a noisy image. What is the shortcoming of inverse filte</em></li><li><em>Explain thc impact of wrong choice of order for contra-harmonic mean filter. (05)</em></li>\n              </ul>\n              <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Spatial\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            ", "children": [{"name": "Centering, Magnitude, Phase & Power Spectrum", "details": "\n                        <h4>Fourier Spectrum Analysis</h4>\n                        <ul>\n                          <li><strong>Spectrum Centering:</strong> Pre-multiplying $f(x, y)$ by $(-1)^{x+y}$ shifts the zero-frequency DC component $F(0, 0)$ to the center of the frequency matrix $(M/2, N/2)$.</li>\n                          <li><strong>Magnitude Spectrum:</strong> $|F(u, v)| = \\sqrt{R^2(u, v) + I^2(u, v)}$ (contains overall contrast and periodicity).</li>\n                          <li><strong>Phase Spectrum:</strong> $\\phi(u, v) = \\arctan\\left(\\frac{I(u, v)}{R(u, v)}\\right)$ (encodes essential geometric shapes and edge locations).</li>\n                          <li><strong>Power Spectrum:</strong> $P(u, v) = |F(u, v)|^2$.</li>\n                        </ul>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#3b82f6; color:#000;\">MEDIUM PRIORITY · 20x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 20 subquestions across 8 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Prove that 'convolution in time domain corresponds to multiplication in frequency (09)  domain'.</em></li><li><em>Find the frequency domain filter H(u,v) Ihat works as a Laplacian filterin spatial (12) (C03J domain</em></li>\n              </ul>\n              <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Convolution\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}, {"name": "2D Convolution Theorem & Padding Rules", "details": "\n                        <h4>Circular vs Linear Convolution</h4>\n                        <p style=\"text-align:center; font-weight:bold;\">$$f(x, y) * h(x, y) \\iff F(u, v) \\cdot H(u, v)$$</p>\n                        <p>Direct multiplication in the frequency domain corresponds to <em>circular convolution</em> in space. To avoid wrap-around error (aliasing distortion), inputs of size $A \\times B$ and $C \\times D$ must be zero-padded to size $P \\times Q$ where:</p>\n                        <p style=\"text-align:center;\">$$P \\ge A + C - 1, \\quad Q \\ge B + D - 1$$</p>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#3b82f6; color:#000;\">MEDIUM PRIORITY · 20x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 20 subquestions across 8 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Prove that 'convolution in time domain corresponds to multiplication in frequency (09)  domain'.</em></li><li><em>Find the frequency domain filter H(u,v) Ihat works as a Laplacian filterin spatial (12) (C03J domain</em></li>\n              </ul>\n              <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Convolution\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}]}, {"name": "8. Frequency Domain Filtering", "details": "\n                <h3>Frequency Filtering & Smoothing/Sharpening Filter Profiles</h3>\n                <p>Modulates frequency components via filter transfer function $H(u, v)$ such that $G(u, v) = H(u, v) F(u, v)$.</p>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 27x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 27 subquestions across 9 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Explain inverse filtering process to restore a noisy image. What is the shortcoming of inverse filte</em></li><li><em>Explain thc impact of wrong choice of order for contra-harmonic mean filter. (05)</em></li>\n              </ul>\n              <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Spatial\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            ", "children": [{"name": "Lowpass Smoothing: ILPF vs BLPF vs GLPF", "details": "\n                        <h4>Lowpass Filter Disambiguation</h4>\n                        <table style=\"width:100%; border-collapse:collapse; margin-top:8px; font-size:12px;\">\n                          <tr style=\"background:#1e293b; color:#38bdf8;\">\n                            <th style=\"padding:6px; border:1px solid #334155;\">Filter Type</th>\n                            <th style=\"padding:6px; border:1px solid #334155;\">Formula $H(u, v)$</th>\n                            <th style=\"padding:6px; border:1px solid #334155;\">Ringing Artifact Behavior</th>\n                          </tr>\n                          <tr>\n                            <td style=\"padding:6px; border:1px solid #334155;\"><strong>Ideal (ILPF)</strong></td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">$1$ if $D(u,v) \\le D_0$, else $0$</td>\n                            <td style=\"padding:6px; border:1px solid #334155;\"><strong>Severe ringing:</strong> Fourier dual of sharp cylinder is a 2D Sinc function with substantial side lobes.</td>\n                          </tr>\n                          <tr style=\"background:#0f172a;\">\n                            <td style=\"padding:6px; border:1px solid #334155;\"><strong>Butterworth (BLPF)</strong></td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">$\\frac{1}{1 + [D(u,v)/D_0]^{2n}}$</td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">Smooth transition; order $n=2$ exhibits negligible ringing while preserving sharp cutoff.</td>\n                          </tr>\n                          <tr>\n                            <td style=\"padding:6px; border:1px solid #334155;\"><strong>Gaussian (GLPF)</strong></td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">$e^{-D^2(u,v) / (2D_0^2)}$</td>\n                            <td style=\"padding:6px; border:1px solid #334155;\"><strong>Zero ringing:</strong> Inverse Fourier transform of a Gaussian is strictly another Gaussian (zero side lobes).</td>\n                          </tr>\n                        </table>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 23x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 23 subquestions across 8 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Define Pseudo color image processing. Discuss about intensity slicing with appropriate diagram.</em></li><li><em>Apply a 3 x 3 vector median fitter on the location (2, 2) of the given RGB image. 01021 02121 03312</em></li>\n              </ul>\n              <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Color\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}, {"name": "Homomorphic Filtering", "details": "\n                        <h4>Illumination-Reflectance Separation</h4>\n                        <p>Decouples non-uniform illumination $i(x,y)$ (slowly varying, low frequencies) from reflectance $r(x,y)$ (fine details, high frequencies):</p>\n                        <ol style=\"margin-left:16px;\">\n                          <li>Take natural logarithm: $\\ln f(x, y) = \\ln i(x, y) + \\ln r(x, y)$.</li>\n                          <li>Apply DFT: $Z(u, v) = F_i(u, v) + F_r(u, v)$.</li>\n                          <li>Filter with high-emphasis $H(u, v)$ ($\\gamma_L < 1, \\gamma_H > 1$).</li>\n                          <li>Apply IDFT and take exponential $\\exp()$.</li>\n                        </ol>\n                        <p>Simultaneously compresses dynamic range and enhances local detail contrast.</p>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 27x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 27 subquestions across 9 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Explain inverse filtering process to restore a noisy image. What is the shortcoming of inverse filte</em></li><li><em>Explain thc impact of wrong choice of order for contra-harmonic mean filter. (05)</em></li>\n              </ul>\n              <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Spatial\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}]}, {"name": "9. Image Restoration & Spatial Noise Models", "details": "\n                <h3>Degradation Modeling & Noise Reduction Filters</h3>\n                <p>Restoration inverts an objective degradation process $g(x, y) = f(x, y) * h(x, y) + \\eta(x, y)$.</p>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 28x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 28 subquestions across 9 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Relate and differentiate between computer vision and image processing. Explain the possible (10) cha</em></li><li><em>What is digital image and digital image processing? What are the fundamental steps in digital image</em></li>\n              </ul>\n              <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Image\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            ", "children": [{"name": "Statistical Noise Probability Density Functions", "details": "\n                        <h4>Common Noise Distributions</h4>\n                        <ul>\n                          <li><strong>Gaussian Noise:</strong> Electronic sensor amplifier noise; bell-shaped PDF.</li>\n                          <li><strong>Rayleigh Noise:</strong> Radar range imaging; skewed asymmetric PDF.</li>\n                          <li><strong>Impulse (Salt-and-Pepper) Noise:</strong> Faulty memory cells / spike transmission errors; bimodal impulses at $0$ and $L-1$.</li>\n                        </ul>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#3b82f6; color:#000;\">MEDIUM PRIORITY · 13x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 13 subquestions across 6 exam sessions (2020, 2021, 2022, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>The following table shows some features extracted from some binary images along (16)  with their kno</em></li><li><em>Find the region descriptors: form factor, compactness, and circularity to describe the binary (12) r</em></li>\n              </ul>\n              <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Boundaries,\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}, {"name": "Mean & Order-Statistics Filters", "details": "\n                        <h4>Spatial Noise Removal Filters</h4>\n                        <table style=\"width:100%; border-collapse:collapse; margin-top:8px; font-size:12px;\">\n                          <tr style=\"background:#1e293b; color:#38bdf8;\">\n                            <th style=\"padding:6px; border:1px solid #334155;\">Filter</th>\n                            <th style=\"padding:6px; border:1px solid #334155;\">Formula / Operation</th>\n                            <th style=\"padding:6px; border:1px solid #334155;\">Optimal Use Case</th>\n                          </tr>\n                          <tr>\n                            <td style=\"padding:6px; border:1px solid #334155;\"><strong>Geometric Mean</strong></td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">$\\left[\\prod_{(s,t)} g(s,t)\\right]^{1/mn}$</td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">Smoothes Gaussian noise with less loss of edge detail than arithmetic mean.</td>\n                          </tr>\n                          <tr style=\"background:#0f172a;\">\n                            <td style=\"padding:6px; border:1px solid #334155;\"><strong>Contraharmonic Mean</strong></td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">$\\frac{\\sum g^{Q+1}}{\\sum g^Q}$</td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">$Q > 0$ eliminates pepper noise; $Q < 0$ eliminates salt noise. Fails if wrong sign chosen.</td>\n                          </tr>\n                          <tr>\n                            <td style=\"padding:6px; border:1px solid #334155;\"><strong>Median Filter</strong></td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">$\\text{median}\\{g(s,t)\\}$</td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">Exceptional salt-and-pepper noise removal with minimal edge blurring.</td>\n                          </tr>\n                          <tr style=\"background:#0f172a;\">\n                            <td style=\"padding:6px; border:1px solid #334155;\"><strong>Adaptive Median</strong></td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">Dynamically expands window $S_{xy}$</td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">Removes high-density impulse noise while preserving thin lines and sharp boundaries.</td>\n                          </tr>\n                        </table>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 27x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 27 subquestions across 9 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Explain inverse filtering process to restore a noisy image. What is the shortcoming of inverse filte</em></li><li><em>Explain thc impact of wrong choice of order for contra-harmonic mean filter. (05)</em></li>\n              </ul>\n              <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Spatial\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}]}, {"name": "10. Frequency Domain Restoration & Deconvolution", "details": "\n                <h3>Inverse Filtering & Optimal Wiener Deconvolution</h3>\n                <p>Restores images degraded by known blur transfer functions $H(u, v)$ (e.g., motion blur, atmospheric turbulence).</p>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 28x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 28 subquestions across 9 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Relate and differentiate between computer vision and image processing. Explain the possible (10) cha</em></li><li><em>What is digital image and digital image processing? What are the fundamental steps in digital image</em></li>\n              </ul>\n              <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Image\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            ", "children": [{"name": "Direct Inverse Filtering & Noise Amplification", "details": "\n                        <h4>The Zero-Divisor Catastrophe</h4>\n                        <p>Given $G(u, v) = F(u, v)H(u, v) + N(u, v)$, the direct inverse estimate is:</p>\n                        <p style=\"text-align:center;\">$$\\hat{F}(u, v) = \\frac{G(u, v)}{H(u, v)} = F(u, v) + \\frac{N(u, v)}{H(u, v)}$$</p>\n                        <p>At high frequencies, $H(u, v) \\to 0$. The noise term $\\frac{N(u, v)}{H(u, v)}$ blows up to infinity, completely obliterating the image.</p>\n                        <p><strong>Solution:</strong> Pseudo-inverse or Radially Limited filtering cutting off frequencies where $D(u, v) > D_0$.</p>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 28x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 28 subquestions across 9 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Relate and differentiate between computer vision and image processing. Explain the possible (10) cha</em></li><li><em>What is digital image and digital image processing? What are the fundamental steps in digital image</em></li>\n              </ul>\n              <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Image\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}, {"name": "Wiener Filtering (Minimum Mean Square Error)", "details": "\n                        <h4>Optimal Statistical Deconvolution</h4>\n                        <p>Minimizes expected squared error $E\\{[f - \\hat{f}]^2\\}$ balancing blur inversion against noise suppression:</p>\n                        <p style=\"text-align:center; font-weight:bold;\">$$W(u, v) = \\frac{H^*(u, v)}{|H(u, v)|^2 + \\frac{S_\\eta(u, v)}{S_f(u, v)}} \\approx \\frac{1}{H(u, v)} \\left[ \\frac{|H(u, v)|^2}{|H(u, v)|^2 + K} \\right]$$</p>\n                        <p>Where $K$ is a scalar signal-to-noise ratio (SNR) tuning constant. When noise is absent ($K=0$), reduces to ideal inverse filter; when noise dominates, smoothly attenuates to zero.</p>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 27x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 27 subquestions across 9 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Explain inverse filtering process to restore a noisy image. What is the shortcoming of inverse filte</em></li><li><em>Explain thc impact of wrong choice of order for contra-harmonic mean filter. (05)</em></li>\n              </ul>\n              <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Spatial\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}]}, {"name": "11. Image Segmentation & Edge Detection", "details": "\n                <h3>Thresholding & Advanced Multi-Stage Edge Extraction</h3>\n                <p>Partitions an image into constituent meaningful regions or boundaries.</p>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 28x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 28 subquestions across 9 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Relate and differentiate between computer vision and image processing. Explain the possible (10) cha</em></li><li><em>What is digital image and digital image processing? What are the fundamental steps in digital image</em></li>\n              </ul>\n              <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Image\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            ", "children": [{"name": "Otsu's Optimum Global Thresholding", "details": "\n                        <h4>Maximizing Between-Class Variance $\\sigma_B^2$</h4>\n                        <p>Automatically selects threshold $k^*$ dividing pixels into background $C_0 [0, k]$ and foreground $C_1 [k+1, L-1]$ without human heuristics:</p>\n                        <p style=\"text-align:center; font-weight:bold;\">$$k^* = \\arg\\max_k \\sigma_B^2(k) = \\arg\\max_k \\frac{[m_G \\omega(k) - m(k)]^2}{\\omega(k)[1 - \\omega(k)]}$$</p>\n                        <ul>\n                          <li>$\\omega(k) = \\sum_{i=0}^k p_i$: Cumulative class probability.</li>\n                          <li>$m(k) = \\sum_{i=0}^k i p_i$: Cumulative mean intensity.</li>\n                          <li>$m_G = \\sum_{i=0}^{L-1} i p_i$: Global mean intensity.</li>\n                        </ul>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 36x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 36 subquestions across 9 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>State the pros and cons of histogram based texture descriptors with proper example.</em></li><li><em>A lunar rover captured a 4-bit image of moon-surfacc under poor lighting condition, (20) IC03J then</em></li>\n              </ul>\n              <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Histograms\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}, {"name": "Canny Edge Detection Algorithm", "details": "\n                        <h4>4-Stage Optimal Edge Detection</h4>\n                        <ol style=\"margin-left:16px;\">\n                          <li><strong>Gaussian Smoothing:</strong> Filter image with Gaussian kernel of scale $\\sigma$ to eliminate high-frequency noise.</li>\n                          <li><strong>Gradient Computation:</strong> Compute gradient magnitude $M(x, y) = \\sqrt{G_x^2 + G_y^2}$ and direction $\\theta(x, y) = \\arctan(G_y / G_x)$ via Sobel operators.</li>\n                          <li><strong>Non-Maximum Suppression (NMS):</strong> Discretize $\\theta$ into 4 directions ($0^\\circ, 45^\\circ, 90^\\circ, 135^\\circ$). Suppress pixel to $0$ if its magnitude is not strictly greater than both neighbors along the gradient normal vector (produces 1-pixel thin edges).</li>\n                          <li><strong>Hysteresis Thresholding:</strong> Dual thresholds $T_{high}$ and $T_{low}$. Pixels $> T_{high}$ are strong edges; pixels between $[T_{low}, T_{high}]$ are weak edges accepted ONLY if 8-connected to a strong edge.</li>\n                        </ol>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: rgba(30, 41, 59, 0.75); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:#38bdf8;\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; background:#eab308; color:#000;\">HIGH PRIORITY · 28x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:#cbd5e1; margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 28 subquestions across 9 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:#94a3b8; margin-left:14px; margin-bottom:8px;\">\n                <li><em>Relate and differentiate between computer vision and image processing. Explain the possible (10) cha</em></li><li><em>What is digital image and digital image processing? What are the fundamental steps in digital image</em></li>\n              </ul>\n              <a href=\"../question-browser/image-processing-masudul-ahsan-sir.html?search=Image\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:#2563eb; color:#ffffff; text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold;\">\n                <span class=\"mono-emoji\">🔍</span> View Questions in Question Browser &rarr;\n              </a>\n            </div>\n            "}]}]};
+
+// 10 Distinct Harmonious Minimalist Domain Themes
+const DOMAIN_THEMES = [
+  { stroke: "#38bdf8", fill: "#0369a1", lightStroke: "#0284c7", lightFill: "#e0f2fe", badgeText: "#38bdf8" },  // D1: Sky
+  { stroke: "#818cf8", fill: "#3730a3", lightStroke: "#4f46e5", lightFill: "#ede9fe", badgeText: "#818cf8" },  // D2: Indigo
+  { stroke: "#34d399", fill: "#065f46", lightStroke: "#059669", lightFill: "#d1fae5", badgeText: "#34d399" },  // D3: Emerald
+  { stroke: "#a78bfa", fill: "#5b21b6", lightStroke: "#7c3aed", lightFill: "#f3e8ff", badgeText: "#a78bfa" },  // D4: Violet
+  { stroke: "#22d3ee", fill: "#155e75", lightStroke: "#0891b2", lightFill: "#cffafe", badgeText: "#22d3ee" },  // D5: Cyan
+  { stroke: "#fb923c", fill: "#9a3412", lightStroke: "#ea580c", lightFill: "#ffedd5", badgeText: "#fb923c" },  // D6: Orange
+  { stroke: "#fb7185", fill: "#9f1239", lightStroke: "#e11d48", lightFill: "#ffe4e6", badgeText: "#fb7185" },  // D7: Rose
+  { stroke: "#2dd4bf", fill: "#115e59", lightStroke: "#0d9488", lightFill: "#ccfbf1", badgeText: "#2dd4bf" },  // D8: Teal
+  { stroke: "#e879f9", fill: "#86198f", lightStroke: "#c026d3", lightFill: "#fae8ff", badgeText: "#e879f9" },  // D9: Fuchsia
+  { stroke: "#facc15", fill: "#854d0e", lightStroke: "#d97706", lightFill: "#fef9c3", badgeText: "#facc15" },  // D10: Gold Matrix
+];
+
+const ROOT_THEME = {
+  stroke: "#f0f0ea",
+  fill: "#1e1f22",
+  lightStroke: "#111111",
+  lightFill: "#f5f5f0",
+  badgeText: "#111111"
+};
+
+// Physics state & node registry
+const nodes = [];
+const links = [];
+const nodeMap = new Map();
+let idCounter = 0;
+
+let storedTheme = localStorage.getItem("hub_theme") || localStorage.getItem("networks_theme");
+let isLightTheme = storedTheme ? storedTheme === "light" : true;
+try {
+  if (window.parent && window.parent.document && window.parent.document.documentElement) {
+    isLightTheme = !window.parent.document.documentElement.classList.contains("dark");
+  }
+} catch (e) {}
+
+if (isLightTheme) {
+  document.body.classList.add("light-theme");
+} else {
+  document.body.classList.remove("light-theme");
+}
+
+window.addEventListener("message", (e) => {
+  if (e.data && e.data.type === "THEME_CHANGE") {
+    const shouldBeLight = e.data.theme === "light";
+    if (isLightTheme !== shouldBeLight) {
+      isLightTheme = shouldBeLight;
+      document.body.classList.toggle("light-theme", isLightTheme);
+      localStorage.setItem("hub_theme", isLightTheme ? "light" : "dark");
+      localStorage.setItem("networks_theme", isLightTheme ? "light" : "dark");
+      updateThemeIcon();
+      buildDOMElements();
+      updatePositionsDOM();
+      highlightSelectedNode();
+    }
+  }
+});
+
+const EMOJI_REGEX = /([\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}\u{2B50}\u{2B55}\u{203C}\u{2049}\u{2139}\u{1FA00}-\u{1FAFF}\u{1F000}-\u{1F2FF}])/gu;
+
+function makeEmojisMonochrome(root) {
+  if (!root) root = document.body;
+  if (!root) return;
+  const walker = document.createTreeWalker(
+    root,
+    NodeFilter.SHOW_TEXT,
+    {
+      acceptNode: function(node) {
+        if (!node.nodeValue || !node.nodeValue.match(EMOJI_REGEX)) {
+          return NodeFilter.FILTER_SKIP;
+        }
+        const parent = node.parentElement;
+        if (!parent) return NodeFilter.FILTER_SKIP;
+        const tag = parent.tagName;
+        if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'TEXTAREA' || tag === 'INPUT') {
+          return NodeFilter.FILTER_REJECT;
+        }
+        if (parent.classList && parent.classList.contains('mono-emoji')) {
+          return NodeFilter.FILTER_SKIP;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    }
+  );
+
+  const nodesToProcess = [];
+  while (walker.nextNode()) {
+    nodesToProcess.push(walker.currentNode);
+  }
+
+  nodesToProcess.forEach(textNode => {
+    const parent = textNode.parentNode;
+    if (!parent) return;
+    const text = textNode.nodeValue;
+    const parts = text.split(EMOJI_REGEX);
+    if (parts.length <= 1) return;
+
+    const fragment = document.createDocumentFragment();
+    parts.forEach(part => {
+      if (!part) return;
+      if (part.match(EMOJI_REGEX)) {
+        const span = document.createElement('span');
+        span.className = 'mono-emoji';
+        span.textContent = part;
+        fragment.appendChild(span);
+      } else {
+        fragment.appendChild(document.createTextNode(part));
+      }
+    });
+    parent.replaceChild(fragment, textNode);
+  });
+}
+
+function buildGraphData(rawNode, depth = 0, domainIdx = 0, parent = null) {
+  const node = {
+    id: ++idCounter,
+    name: rawNode.name,
+    details: rawNode.details || "",
+    depth: depth,
+    domainIdx: depth === 0 ? -1 : (depth === 1 ? domainIdx : parent.domainIdx),
+    parent: parent,
+    _children: [],
+    children: [],
+    collapsed: depth >= 2, // Subtopics start collapsed
+    x: 0,
+    y: 0,
+    targetX: 0,
+    targetY: 0,
+    width: 200,
+    height: 36,
+    radius: 20
+  };
+
+  // Dimensions with ample room for Times New Roman font
+  const len = node.name.length;
+  if (depth === 0) {
+    node.width = 410;
+    node.height = 46;
+  } else if (depth === 1) {
+    node.width = Math.min(370, Math.max(240, len * 7.7 + 56));
+    node.height = 40;
+  } else if (depth === 2) {
+    node.width = Math.min(330, Math.max(210, len * 7.4 + 52));
+    node.height = 36;
+  } else {
+    node.width = Math.min(300, Math.max(180, len * 7.0 + 48));
+    node.height = 32;
+  }
+  node.radius = node.width / 2;
+
+  nodeMap.set(node.id, node);
+  nodes.push(node);
+
+  if (parent) {
+    links.push({ source: parent, target: node, length: depth === 1 ? 380 : (depth === 2 ? 300 : 220) });
+  }
+
+  const rawChildren = rawNode.children || [];
+  rawChildren.forEach((childRaw, idx) => {
+    const childNode = buildGraphData(childRaw, depth + 1, depth === 0 ? idx : domainIdx, node);
+    node._children.push(childNode);
+    if (!node.collapsed) {
+      node.children.push(childNode);
+    }
+  });
+
+  return node;
+}
+
+const rootNode = buildGraphData(rawData);
+
+// Compute 360-degree Radial Staggered Multi-Orbit Geometry
+function calculateRadialPositions() {
+  rootNode.targetX = 0;
+  rootNode.targetY = 0;
+  rootNode.x = 0;
+  rootNode.y = 0;
+
+  // 10 Domains distributed with weighted sector widths based on child count and text lengths
+  const domains = rootNode._children;
+  const numDomains = domains.length;
+
+  // Proportional sector weights giving domains with extensive text and subtopics ample room
+  const weights = domains.map(d => {
+    const subs = d._children || [];
+    const totLen = subs.reduce((acc, s) => acc + (s.name.length || 20), 0);
+    return Math.max(4.0, subs.length * 1.8 + totLen * 0.05);
+  });
+  const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+
+  let currentAngle = -Math.PI / 2;
+  domains.forEach((dom, i) => {
+    const domainSpan = (weights[i] / totalWeight) * (2 * Math.PI);
+    const domainCenterAngle = currentAngle + domainSpan / 2;
+    currentAngle += domainSpan;
+
+    // Widescreen elliptical radial geometry to match horizontal capsule dimensions
+    const r1x = 660;
+    const r1y = 470;
+    dom.targetX = r1x * Math.cos(domainCenterAngle);
+    dom.targetY = r1y * Math.sin(domainCenterAngle);
+    if (dom.x === 0 && dom.y === 0) {
+      dom.x = dom.targetX;
+      dom.y = dom.targetY;
+    }
+
+    // Subtopics fanning out in domain sector with 3-tier radial staggering
+    const subtopics = dom._children || [];
+    const numSub = subtopics.length;
+    const subSector = domainSpan * 0.82;
+    const tiers = numSub >= 3 ? 3 : (numSub >= 2 ? 2 : 1);
+
+    subtopics.forEach((sub, j) => {
+      const subOffset = numSub > 1 ? ((j - (numSub - 1) / 2) / (numSub - 1)) * subSector : 0;
+      const subAngle = domainCenterAngle + subOffset;
+      const tierIdx = (j + (i % 2)) % tiers;
+
+      const r2x = 1100 + tierIdx * 350;
+      const r2y = 800 + tierIdx * 250;
+      sub.targetX = r2x * Math.cos(subAngle);
+      sub.targetY = r2y * Math.sin(subAngle);
+      if (sub.x === 0 && sub.y === 0) {
+        sub.x = sub.targetX;
+        sub.y = sub.targetY;
+      }
+
+      // Concepts / Leaves fanning out with staggered radius relative to parent subtopic
+      const concepts = sub._children || [];
+      const numConcepts = concepts.length;
+      const leafSector = 0.28;
+      const leafTiers = numConcepts >= 4 ? 2 : 1;
+
+      concepts.forEach((con, k) => {
+        const conOffset = numConcepts > 1 ? ((k - (numConcepts - 1) / 2) / (numConcepts - 1)) * leafSector : 0;
+        const conAngle = subAngle + conOffset;
+        const ltIdx = (k % leafTiers);
+        const r3x = r2x + 400 + ltIdx * 220;
+        const r3y = r2y + 300 + ltIdx * 160;
+        con.targetX = r3x * Math.cos(conAngle);
+        con.targetY = r3y * Math.sin(conAngle);
+        if (con.x === 0 && con.y === 0) {
+          con.x = con.targetX;
+          con.y = con.targetY;
+        }
+      });
+    });
+  });
+
+  // Run geometric overlap removal on all initial positions to guarantee zero collisions
+  resolveOverlaps(false);
+
+  // Store settled positions as targetX / targetY for reset button
+  nodes.forEach(n => {
+    n.targetX = n.x;
+    n.targetY = n.y;
+  });
+}
+
+// Deterministic Non-Physics Overlap Removal Pass (Executes once upon render/toggle)
+function resolveOverlaps(onlyVisible = true) {
+  const targetNodes = onlyVisible ? nodes.filter(isVisible) : nodes;
+  const maxIters = 60;
+  for (let it = 0; it < maxIters; it++) {
+    let moved = false;
+    for (let a = 0; a < targetNodes.length; a++) {
+      for (let b = a + 1; b < targetNodes.length; b++) {
+        const nA = targetNodes[a];
+        const nB = targetNodes[b];
+
+        // Safety margins: horizontal width + 36px, vertical height + 24px
+        const minDx = (nA.width + nB.width) / 2 + 36;
+        const minDy = (nA.height + nB.height) / 2 + 24;
+        const dx = nB.x - nA.x;
+        const dy = nB.y - nA.y;
+        const absDx = Math.abs(dx);
+        const absDy = Math.abs(dy);
+
+        if (absDx < minDx && absDy < minDy) {
+          const overlapX = minDx - absDx;
+          const overlapY = minDy - absDy;
+
+          // Push along the axis of smaller relative penetration
+          if (overlapX / minDx < overlapY / minDy) {
+            const pushX = (overlapX / 2) * (dx >= 0 ? 1 : -1);
+            if (nA.depth > 0 && !nA.isPinned) nA.x -= pushX;
+            if (nB.depth > 0 && !nB.isPinned) nB.x += pushX;
+          } else {
+            const pushY = (overlapY / 2) * (dy >= 0 ? 1 : -1);
+            if (nA.depth > 0 && !nA.isPinned) nA.y -= pushY;
+            if (nB.depth > 0 && !nB.isPinned) nB.y += pushY;
+          }
+          moved = true;
+        }
+      }
+    }
+    if (!moved) break;
+  }
+}
+
+calculateRadialPositions();
+
+// Viewport & Pan-Zoom State
+let transform = { x: window.innerWidth / 2, y: window.innerHeight / 2, k: 0.82 };
+let isPanning = false;
+let startPan = { x: 0, y: 0 };
+
+const svg = document.getElementById("svg-canvas");
+const viewport = document.getElementById("viewport");
+const linksLayer = document.getElementById("links-layer");
+const nodesLayer = document.getElementById("nodes-layer");
+
+function updateTransform() {
+  viewport.setAttribute("transform", `translate(${transform.x}, ${transform.y}) scale(${transform.k})`);
+}
+updateTransform();
+
+// Canvas pan
+const container = document.getElementById("canvas-container");
+container.addEventListener("mousedown", (e) => {
+  if (e.target.closest(".node-group") || e.target.closest(".toolbar") || e.target.closest(".details-drawer")) return;
+  isPanning = true;
+  startPan = { x: e.clientX - transform.x, y: e.clientY - transform.y };
+});
+
+window.addEventListener("mousemove", (e) => {
+  if (!isPanning) return;
+  transform.x = e.clientX - startPan.x;
+  transform.y = e.clientY - startPan.y;
+  updateTransform();
+});
+
+window.addEventListener("mouseup", () => isPanning = false);
+
+// Canvas zoom
+container.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  const zoomFactor = 1.14;
+  const direction = e.deltaY < 0 ? 1 : -1;
+  const factor = direction > 0 ? zoomFactor : 1 / zoomFactor;
+
+  const mouseX = e.clientX;
+  const mouseY = e.clientY;
+
+  transform.x = mouseX - (mouseX - transform.x) * factor;
+  transform.y = mouseY - (mouseY - transform.y) * factor;
+  transform.k *= factor;
+  transform.k = Math.max(0.12, Math.min(transform.k, 3.0));
+  updateTransform();
+}, { passive: false });
+
+let draggedNode = null;
+
+function isVisible(node) {
+  let curr = node.parent;
+  while (curr) {
+    if (curr.collapsed) return false;
+    curr = curr.parent;
+  }
+  return true;
+}
+
+// Render Elements (Nodes & Moving Links)
+let selectedNodeId = null;
+
+function buildDOMElements() {
+  linksLayer.innerHTML = "";
+  nodesLayer.innerHTML = "";
+
+  const visibleNodes = nodes.filter(isVisible);
+
+  // Render Links
+  links.forEach(l => {
+    if (!isVisible(l.source) || !isVisible(l.target)) return;
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("class", "link-path");
+    path.id = `link-${l.source.id}-${l.target.id}`;
+    path.dataset.source = l.source.id;
+    path.dataset.target = l.target.id;
+    linksLayer.appendChild(path);
+  });
+
+  // Render Nodes
+  visibleNodes.forEach(n => {
+    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    g.setAttribute("class", "node-group");
+    g.id = `node-${n.id}`;
+
+    const theme = n.depth === 0 ? ROOT_THEME : DOMAIN_THEMES[n.domainIdx % DOMAIN_THEMES.length];
+    const strokeColor = isLightTheme ? theme.lightStroke : theme.stroke;
+    const fillColor = isLightTheme ? theme.lightFill : "var(--node-bg)";
+
+    // Capsule Pill Background (Strict zero-radius rectangle)
+    const capsule = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    capsule.setAttribute("class", "node-capsule" + (n.id === selectedNodeId ? " selected" : ""));
+    capsule.setAttribute("x", -n.width / 2);
+    capsule.setAttribute("y", -n.height / 2);
+    capsule.setAttribute("width", n.width);
+    capsule.setAttribute("height", n.height);
+    capsule.setAttribute("rx", "0");
+    capsule.setAttribute("ry", "0");
+    capsule.setAttribute("fill", fillColor);
+    capsule.setAttribute("stroke", strokeColor);
+    g.appendChild(capsule);
+
+    // Indicator Dot (Retro Square)
+    const dot = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    dot.setAttribute("class", "status-dot");
+    dot.setAttribute("x", -n.width / 2 + 11);
+    dot.setAttribute("y", -3.5);
+    dot.setAttribute("width", 7);
+    dot.setAttribute("height", 7);
+    dot.setAttribute("fill", strokeColor);
+    g.appendChild(dot);
+
+    // Node Text Label in Times New Roman
+    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    let textClass = "node-label";
+    if (n.depth === 0) textClass += " root-label";
+    else if (n.depth === 1) textClass += " domain-label";
+    text.setAttribute("class", textClass);
+    text.setAttribute("x", -n.width / 2 + 28);
+    text.setAttribute("y", 4.5);
+    text.textContent = n.name;
+    g.appendChild(text);
+
+    // Child count badge / Expand indicator
+    if (n._children && n._children.length > 0) {
+      const badgeG = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      badgeG.setAttribute("class", "node-badge");
+      badgeG.setAttribute("transform", `translate(${n.width / 2 - 14}, 0)`);
+      badgeG.style.cursor = "pointer";
+
+      const badgeCircle = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      badgeCircle.setAttribute("x", -7.5);
+      badgeCircle.setAttribute("y", -7.5);
+      badgeCircle.setAttribute("width", 15);
+      badgeCircle.setAttribute("height", 15);
+      badgeCircle.setAttribute("fill", strokeColor);
+      badgeCircle.setAttribute("opacity", "0.9");
+      badgeG.appendChild(badgeCircle);
+
+      const sign = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      sign.setAttribute("class", "badge-count");
+      sign.setAttribute("text-anchor", "middle");
+      sign.setAttribute("y", 4);
+      sign.textContent = n.collapsed ? "+" : "−";
+      badgeG.appendChild(sign);
+
+      badgeG.addEventListener("mousedown", (e) => {
+        e.stopPropagation();
+      });
+
+      badgeG.addEventListener("mouseup", (e) => {
+        e.stopPropagation();
+      });
+
+      badgeG.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleNode(n);
+      });
+
+      g.appendChild(badgeG);
+    }
+
+    // Node drag & click handlers
+    g.addEventListener("mousedown", (e) => {
+      e.stopPropagation();
+      draggedNode = n;
+      const startMouseX = e.clientX;
+      const startMouseY = e.clientY;
+      let hasMoved = false;
+
+      function onMouseMove(moveEvent) {
+        const dx = moveEvent.clientX - startMouseX;
+        const dy = moveEvent.clientY - startMouseY;
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasMoved = true;
+
+        const worldX = (moveEvent.clientX - transform.x) / transform.k;
+        const worldY = (moveEvent.clientY - transform.y) / transform.k;
+        draggedNode.x = worldX;
+        draggedNode.y = worldY;
+        updatePositionsDOM();
+      }
+
+      function onMouseUp() {
+        window.removeEventListener("mousemove", onMouseMove);
+        window.removeEventListener("mouseup", onMouseUp);
+        if (!hasMoved) {
+          selectNode(n);
+        }
+        draggedNode = null;
+      }
+
+      window.addEventListener("mousemove", onMouseMove);
+      window.addEventListener("mouseup", onMouseUp);
+    });
+
+    g.addEventListener("dblclick", (e) => {
+      e.stopPropagation();
+      if (n._children && n._children.length > 0) {
+        toggleNode(n);
+      }
+    });
+
+    nodesLayer.appendChild(g);
+  });
+}
+
+function updatePositionsDOM() {
+  const visibleNodes = nodes.filter(isVisible);
+
+  // 1. Update node capsule positions
+  visibleNodes.forEach(n => {
+    const g = document.getElementById(`node-${n.id}`);
+    if (g) {
+      g.setAttribute("transform", `translate(${n.x}, ${n.y})`);
+    }
+  });
+
+  // 2. Update curved movable links in real time
+  links.forEach(l => {
+    if (!isVisible(l.source) || !isVisible(l.target)) return;
+
+    const path = document.getElementById(`link-${l.source.id}-${l.target.id}`);
+    if (!path) return;
+
+    const sx = l.source.x;
+    const sy = l.source.y;
+    const tx = l.target.x;
+    const ty = l.target.y;
+
+    // Organic S-curve Bezier
+    const dx = tx - sx;
+    const dy = ty - sy;
+    const cx1 = sx + dx * 0.45;
+    const cy1 = sy + dy * 0.1;
+    const cx2 = sx + dx * 0.55;
+    const cy2 = sy + dy * 0.9;
+
+    path.setAttribute("d", `M ${sx} ${sy} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${tx} ${ty}`);
+  });
+}
+
+buildDOMElements();
+updatePositionsDOM();
+setTimeout(fitView, 60);
+
+// Node Selection & Details Drawer History
+const navHistory = [];
+
+function selectNode(n, recordHistory = true) {
+  if (recordHistory && selectedNodeId && selectedNodeId !== n.id) {
+    navHistory.push(selectedNodeId);
+  }
+  selectedNodeId = n.id;
+  highlightSelectedNode();
+  showDrawer(n);
+  updateBackButton();
+}
+
+function goBack() {
+  if (navHistory.length > 0) {
+    const prevId = navHistory.pop();
+    const prevNode = nodeMap.get(prevId);
+    if (prevNode) {
+      // Ensure ancestors of prevNode are expanded
+      let p = prevNode.parent;
+      let needsRebuild = false;
+      while (p) {
+        if (p.collapsed) {
+          p.collapsed = false;
+          needsRebuild = true;
+        }
+        p = p.parent;
+      }
+      if (needsRebuild) {
+        resolveOverlaps(true);
+        buildDOMElements();
+        updatePositionsDOM();
+      }
+      selectNode(prevNode, false);
+      focusNode(prevNode);
+      return;
+    }
+  }
+
+  // Fallback: If no history, navigate to parent if exists
+  if (selectedNodeId) {
+    const curr = nodeMap.get(selectedNodeId);
+    if (curr && curr.parent) {
+      selectNode(curr.parent, false);
+      focusNode(curr.parent);
+    }
+  }
+}
+
+function updateBackButton() {
+  const backBtn = document.getElementById("drawer-back");
+  const barBackBtn = document.getElementById("bar-btn-back");
+  const curr = selectedNodeId ? nodeMap.get(selectedNodeId) : null;
+  const canGoBack = navHistory.length > 0 || (curr && curr.parent);
+
+  [backBtn, barBackBtn].forEach(btn => {
+    if (!btn) return;
+    btn.disabled = !canGoBack;
+    btn.style.opacity = canGoBack ? "1" : "0.35";
+    btn.style.cursor = canGoBack ? "pointer" : "not-allowed";
+    btn.style.pointerEvents = canGoBack ? "auto" : "none";
+    if (navHistory.length > 0) {
+      const prev = nodeMap.get(navHistory[navHistory.length - 1]);
+      btn.setAttribute("title", prev ? `Back to "${prev.name}"` : "Back to Previous");
+    } else if (curr && curr.parent) {
+      btn.setAttribute("title", `Back to Parent "${curr.parent.name}"`);
+    } else {
+      btn.setAttribute("title", "No Previous Concept");
+    }
+  });
+}
+
+function highlightSelectedNode() {
+  document.querySelectorAll(".node-capsule").forEach(r => r.classList.remove("selected"));
+  document.querySelectorAll(".link-path").forEach(l => l.classList.remove("highlighted"));
+
+  if (!selectedNodeId) return;
+
+  const g = document.getElementById(`node-${selectedNodeId}`);
+  if (g) {
+    const cap = g.querySelector(".node-capsule");
+    if (cap) cap.classList.add("selected");
+  }
+
+  // Highlight ancestor links up to root
+  let curr = nodeMap.get(selectedNodeId);
+  while (curr && curr.parent) {
+    const lPath = document.getElementById(`link-${curr.parent.id}-${curr.id}`);
+    if (lPath) lPath.classList.add("highlighted");
+    curr = curr.parent;
+  }
+}
+
+function toggleNode(n) {
+  n.collapsed = !n.collapsed;
+  resolveOverlaps(true);
+  buildDOMElements();
+  updatePositionsDOM();
+  highlightSelectedNode();
+}
+
+function showDrawer(n) {
+  const drawer = document.getElementById("details-drawer");
+  const drawerBadge = document.getElementById("drawer-badge");
+  const drawerTitle = document.getElementById("drawer-title");
+  const drawerBody = document.getElementById("drawer-body");
+
+  const theme = n.depth === 0 ? ROOT_THEME : DOMAIN_THEMES[n.domainIdx % DOMAIN_THEMES.length];
+  const color = isLightTheme ? theme.lightStroke : theme.stroke;
+
+  drawerBadge.style.background = isLightTheme ? theme.lightFill : "rgba(255, 255, 255, 0.08)";
+  drawerBadge.style.color = color;
+  drawerBadge.style.borderColor = color;
+
+  if (n.depth === 0) drawerBadge.textContent = "Root System Overview";
+  else if (n.depth === 1) drawerBadge.textContent = `Domain ${n.domainIdx + 1} Architecture`;
+  else if (n.depth === 2) drawerBadge.textContent = `Subtopic • Domain ${n.domainIdx + 1}`;
+  else drawerBadge.textContent = "Deep Concept Disambiguation";
+
+  drawerTitle.textContent = n.name;
+  drawerTitle.style.color = color;
+
+  let html = "";
+  if (n.details) {
+    html += `<div>${n.details}</div>`;
+  } else {
+    html += `<p style="color: var(--text-muted);">Explore child concepts or surrounding domain modules for specific architectural models and disambiguation matrices.</p>`;
+  }
+
+  // Clickable Subtopic / Concept Pills
+  if (n._children && n._children.length > 0) {
+    html += `<h3 style="margin-top: 20px; border-top: 1px solid var(--panel-border); padding-top: 14px;">Direct Subtopics & Concepts (${n._children.length}):</h3>`;
+    html += `<div class="concept-pills">`;
+    n._children.forEach(c => {
+      html += `<div class="concept-pill" data-id="${c.id}">📍 ${c.name}</div>`;
+    });
+    html += `</div>`;
+  }
+
+  drawerBody.innerHTML = html;
+  makeEmojisMonochrome(drawer);
+
+  // Subtopic pill click listeners
+  drawerBody.querySelectorAll(".concept-pill").forEach(pill => {
+    pill.addEventListener("click", () => {
+      const targetId = parseInt(pill.dataset.id, 10);
+      const targetNode = nodeMap.get(targetId);
+      if (targetNode) {
+        if (n.collapsed) toggleNode(n);
+        selectNode(targetNode);
+        focusNode(targetNode);
+      }
+    });
+  });
+
+  drawer.classList.add("open");
+  const overlay = document.getElementById("drawer-overlay");
+  if (overlay) overlay.classList.add("active");
+}
+
+function closeDrawer() {
+  const drawer = document.getElementById("details-drawer");
+  const overlay = document.getElementById("drawer-overlay");
+  if (drawer) drawer.classList.remove("open");
+  if (overlay) overlay.classList.remove("active");
+}
+
+function focusNode(n) {
+  transform.x = window.innerWidth / 2 - n.x * transform.k - 100;
+  transform.y = window.innerHeight / 2 - n.y * transform.k;
+  updateTransform();
+}
+
+const drawerBackBtn = document.getElementById("drawer-back");
+if (drawerBackBtn) drawerBackBtn.addEventListener("click", goBack);
+
+const barBackBtn = document.getElementById("bar-btn-back");
+if (barBackBtn) barBackBtn.addEventListener("click", goBack);
+
+document.getElementById("drawer-close").addEventListener("click", closeDrawer);
+
+const drawerOverlay = document.getElementById("drawer-overlay");
+if (drawerOverlay) {
+  drawerOverlay.addEventListener("click", closeDrawer);
+}
+
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    closeDrawer();
+  } else if ((e.altKey && e.key === "ArrowLeft") || (e.key === "Backspace" && document.activeElement.tagName !== "INPUT" && document.activeElement.tagName !== "TEXTAREA")) {
+    const drawer = document.getElementById("details-drawer");
+    if (drawer && drawer.classList.contains("open")) {
+      e.preventDefault();
+      goBack();
+    }
+  }
+});
+
+document.getElementById("bar-btn-focus").addEventListener("click", () => {
+  if (selectedNodeId) {
+    const n = nodeMap.get(selectedNodeId);
+    if (n) focusNode(n);
+  }
+});
+
+document.getElementById("bar-btn-pin").addEventListener("click", () => {
+  if (selectedNodeId) {
+    const n = nodeMap.get(selectedNodeId);
+    if (n) {
+      n.isPinned = !n.isPinned;
+      const pinBtn = document.getElementById("bar-btn-pin");
+      pinBtn.classList.toggle("active", n.isPinned);
+      pinBtn.setAttribute("title", n.isPinned ? "Node Pinned (Click to unpin)" : "Pin Node");
+    }
+  }
+});
+
+document.getElementById("bar-btn-copy").addEventListener("click", () => {
+  if (selectedNodeId) {
+    const n = nodeMap.get(selectedNodeId);
+    if (n) {
+      const text = `${n.name}
+
+${n.details ? n.details.replace(/<[^>]+>/g, '') : ''}`;
+      navigator.clipboard.writeText(text).then(() => {
+        const copyIcon = document.getElementById("copy-icon");
+        copyIcon.innerHTML = `<polyline points="20 6 9 17 4 12"></polyline>`;
+        setTimeout(() => {
+          copyIcon.innerHTML = `<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>`;
+        }, 1500);
+      });
+    }
+  }
+});
+
+// Fit View to Visible Nodes
+function fitView() {
+  const visibleNodes = nodes.filter(isVisible);
+  if (visibleNodes.length === 0) return;
+
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  visibleNodes.forEach(n => {
+    minX = Math.min(minX, n.x - n.width / 2);
+    maxX = Math.max(maxX, n.x + n.width / 2);
+    minY = Math.min(minY, n.y - n.height / 2);
+    maxY = Math.max(maxY, n.y + n.height / 2);
+  });
+
+  const spanW = maxX - minX;
+  const spanH = maxY - minY;
+  const availW = window.innerWidth - 120;
+  const availH = window.innerHeight - 120;
+
+  const k = Math.min(availW / spanW, availH / spanH, 1.05);
+  transform.k = Math.max(0.18, k);
+  transform.x = window.innerWidth / 2 - ((minX + maxX) / 2) * transform.k - 40;
+  transform.y = window.innerHeight / 2 - ((minY + maxY) / 2) * transform.k;
+  updateTransform();
+}
+
+document.getElementById("btn-fit").addEventListener("click", fitView);
+
+// Expand All
+document.getElementById("btn-expand").addEventListener("click", () => {
+  nodes.forEach(n => {
+    n.collapsed = false;
+  });
+  resolveOverlaps(true);
+  buildDOMElements();
+  updatePositionsDOM();
+  highlightSelectedNode();
+  setTimeout(fitView, 50);
+});
+
+// Collapse to Domains
+document.getElementById("btn-collapse").addEventListener("click", () => {
+  nodes.forEach(n => {
+    if (n.depth >= 1) n.collapsed = true;
+  });
+  resolveOverlaps(true);
+  buildDOMElements();
+  updatePositionsDOM();
+  highlightSelectedNode();
+  setTimeout(fitView, 50);
+});
+
+// Theme Switcher (Monochrome Sun/Moon Toggle)
+const themeBtn = document.getElementById("btn-theme");
+const themeIcon = document.getElementById("theme-icon");
+
+function updateThemeIcon() {
+  if (isLightTheme) {
+    // Moon icon for switching back to dark
+    themeIcon.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
+    themeBtn.setAttribute("title", "Switch to Dark Mode");
+  } else {
+    // Sun icon for switching to light
+    themeIcon.innerHTML = `<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>`;
+    themeBtn.setAttribute("title", "Switch to Light Mode");
+  }
+}
+updateThemeIcon();
+
+themeBtn.addEventListener("click", () => {
+  isLightTheme = !isLightTheme;
+  document.body.classList.toggle("light-theme", isLightTheme);
+  localStorage.setItem("hub_theme", isLightTheme ? "light" : "dark");
+  localStorage.setItem("networks_theme", isLightTheme ? "light" : "dark");
+  updateThemeIcon();
+  buildDOMElements();
+  updatePositionsDOM();
+  highlightSelectedNode();
+});
+
+// Grid Visibility Toggle
+const gridBtn = document.getElementById("btn-grid");
+const gridPlane = document.getElementById("grid-plane");
+gridBtn.addEventListener("click", () => {
+  gridPlane.classList.toggle("hidden");
+  gridBtn.classList.toggle("active", !gridPlane.classList.contains("hidden"));
+});
+
+// Reset Layout to Default Radial Grid
+const resetBtn = document.getElementById("btn-reset");
+if (resetBtn) {
+  resetBtn.addEventListener("click", () => {
+    nodes.forEach(n => {
+      n.x = n.targetX;
+      n.y = n.targetY;
+    });
+    resolveOverlaps(true);
+    updatePositionsDOM();
+    fitView();
+  });
+}
+
+// Real-Time Search & Match Cycling
+let matchedNodes = [];
+let currentMatchIdx = -1;
+
+const searchInput = document.getElementById("search-input");
+const searchBadge = document.getElementById("search-badge");
+const searchPrev = document.getElementById("search-prev");
+const searchNext = document.getElementById("search-next");
+
+searchInput.addEventListener("input", (e) => {
+  const query = e.target.value.trim().toLowerCase();
+  document.querySelectorAll(".node-capsule").forEach(r => r.classList.remove("matched"));
+
+  matchedNodes = [];
+  currentMatchIdx = -1;
+
+  if (!query) {
+    searchBadge.style.display = "none";
+    searchPrev.style.display = "none";
+    searchNext.style.display = "none";
+    return;
+  }
+
+  nodes.forEach(n => {
+    const isMatch = n.name.toLowerCase().includes(query) || (n.details && n.details.toLowerCase().includes(query));
+    if (isMatch) {
+      matchedNodes.push(n);
+      // Auto expand ancestors so match is rendered
+      let curr = n.parent;
+      while (curr) {
+        curr.collapsed = false;
+        curr = curr.parent;
+      }
+    }
+  });
+
+  buildDOMElements();
+  highlightSelectedNode();
+
+  if (matchedNodes.length > 0) {
+    searchBadge.style.display = "inline-block";
+    searchPrev.style.display = "inline-flex";
+    searchNext.style.display = "inline-flex";
+    currentMatchIdx = 0;
+    updateSearchMatch();
+  } else {
+    searchBadge.style.display = "inline-block";
+    searchBadge.textContent = "0";
+    searchPrev.style.display = "none";
+    searchNext.style.display = "none";
+  }
+});
+
+function updateSearchMatch() {
+  document.querySelectorAll(".node-capsule").forEach(r => r.classList.remove("matched"));
+  searchBadge.textContent = `${currentMatchIdx + 1}/${matchedNodes.length}`;
+
+  matchedNodes.forEach(mn => {
+    const g = document.getElementById(`node-${mn.id}`);
+    if (g) {
+      const cap = g.querySelector(".node-capsule");
+      if (cap) cap.classList.add("matched");
+    }
+  });
+
+  const target = matchedNodes[currentMatchIdx];
+  if (target) {
+    focusNode(target);
+    selectNode(target);
+  }
+}
+
+searchNext.addEventListener("click", () => {
+  if (matchedNodes.length > 0) {
+    currentMatchIdx = (currentMatchIdx + 1) % matchedNodes.length;
+    updateSearchMatch();
+  }
+});
+
+searchPrev.addEventListener("click", () => {
+  if (matchedNodes.length > 0) {
+    currentMatchIdx = (currentMatchIdx - 1 + matchedNodes.length) % matchedNodes.length;
+    updateSearchMatch();
+  }
+});
+
+// Initial View Fit
+setTimeout(() => {
+  fitView();
+  makeEmojisMonochrome(document.body);
+}, 120);
+
+// URL Search & Node Deep-linking
+setTimeout(() => {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const qSearch = params.get("search") || params.get("q") || params.get("topic") || params.get("node");
+    if (qSearch && searchInput) {
+      searchInput.value = decodeURIComponent(qSearch);
+      searchInput.dispatchEvent(new Event("input"));
+    }
+  } catch (e) {
+    console.error("URL search init error:", e);
+  }
+}, 250);
+
+window.addEventListener("resize", () => {
+  fitView();
+});
+</script>
+</body>
+</html>

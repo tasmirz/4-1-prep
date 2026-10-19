@@ -1,0 +1,1684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Natural Language Processing: Statistical Foundations & Semantics</title>
+<style>
+  :root {
+    --bg-color: #121314;
+    --canvas-bg: #121314;
+    --grid-minor: rgba(255, 255, 255, 0.04);
+    --grid-major: rgba(255, 255, 255, 0.09);
+    --panel-bg: #1a1b1d;
+    --panel-border: #555555;
+    --text-primary: #f0f0ea;
+    --text-secondary: #b0b0a8;
+    --text-muted: #808078;
+    --node-bg: #1a1b1d;
+    --node-border: #555555;
+    --link-color: rgba(160, 160, 160, 0.35);
+    --link-pulse: #f0f0ea;
+    --drawer-bg: #1a1b1d;
+    --table-head-bg: #242528;
+    --table-border: #555555;
+    --table-stripe: #1e1f22;
+    --btn-bg: #1e1f22;
+    --btn-hover: #2a2b2f;
+    --icon-color: #b0b0a8;
+    --icon-hover: #f0f0ea;
+    --font-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "JetBrains Mono", "Courier New", Courier, monospace;
+  }
+
+  body.light-theme {
+    --bg-color: #f5f5f0;
+    --canvas-bg: #f5f5f0;
+    --grid-minor: rgba(0, 0, 0, 0.04);
+    --grid-major: rgba(0, 0, 0, 0.09);
+    --panel-bg: #ffffff;
+    --panel-border: #111111;
+    --text-primary: #111111;
+    --text-secondary: #444444;
+    --text-muted: #666666;
+    --node-bg: #ffffff;
+    --node-border: #111111;
+    --link-color: rgba(60, 60, 60, 0.35);
+    --link-pulse: #111111;
+    --drawer-bg: #ffffff;
+    --table-head-bg: #f5f5f0;
+    --table-border: #111111;
+    --table-stripe: #fafaf8;
+    --btn-bg: #f9f9f6;
+    --btn-hover: #eaeae4;
+    --icon-color: #444444;
+    --icon-hover: #111111;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border-radius: 0 !important;
+  }
+
+  ::selection {
+    background: var(--text-primary);
+    color: var(--panel-bg);
+  }
+  ::-moz-selection {
+    background: var(--text-primary);
+    color: var(--panel-bg);
+  }
+
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    font-family: var(--font-serif);
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  #canvas-container {
+    flex: 1;
+    height: 100%;
+    position: relative;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    overflow: hidden;
+  }
+  #canvas-container:active { cursor: grabbing; }
+
+  svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* Minimalist Graph Paper Grid */
+  .grid-bg {
+    transition: opacity 0.2s ease;
+  }
+  .grid-bg.hidden { opacity: 0; }
+
+  /* Moving Organic Links */
+  .link-path {
+    fill: none;
+    stroke: var(--link-color);
+    stroke-width: 1.5px;
+    stroke-linecap: square;
+    transition: stroke 0.2s ease, stroke-width 0.2s ease;
+  }
+  .link-path.highlighted {
+    stroke-width: 2.5px;
+    stroke: var(--text-primary);
+  }
+
+  /* Draggable Node Pills / Wireframe Rectangles */
+  .node-group {
+    cursor: grab;
+    transition: filter 0.15s ease;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .node-group:active { cursor: grabbing; }
+
+  .node-capsule {
+    rx: 0px !important;
+    ry: 0px !important;
+    stroke-width: 1.5px;
+    transition: stroke 0.2s ease, stroke-width 0.2s ease, filter 0.2s ease;
+  }
+  .node-capsule:hover {
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.25));
+  }
+  body:not(.light-theme) .node-capsule:hover {
+    filter: drop-shadow(0 4px 10px rgba(255, 255, 255, 0.25));
+  }
+  .node-capsule.selected {
+    stroke-width: 2.5px !important;
+    stroke: var(--text-primary) !important;
+    filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.4)) !important;
+  }
+  body:not(.light-theme) .node-capsule.selected {
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.4)) !important;
+  }
+  .node-capsule.matched {
+    stroke: var(--text-primary) !important;
+    stroke-width: 3px !important;
+    stroke-dasharray: 4 2;
+  }
+
+  .node-label {
+    font-size: 13px;
+    font-weight: 500;
+    fill: var(--text-primary);
+    font-family: var(--font-serif);
+    pointer-events: none;
+    letter-spacing: 0.1px;
+  }
+  .node-label.root-label {
+    font-size: 14.5px;
+    font-weight: 700;
+    font-style: italic;
+    fill: var(--text-primary);
+  }
+  .node-label.domain-label {
+    font-size: 13.5px;
+    font-weight: 600;
+  }
+
+  .status-dot {
+    pointer-events: none;
+  }
+
+  .badge-count {
+    font-size: 11px;
+    font-weight: 700;
+    fill: #ffffff;
+    font-family: var(--font-mono);
+    pointer-events: none;
+  }
+
+  /* Minimalist Floating Toolbar with Pure Monochrome Icons */
+  .toolbar {
+    position: absolute;
+    top: 16px;
+    left: 20px;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 0 !important;
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 2px 2px 0px var(--panel-border);
+    z-index: 10;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-right: 10px;
+    border-right: 1px solid var(--panel-border);
+    font-size: 13.5px;
+    font-weight: 700;
+    font-family: var(--font-serif);
+    color: var(--text-primary);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .live-dot {
+    width: 7.5px;
+    height: 7.5px;
+    background: var(--text-primary);
+    border-radius: 0 !important;
+  }
+
+  .search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .search-wrap input {
+    background: var(--btn-bg);
+    border: 1px solid var(--panel-border);
+    color: var(--text-primary);
+    font-family: var(--font-serif);
+    border-radius: 0 !important;
+    padding: 5px 10px 5px 28px;
+    font-size: 12.5px;
+    width: 190px;
+    outline: none !important;
+    transition: all 0.15s ease;
+  }
+  .search-wrap input:focus {
+    width: 240px;
+    border-color: var(--text-primary);
+    background: var(--panel-bg);
+  }
+  .search-ico {
+    position: absolute;
+    left: 9px;
+    display: flex;
+    align-items: center;
+    color: var(--icon-color);
+    pointer-events: none;
+  }
+
+  .search-badge {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--panel-bg);
+    background: var(--text-primary);
+    border: 1px solid var(--panel-border);
+    border-radius: 0 !important;
+    padding: 2px 7px;
+    display: none;
+    white-space: nowrap;
+  }
+
+  /* Monochrome Icon Buttons (No text!) */
+  .mono-btn {
+    background: var(--btn-bg);
+    border: 1px solid var(--panel-border);
+    color: var(--icon-color);
+    border-radius: 0 !important;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.1s ease;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    outline: none !important;
+  }
+  .mono-btn svg {
+    width: 15px;
+    height: 15px;
+    stroke: currentColor;
+    display: block;
+  }
+  .mono-btn:hover {
+    background: var(--text-primary);
+    color: var(--panel-bg);
+    border-color: var(--text-primary);
+  }
+  .mono-btn.active {
+    background: var(--text-primary) !important;
+    color: var(--panel-bg) !important;
+    border-color: var(--text-primary) !important;
+  }
+
+  /* Backdrop Overlay when Details Drawer is Open */
+  .drawer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.48);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 15;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .drawer-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  body.light-theme .drawer-overlay {
+    background: rgba(0, 0, 0, 0.25);
+  }
+
+  /* Sleek Slide-over Details Drawer */
+  .details-drawer {
+    width: 500px;
+    max-width: 92vw;
+    height: 100%;
+    background: var(--drawer-bg);
+    border-left: 2px solid var(--panel-border);
+    border-radius: 0 !important;
+    box-shadow: -10px 0 30px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    z-index: 20;
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+  .details-drawer.open {
+    transform: translateX(0);
+  }
+
+  .drawer-head {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--panel-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .drawer-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 0 !important;
+    border: 1px solid var(--panel-border);
+    font-size: 11px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .drawer-title {
+    font-size: 16px;
+    font-weight: 700;
+    font-family: var(--font-serif);
+    line-height: 1.35;
+    color: var(--text-primary);
+  }
+
+  .drawer-bar {
+    padding: 8px 20px;
+    border-bottom: 1px solid var(--panel-border);
+    display: flex;
+    gap: 8px;
+    background: var(--btn-bg);
+  }
+
+  .drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 22px;
+    font-size: 14px;
+    line-height: 1.65;
+    font-family: var(--font-serif);
+    color: var(--text-secondary);
+  }
+  .drawer-body h3 {
+    color: var(--text-primary);
+    margin: 16px 0 8px 0;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: var(--font-serif);
+  }
+  .drawer-body p { margin-bottom: 12px; }
+  .drawer-body ul, .drawer-body ol { padding-left: 22px; margin-bottom: 12px; }
+  .drawer-body li { margin-bottom: 6px; }
+  .drawer-body strong { color: var(--text-primary); font-family: var(--font-serif); }
+  .drawer-body em { font-style: italic; }
+  .drawer-body code {
+    background: var(--btn-bg);
+    color: var(--text-primary);
+    padding: 2px 6px;
+    border: 1px solid var(--panel-border);
+    border-radius: 0 !important;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  /* Clean Academic Tables */
+  .drawer-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0 18px 0;
+    font-size: 13px;
+    border-radius: 0 !important;
+    overflow: hidden;
+    font-family: var(--font-serif);
+    border: 1px solid var(--table-border);
+  }
+  .drawer-body th, .drawer-body td {
+    padding: 8px 11px;
+    border: 1px solid var(--table-border);
+    text-align: left;
+    vertical-align: top;
+  }
+  .drawer-body th {
+    background: var(--table-head-bg);
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+  .drawer-body tr:nth-child(even) { background: var(--table-stripe); }
+
+  /* Concept Pills */
+  .concept-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin: 10px 0 16px 0;
+  }
+  .concept-pill {
+    background: var(--btn-bg);
+    border: 1px solid var(--panel-border);
+    color: var(--text-secondary);
+    font-family: var(--font-serif);
+    border-radius: 0 !important;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.1s ease;
+  }
+  .concept-pill:hover {
+    background: var(--text-primary);
+    color: var(--panel-bg);
+    border-color: var(--text-primary);
+  }
+
+  /* Minimalist Footer Hint */
+  .hint-pill {
+    position: absolute;
+    bottom: 16px;
+    left: 20px;
+    font-size: 12px;
+    font-family: var(--font-serif);
+    color: var(--text-muted);
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 0 !important;
+    padding: 4px 12px;
+    pointer-events: none;
+    box-shadow: 2px 2px 0px var(--panel-border);
+  }
+
+  /* Robust Drawer Theme Adaptations */
+  body.light-theme .drawer-body div[style*="background"] {
+    background: var(--btn-bg) !important;
+    border-color: var(--panel-border) !important;
+    color: var(--text-primary) !important;
+  }
+  body.light-theme .drawer-body span[style*="color:#38bdf8"],
+  body.light-theme .drawer-body p[style*="color:#38bdf8"],
+  body.light-theme .drawer-body a[style*="color:#38bdf8"] {
+    color: var(--text-primary) !important;
+  }
+  body.light-theme .drawer-body p[style*="color:#cbd5e1"],
+  body.light-theme .drawer-body ul[style*="color:#94a3b8"] {
+    color: var(--text-secondary) !important;
+  }
+  body.light-theme .drawer-body tr[style*="background:#1e293b"] {
+    background: var(--table-head-bg) !important;
+    color: var(--text-primary) !important;
+  }
+  body.light-theme .drawer-body tr[style*="background:#1e293b"] th {
+    color: var(--text-primary) !important;
+  }
+  body.light-theme .drawer-body tr[style*="background:#0f172a"] {
+    background: var(--table-stripe) !important;
+  }
+  body.light-theme .drawer-body a[style*="background"] {
+    background: var(--text-primary) !important;
+    color: var(--panel-bg) !important;
+    border: 1px solid var(--panel-border) !important;
+  }
+
+  /* Retro Monochrome Emojis */
+  .mono-emoji {
+    display: inline-block;
+    vertical-align: -0.1em;
+    line-height: 1;
+    filter: grayscale(100%) brightness(0.65) contrast(160%);
+    -webkit-filter: grayscale(100%) brightness(0.65) contrast(160%);
+    transition: filter 0.1s ease;
+  }
+  body:not(.light-theme) .mono-emoji {
+    filter: grayscale(100%) brightness(1.75) contrast(140%);
+    -webkit-filter: grayscale(100%) brightness(1.75) contrast(140%);
+  }
+  body.light-theme .drawer-body a[style*="background"] .mono-emoji,
+  body.light-theme .btn:hover .mono-emoji,
+  body.light-theme button:hover .mono-emoji {
+    filter: grayscale(100%) brightness(2.2) contrast(150%) !important;
+    -webkit-filter: grayscale(100%) brightness(2.2) contrast(150%) !important;
+  }
+</style>
+</head>
+<body>
+
+<div id="canvas-container">
+  <div class="toolbar">
+    <div class="brand">
+      <div class="live-dot"></div>
+      <span>Natural Language Processing: Statistical Foundations & Semantics</span>
+    </div>
+
+    <div class="search-wrap">
+      <span class="search-ico">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      </span>
+      <input type="text" id="search-input" placeholder="Search concepts (Tahoe, Karn, AIMD)...">
+    </div>
+    <span class="search-badge" id="search-badge">0</span>
+
+    <!-- Search Prev/Next (Monochrome Icons) -->
+    <button class="mono-btn" id="search-prev" style="display:none;" title="Previous Match">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="18 15 12 9 6 15"></polyline></svg>
+    </button>
+    <button class="mono-btn" id="search-next" style="display:none;" title="Next Match">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+    </button>
+
+    <!-- Theme Switcher (Monochrome Sun/Moon Icon) -->
+    <button class="mono-btn" id="btn-theme" title="Toggle Light / Dark Mode">
+      <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+    </button>
+
+    <!-- Grid Toggle (Monochrome Grid Icon) -->
+    <button class="mono-btn active" id="btn-grid" title="Toggle Graph Paper Grid">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>
+    </button>
+
+    <!-- Reset Layout (Monochrome Reset Icon) -->
+    <button class="mono-btn" id="btn-reset" title="Reset Layout to Default Radial Grid">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
+    </button>
+
+    <!-- Fit View (Monochrome Crosshairs / Fit Icon) -->
+    <button class="mono-btn" id="btn-fit" title="Zoom to Fit">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><polyline points="21 15 21 21 15 21"></polyline><polyline points="3 9 3 3 9 3"></polyline></svg>
+    </button>
+
+    <!-- Expand All (Monochrome Tree Expand Icon) -->
+    <button class="mono-btn" id="btn-expand" title="Expand All Branches">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+    </button>
+
+    <!-- Collapse All (Monochrome Tree Fold Icon) -->
+    <button class="mono-btn" id="btn-collapse" title="Collapse to Domains">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+    </button>
+  </div>
+
+  <svg id="svg-canvas">
+    <defs>
+      <!-- Engineering Graph Paper Grid -->
+      <pattern id="grid-pattern-minor" width="24" height="24" patternUnits="userSpaceOnUse">
+        <path d="M 24 0 L 0 0 0 24" fill="none" stroke="var(--grid-minor)" stroke-width="0.75" />
+      </pattern>
+      <pattern id="grid-pattern-major" width="120" height="120" patternUnits="userSpaceOnUse">
+        <rect width="120" height="120" fill="url(#grid-pattern-minor)" />
+        <path d="M 120 0 L 0 0 0 120" fill="none" stroke="var(--grid-major)" stroke-width="1.2" />
+      </pattern>
+    </defs>
+
+    <g id="viewport">
+      <!-- Infinite Graph Paper Grid Plane -->
+      <rect id="grid-plane" class="grid-bg" x="-10000" y="-10000" width="20000" height="20000" fill="url(#grid-pattern-major)" />
+
+      <!-- Moving Links Layer -->
+      <g id="links-layer"></g>
+
+      <!-- Movable Nodes Layer -->
+      <g id="nodes-layer"></g>
+    </g>
+  </svg>
+
+  <div class="hint-pill">
+    Drag nodes to reposition • Scroll to zoom • Click +/- to toggle branch • Click node for details
+  </div>
+</div>
+
+<!-- Backdrop Overlay for Details Drawer -->
+<div class="drawer-overlay" id="drawer-overlay"></div>
+
+<div class="details-drawer" id="details-drawer">
+  <div class="drawer-head">
+    <div style="display: flex; align-items: flex-start; gap: 10px; flex: 1;">
+      <!-- Monochrome Back Button -->
+      <button class="mono-btn" id="drawer-back" title="Go Back to Previous Concept" disabled style="margin-top: 2px; flex-shrink: 0; opacity: 0.35; cursor: not-allowed; pointer-events: none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+      </button>
+      <div style="flex: 1; min-width: 0;">
+        <div class="drawer-badge" id="drawer-badge">Overview</div>
+        <div class="drawer-title" id="drawer-title">Node Title</div>
+      </div>
+    </div>
+    <!-- Monochrome Close Button -->
+    <button class="mono-btn" id="drawer-close" title="Close Panel" style="flex-shrink: 0;">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </button>
+  </div>
+  <div class="drawer-bar">
+    <!-- Monochrome Back Button in Action Bar -->
+    <button class="mono-btn" id="bar-btn-back" title="Go Back to Previous Concept" disabled style="opacity: 0.35; cursor: not-allowed; pointer-events: none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+    </button>
+    <!-- Monochrome Center/Focus Button -->
+    <button class="mono-btn" id="bar-btn-focus" title="Center in View">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
+    </button>
+    <!-- Monochrome Pin/Unpin Button -->
+    <button class="mono-btn" id="bar-btn-pin" title="Pin / Unpin Node Position">
+      <svg id="pin-icon" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+    </button>
+    <!-- Monochrome Copy Notes Button -->
+    <button class="mono-btn" id="bar-btn-copy" title="Copy Notes to Clipboard">
+      <svg id="copy-icon" viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+    </button>
+  </div>
+  <div class="drawer-body" id="drawer-body">
+    Select any node to view comprehensive disambiguation notes, architecture tables, and formulas.
+  </div>
+</div>
+
+<script>
+const rawData = {"name": "Natural Language Processing: Statistical Foundations & Semantics", "details": "\n    <div style=\"margin: 14px 0 16px 0; padding: 12px; background: var(--bg-box, #202225); border: 1px solid var(--border-main, #555555); border-radius: 0 !important; box-shadow: 2px 2px 0px var(--border-main, #555555);\">\n      <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;\">\n        <span style=\"font-size:13px; font-weight:bold; color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\"><span class=\"mono-emoji\">🎓</span> University Exam Intelligence (CSE 4241)</span>\n        <span style=\"font-size:11px; font-weight:bold; border:1px solid var(--border-main, #555555); background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); padding:2px 8px; border-radius:0 !important; font-family:var(--font-mono, monospace);\">196 Questions Analyzed</span>\n      </div>\n      <p style=\"font-size:12px; color:var(--text-dim, #b8b8b0); margin-bottom:10px; line-height:1.5;\">\n        Complete historical coverage from <strong>2018 to 2024</strong> (1791 Total Marks). Every question includes faculty expectations, topic alignment, and original printed university exam scans.\n      </p>\n      <div style=\"display:flex; gap:8px; flex-wrap:wrap;\">\n        <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:6px; padding:7px 14px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-weight:bold; font-size:12px; font-family:var(--font-mono, monospace);\">\n          <span class=\"mono-emoji\">📚</span> [OPEN QUESTION ANALYZER (196 Qs · 1791M) &rarr;]\n        </a>\n        <a href=\"../final/nlp-azhar-sir.pdf\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:6px; padding:7px 14px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-weight:bold; font-size:12px; font-family:var(--font-mono, monospace);\">\n          <span class=\"mono-emoji\">📖</span> [OPEN MERGED PDF (329 Pages) &rarr;]\n        </a>\n      </div>\n    </div>\n    \n        <h3>Natural Language Processing: Mathematical & Statistical Foundations</h3>\n        <p>This interactive mind map explores foundational NLP algorithms as taught by Prof. Azhar Sir: from discrete string distance and statistical n-gram language models to probabilistic smoothing, discriminative text classification, dense vector semantics, and dynamic programming syntactic parsers.</p>\n        <div style=\"margin-top: 10px; padding: 10px; background: rgba(56, 189, 248, 0.1); border-left: 3px solid #38bdf8; border-radius: 4px;\">\n          <strong>Core Focus:</strong> Levenshtein DP equations, Kneser-Ney continuation probability, Naive Bayes vs Logistic Regression objectives, Skip-gram negative sampling loss, and CKY parsing grids.\n        </div>\n        <ul style=\"margin-top: 12px;\">\n          <li><strong>Source:</strong> Course Lectures (Prof. Azhar Sir), Jurafsky & Martin (Speech & Language Processing, 3rd ed.), Manning & Schütze.</li>\n          <li><strong>Coverage:</strong> 9 Major Domains across 410 lecture slides.</li>\n        </ul>\n        ", "children": [{"name": "📝 Exam Questions (86 Patterns · 1791M)", "details": "\n        <h3>University Exam Question Archive & Patterns</h3>\n        <p>Comprehensive historical recurrence analysis across KUET Term Examinations (2018–2024).</p>\n        <p style=\"margin-top:8px;\">Click any specific pattern node on this branch to view recurring exam questions, frequency metrics, and exact marks.</p>\n        <div style=\"margin-top:12px;\">\n          <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html\" target=\"_blank\" style=\"display:inline-block; padding:8px 14px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-weight:bold; font-size:12px; font-family:var(--font-mono, monospace);\">\n            <span class=\"mono-emoji\">📚</span> [LAUNCH FULL QUESTION BROWSER (196 Questions) &rarr;]\n          </a>\n        </div>\n        ", "children": [{"name": "Q: \"Parts-of-Speech (POS) tagging is a di... (4x)", "details": "\n        <h4>Exam Pattern: \"Parts-of-Speech (POS) tagging is a disambiguation task\" — justify the statement with example.</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: var(--bg-box, #202225); border: 1px solid var(--border-main, #555555); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:var(--text-ink, #f0f0ea); font-weight:bold; margin-bottom:4px; font-family:var(--font-mono, monospace);\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 4 Times Asked · 38 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:var(--text-dim, #b8b8b0); margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2019, 2020, 2022, 2024\n          </p>\n          <ul style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2022)</strong> [10M] <em>\"Parts-of-Speech (POS) tagging is a disambiguation task\" — justify the statement with\nexample....</em></li><li style='margin-bottom:5px;'><strong>(2024)</strong> [10M] <em>\"POS tagging is a disambiguation task\" — Justify the statement with example. (10)...</em></li><li style='margin-bottom:5px;'><strong>(2020)</strong> [10M] <em>\"POS tagging is a disambiguation task\" — Justify the statement with example....</em></li>\n          </ul>\n          <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html?search=\"Parts-of-Speech%20(POS)%20tagging\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold; font-family:var(--font-mono, monospace);\">\n            <span class=\"mono-emoji\">🔍</span> [VIEW QUESTIONS IN BROWSER &rarr;]\n          </a>\n        </div>\n        "}, {"name": "Q: What is homograph disambiguation? What... (4x)", "details": "\n        <h4>Exam Pattern: What is homograph disambiguation? What problems does CMU face in this regard, and how does UNISYN ad</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: var(--bg-box, #202225); border: 1px solid var(--border-main, #555555); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:var(--text-ink, #f0f0ea); font-weight:bold; margin-bottom:4px; font-family:var(--font-mono, monospace);\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 4 Times Asked · 27 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:var(--text-dim, #b8b8b0); margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2018, 2020, 2021, 2022\n          </p>\n          <ul style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2022)</strong>  <em>What is homograph disambiguation? What problems does CMU face in this regard, and\nhow does UNISYN address these issues?...</em></li><li style='margin-bottom:5px;'><strong>(2020)</strong> [10M] <em>What is Homograph disambiguation? What are the problems of CMU? How does UNISYN (10)\novercome the problems of CMU?...</em></li><li style='margin-bottom:5px;'><strong>(2021)</strong> [7M] <em>What is Homograph disambiguation? What are the problems of CMU? How does UNISYN\novercome the problems of CMU?...</em></li>\n          </ul>\n          <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html?search=What%20is%20homograph%20disambiguati\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold; font-family:var(--font-mono, monospace);\">\n            <span class=\"mono-emoji\">🔍</span> [VIEW QUESTIONS IN BROWSER &rarr;]\n          </a>\n        </div>\n        "}, {"name": "Q: For Hidden Markov Model (HMM) POS tagg... (3x)", "details": "\n        <h4>Exam Pattern: For Hidden Markov Model (HMM) POS tagging, using the following formula, find the (13)  equation of c</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: var(--bg-box, #202225); border: 1px solid var(--border-main, #555555); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:var(--text-ink, #f0f0ea); font-weight:bold; margin-bottom:4px; font-family:var(--font-mono, monospace);\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 3 Times Asked · 31 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:var(--text-dim, #b8b8b0); margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2018, 2019, 2024\n          </p>\n          <ul style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2019)</strong> [10M] <em>For Hidden Markov Model (HMM) Pos tagging, using the following formula, find the (10)\nequation of calculating tag transition probabilities\nt...</em></li><li style='margin-bottom:5px;'><strong>(2024)</strong> [13M] <em>For Hidden Markov Model (HMM) POS tagging, using the following formula, find the (13) \nequation of calculating tag transition probabilities....</em></li><li style='margin-bottom:5px;'><strong>(2018)</strong> [8M] <em>For Hidden Markov Model (HMM) POS Tagging, using the following formula, find the\nequation of calculating tag transition probabilities.\nn)...</em></li>\n          </ul>\n          <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html?search=For%20Hidden%20Markov%20Model%20(HMM)%20\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold; font-family:var(--font-mono, monospace);\">\n            <span class=\"mono-emoji\">🔍</span> [VIEW QUESTIONS IN BROWSER &rarr;]\n          </a>\n        </div>\n        "}, {"name": "Q: Speech Synthesis perform text to wavef... (3x)", "details": "\n        <h4>Exam Pattern: Speech Synthesis perform text to waveform mapping in two-steps. Name and discuss about the steps. Us</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: var(--bg-box, #202225); border: 1px solid var(--border-main, #555555); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:var(--text-ink, #f0f0ea); font-weight:bold; margin-bottom:4px; font-family:var(--font-mono, monospace);\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 3 Times Asked · 30 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:var(--text-dim, #b8b8b0); margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2018, 2020, 2021\n          </p>\n          <ul style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2021)</strong> [8M] <em>Speech synthesis performs text-to-waveform mapping in two steps. Name and discuss the\nsteps using Hourglass metaphor....</em></li><li style='margin-bottom:5px;'><strong>(2018)</strong> [12M] <em>Speech Synthesis perform text to waveform mapping in two-steps. Name and discuss about the\nsteps. Using Hourglass Metaphor....</em></li><li style='margin-bottom:5px;'><strong>(2020)</strong> [10M] <em>Discuss about the steps of text to waveform mapping in speech synthesis using Hourglass (10)\nmetaphor....</em></li>\n          </ul>\n          <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html?search=Speech%20Synthesis%20perform%20text%20\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold; font-family:var(--font-mono, monospace);\">\n            <span class=\"mono-emoji\">🔍</span> [VIEW QUESTIONS IN BROWSER &rarr;]\n          </a>\n        </div>\n        "}, {"name": "Q: Define stop words. What are the applic... (2x)", "details": "\n        <h4>Exam Pattern: Define stop words. What are the applications of stop word detection In NLP tasksO Icon</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: var(--bg-box, #202225); border: 1px solid var(--border-main, #555555); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:var(--text-ink, #f0f0ea); font-weight:bold; margin-bottom:4px; font-family:var(--font-mono, monospace);\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 2 Times Asked · 11 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:var(--text-dim, #b8b8b0); margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2022, 2024\n          </p>\n          <ul style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2024)</strong> [6M] <em>Define stop words. What are the applications of stop word detection In NLP tasksO\nIcon...</em></li><li style='margin-bottom:5px;'><strong>(2022)</strong> [5M] <em>Define stop words. What are the applications of stop word detection in NLP tasks?...</em></li>\n          </ul>\n          <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html?search=Define%20stop%20words.%20What%20are%20th\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold; font-family:var(--font-mono, monospace);\">\n            <span class=\"mono-emoji\">🔍</span> [VIEW QUESTIONS IN BROWSER &rarr;]\n          </a>\n        </div>\n        "}, {"name": "Q: Define N-gram language model. How can ... (2x)", "details": "\n        <h4>Exam Pattern: Define N-gram language model. How can you compute the probability ofa sentence of n words P(w), w =</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: var(--bg-box, #202225); border: 1px solid var(--border-main, #555555); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:var(--text-ink, #f0f0ea); font-weight:bold; margin-bottom:4px; font-family:var(--font-mono, monospace);\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 2 Times Asked · 20 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:var(--text-dim, #b8b8b0); margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2021, 2024\n          </p>\n          <ul style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2024)</strong> [10M] <em>Define N-gram language model. HöWcgn you compute the probability ofa sentence of (10)\nn words P(w), w WI w2 .... wn? How can you calculate t...</em></li><li style='margin-bottom:5px;'><strong>(2021)</strong> [10M] <em>Define N-gram language model. How can you compute the probability ofa sentence of n words\nP(w), w = WIW2... wn. How can you calculate maximu...</em></li>\n          </ul>\n          <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html?search=Define%20N-gram%20language%20model.%20\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold; font-family:var(--font-mono, monospace);\">\n            <span class=\"mono-emoji\">🔍</span> [VIEW QUESTIONS IN BROWSER &rarr;]\n          </a>\n        </div>\n        "}, {"name": "Q: Define smoothing. How can you smooth t... (2x)", "details": "\n        <h4>Exam Pattern: Define smoothing. How can you smooth the language model by interpolation? How to choose the value of</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: var(--bg-box, #202225); border: 1px solid var(--border-main, #555555); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:var(--text-ink, #f0f0ea); font-weight:bold; margin-bottom:4px; font-family:var(--font-mono, monospace);\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 2 Times Asked · 20 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:var(--text-dim, #b8b8b0); margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2021, 2024\n          </p>\n          <ul style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2024)</strong> [10M] <em>efine smoothing. How can you smooth the language model by interpolation? I-IoWto (10) \nchoose the value of 'X' to maximize the probability?...</em></li><li style='margin-bottom:5px;'><strong>(2021)</strong> [10M] <em>Define smoothing. How can you smooth the language model by interpolation? How to choose\nthe value of 'X' to maximize the probability?...</em></li>\n          </ul>\n          <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html?search=Define%20smoothing.%20How%20can%20you%20\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold; font-family:var(--font-mono, monospace);\">\n            <span class=\"mono-emoji\">🔍</span> [VIEW QUESTIONS IN BROWSER &rarr;]\n          </a>\n        </div>\n        "}, {"name": "Q: What is the difference between tokens ... (2x)", "details": "\n        <h4>Exam Pattern: What is the difference between tokens and embeddings? Explain the pipeline of creating embedding mod</h4>\n        <div style=\"margin: 8px 0; padding: 10px; background: var(--bg-box, #202225); border: 1px solid var(--border-main, #555555); border-radius: 0 !important;\">\n          <p style=\"font-size:12px; color:var(--text-ink, #f0f0ea); font-weight:bold; margin-bottom:4px; font-family:var(--font-mono, monospace);\">\n            <span class=\"mono-emoji\">⭐</span> Exam Weight: 2 Times Asked · 8 Total Marks\n          </p>\n          <p style=\"font-size:12px; color:var(--text-dim, #b8b8b0); margin-bottom:6px;\">\n            <strong>Recent Sessions:</strong> 2023, 2024\n          </p>\n          <ul style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-left:14px; margin-bottom:10px;\">\n            <li style='margin-bottom:5px;'><strong>(2024)</strong>  <em>What is the difference between tokens and embeddings? Explain the pipeline of...</em></li><li style='margin-bottom:5px;'><strong>(2023)</strong> [8M] <em>What is the difference between tokens and embeddings? Explain the pipeline of\ncreating embedding model....</em></li>\n          </ul>\n          <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html?search=What%20is%20the%20difference%20between\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-size:11.5px; font-weight:bold; font-family:var(--font-mono, monospace);\">\n            <span class=\"mono-emoji\">🔍</span> [VIEW QUESTIONS IN BROWSER &rarr;]\n          </a>\n        </div>\n        "}]}, {"name": "1. Text Normalization, Regex & Morphology", "details": "\n                <h3>Text Tokenization, Lemmatization & Corpus Statistics</h3>\n                <p>Text normalization converts raw textual strings into standardized sequence tokens suitable for linguistic modeling.</p>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: var(--bg-box, #202225); border: 1px solid var(--border-main, #555555); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; border:1px solid var(--border-main, #555555); background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\">HIGH PRIORITY · 16x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 16 subquestions across 6 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-left:14px; margin-bottom:8px;\">\n                <li><em>What is Bag of words representation? How do you apply Bag of words assumption and conditional indepe</em></li><li><em>Define Stop word. How do you handle Stop word in text classification?</em></li>\n              </ul>\n              <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html?search=Naive\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold; font-family:var(--font-mono, monospace);\">\n                <span class=\"mono-emoji\">🔍</span> [VIEW QUESTIONS IN BROWSER &rarr;]\n              </a>\n            </div>\n            ", "children": [{"name": "Tokenization & Byte-Pair Encoding (BPE)", "details": "\n                        <h4>Subword Segmentation Algorithms</h4>\n                        <ul>\n                          <li><strong>Word Tokenization:</strong> Splitting by whitespace and punctuation; struggles with contractions (`don't`), hyphenated compounds, and language boundaries.</li>\n                          <li><strong>Byte-Pair Encoding (BPE):</strong> Iterative subword segmentation. Starts with character vocabulary; iteratively merges the most frequent adjacent character/token pair in the corpus until desired vocabulary size is achieved. Solves the Out-of-Vocabulary (OOV) dilemma by representing rare words as known subword morphemes.</li>\n                        </ul>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: var(--bg-box, #202225); border: 1px solid var(--border-main, #555555); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; border:1px solid var(--border-main, #555555); background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\">HIGH PRIORITY · 19x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 19 subquestions across 7 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-left:14px; margin-bottom:8px;\">\n                <li><em>Define N-gram language model. How can you compute the probability ofa sentence of n words P(w), w =</em></li><li><em>Consider the following corpus shown in the following figure. What is the most probable (15) next wor</em></li>\n              </ul>\n              <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html?search=N-gram\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold; font-family:var(--font-mono, monospace);\">\n                <span class=\"mono-emoji\">🔍</span> [VIEW QUESTIONS IN BROWSER &rarr;]\n              </a>\n            </div>\n            "}, {"name": "Lemmatization vs Stemming & Zipf's Law", "details": "\n                        <h4>Morphological Reduction & Frequency Power Laws</h4>\n                        <table style=\"width:100%; border-collapse:collapse; margin-top:8px; font-size:12px;\">\n                          <tr style=\"background:#1e293b; color:#38bdf8;\">\n                            <th style=\"padding:6px; border:1px solid #334155;\">Operation</th>\n                            <th style=\"padding:6px; border:1px solid #334155;\">Methodology</th>\n                            <th style=\"padding:6px; border:1px solid #334155;\">Example (`saw`, `studies`)</th>\n                          </tr>\n                          <tr>\n                            <td style=\"padding:6px; border:1px solid #334155;\"><strong>Stemming (Porter)</strong></td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">Heuristic chopping of affixes; ignores grammar and context.</td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">`studi`, `saw` (no change).</td>\n                          </tr>\n                          <tr style=\"background:#0f172a;\">\n                            <td style=\"padding:6px; border:1px solid #334155;\"><strong>Lemmatization</strong></td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">Full morphological dictionary analysis; maps words to valid root dictionary lemma.</td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">`study`, `see` (verb) or `saw` (noun).</td>\n                          </tr>\n                        </table>\n                        <div style=\"margin-top:8px;\">\n                          <strong>Zipf's Law:</strong> Word frequency $f$ is inversely proportional to its frequency rank $r$: $f \\propto \\frac{1}{r}$. A tiny handful of words account for the majority of tokens in any language.\n                        </div>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: var(--bg-box, #202225); border: 1px solid var(--border-main, #555555); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; border:1px solid var(--border-main, #555555); background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\">HIGH PRIORITY · 19x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 19 subquestions across 7 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-left:14px; margin-bottom:8px;\">\n                <li><em>Define N-gram language model. How can you compute the probability ofa sentence of n words P(w), w =</em></li><li><em>Consider the following corpus shown in the following figure. What is the most probable (15) next wor</em></li>\n              </ul>\n              <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html?search=N-gram\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold; font-family:var(--font-mono, monospace);\">\n                <span class=\"mono-emoji\">🔍</span> [VIEW QUESTIONS IN BROWSER &rarr;]\n              </a>\n            </div>\n            "}]}, {"name": "2. Minimum Edit Distance & String Alignment", "details": "\n                <h3>Levenshtein Distance & Dynamic Programming Alignment</h3>\n                <p>Quantifies the dissimilarity between two strings by finding the minimum number of editing operations (Insert, Delete, Substitute) required to transform string $X$ into string $Y$.</p>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: var(--bg-box, #202225); border: 1px solid var(--border-main, #555555); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; border:1px solid var(--border-main, #555555); background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\">HIGH PRIORITY · 19x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 19 subquestions across 7 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-left:14px; margin-bottom:8px;\">\n                <li><em>Define N-gram language model. How can you compute the probability ofa sentence of n words P(w), w =</em></li><li><em>Consider the following corpus shown in the following figure. What is the most probable (15) next wor</em></li>\n              </ul>\n              <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html?search=N-gram\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold; font-family:var(--font-mono, monospace);\">\n                <span class=\"mono-emoji\">🔍</span> [VIEW QUESTIONS IN BROWSER &rarr;]\n              </a>\n            </div>\n            ", "children": [{"name": "Levenshtein DP Recurrence & Matrix Formulation", "details": "\n                        <h4>Matrix Recurrence Equation</h4>\n                        <p>For source string $X$ of length $n$ and target string $Y$ of length $m$:</p>\n                        <p style=\"text-align:center; font-weight:bold;\">$$D[i, j] = \\min \\begin{cases} D[i-1, j] + \\text{cost}(\\text{delete}) \\\\ D[i, j-1] + \\text{cost}(\\text{insert}) \\\\ D[i-1, j-1] + \\begin{cases} 0 & \\text{if } X[i] = Y[j] \\\\ \\text{cost}(\\text{substitute}) & \\text{if } X[i] \\ne Y[j] \\end{cases} \\end{cases}$$</p>\n                        <ul>\n                          <li><strong>Costs:</strong> Levenshtein sets $\\text{ins}=1, \\text{del}=1, \\text{sub}=2$ (substitution = deletion + insertion).</li>\n                          <li><strong>Complexity:</strong> Time $O(nm)$, Space $O(nm)$.</li>\n                          <li><strong>Backtrace Alignment:</strong> Traces backpointers from cell $(n, m)$ to $(0, 0)$ to reconstruct the optimal character-level global alignment (Needleman-Wunsch).</li>\n                        </ul>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: var(--bg-box, #202225); border: 1px solid var(--border-main, #555555); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; border:1px solid var(--border-main, #555555); background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\">HIGH PRIORITY · 16x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 16 subquestions across 6 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-left:14px; margin-bottom:8px;\">\n                <li><em>What is Bag of words representation? How do you apply Bag of words assumption and conditional indepe</em></li><li><em>Define Stop word. How do you handle Stop word in text classification?</em></li>\n              </ul>\n              <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html?search=Naive\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold; font-family:var(--font-mono, monospace);\">\n                <span class=\"mono-emoji\">🔍</span> [VIEW QUESTIONS IN BROWSER &rarr;]\n              </a>\n            </div>\n            "}]}, {"name": "3. N-gram Language Models & Perplexity", "details": "\n                <h3>Probabilistic Language Modeling & Intrinsic Evaluation</h3>\n                <p>Calculates the probability of a sentence $W = (w_1, w_2, \\dots, w_n)$ using the chain rule and Markov conditional approximations.</p>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: var(--bg-box, #202225); border: 1px solid var(--border-main, #555555); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; border:1px solid var(--border-main, #555555); background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\">HIGH PRIORITY · 19x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 19 subquestions across 7 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-left:14px; margin-bottom:8px;\">\n                <li><em>Define N-gram language model. How can you compute the probability ofa sentence of n words P(w), w =</em></li><li><em>Consider the following corpus shown in the following figure. What is the most probable (15) next wor</em></li>\n              </ul>\n              <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html?search=N-gram\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold; font-family:var(--font-mono, monospace);\">\n                <span class=\"mono-emoji\">🔍</span> [VIEW QUESTIONS IN BROWSER &rarr;]\n              </a>\n            </div>\n            ", "children": [{"name": "Markov Assumption & MLE Estimates", "details": "\n                        <h4>Maximum Likelihood Estimation of N-grams</h4>\n                        <p>Full chain rule requires conditioning on all preceding history: $P(W) = \\prod_{k=1}^n P(w_k \\mid w_1^{k-1})$.</p>\n                        <p><strong>Markov Assumption:</strong> The probability of an upcoming word depends only on the immediately preceding $N-1$ words:</p>\n                        <p style=\"text-align:center; font-weight:bold;\">$$P_{Bigram}(w_i \\mid w_{i-1}) = \\frac{C(w_{i-1}, w_i)}{C(w_{i-1})}, \\quad P_{Trigram}(w_i \\mid w_{i-2}, w_{i-1}) = \\frac{C(w_{i-2}, w_{i-1}, w_i)}{C(w_{i-2}, w_{i-1})}$$</p>\n                        <p>Arithmetic is strictly computed in $\\log$-space: $\\sum \\log P(w_i \\mid w_{i-1})$ to prevent numerical underflow.</p>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: var(--bg-box, #202225); border: 1px solid var(--border-main, #555555); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; border:1px solid var(--border-main, #555555); background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\">HIGH PRIORITY · 19x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 19 subquestions across 7 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-left:14px; margin-bottom:8px;\">\n                <li><em>Define N-gram language model. How can you compute the probability ofa sentence of n words P(w), w =</em></li><li><em>Consider the following corpus shown in the following figure. What is the most probable (15) next wor</em></li>\n              </ul>\n              <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html?search=N-gram\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold; font-family:var(--font-mono, monospace);\">\n                <span class=\"mono-emoji\">🔍</span> [VIEW QUESTIONS IN BROWSER &rarr;]\n              </a>\n            </div>\n            "}, {"name": "Perplexity (PP) Evaluation Metric", "details": "\n                        <h4>Intrinsic Model Quality Metric</h4>\n                        <p>Perplexity is the inverse probability of the test set normalized by word count $N$:</p>\n                        <p style=\"text-align:center; font-weight:bold;\">$$PP(W) = P(w_1, w_2, \\dots, w_N)^{-\\frac{1}{N}} = \\sqrt[N]{\\prod_{i=1}^N \\frac{1}{P(w_i \\mid w_{i-1})}} = 2^{H(W)}$$</p>\n                        <p><strong>Interpretation:</strong> The effective branching factor of the language model (the number of equally probable words the model is guessing between at each step). Lower perplexity indicates superior predictive performance.</p>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: var(--bg-box, #202225); border: 1px solid var(--border-main, #555555); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; border:1px solid var(--border-main, #555555); background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\">HIGH PRIORITY · 19x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 19 subquestions across 7 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-left:14px; margin-bottom:8px;\">\n                <li><em>Define N-gram language model. How can you compute the probability ofa sentence of n words P(w), w =</em></li><li><em>Consider the following corpus shown in the following figure. What is the most probable (15) next wor</em></li>\n              </ul>\n              <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html?search=N-gram\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold; font-family:var(--font-mono, monospace);\">\n                <span class=\"mono-emoji\">🔍</span> [VIEW QUESTIONS IN BROWSER &rarr;]\n              </a>\n            </div>\n            "}]}, {"name": "4. Smoothing Techniques for Language Models", "details": "\n                <h3>Probability Mass Redistribution & Zero-Probability Fixes</h3>\n                <p>In MLE, any unseen $n$-gram receives probability $0$, causing sentence perplexity to explode to infinity.</p>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: var(--bg-box, #202225); border: 1px solid var(--border-main, #555555); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; border:1px solid var(--border-main, #555555); background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\">HIGH PRIORITY · 19x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 19 subquestions across 7 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-left:14px; margin-bottom:8px;\">\n                <li><em>Define N-gram language model. How can you compute the probability ofa sentence of n words P(w), w =</em></li><li><em>Consider the following corpus shown in the following figure. What is the most probable (15) next wor</em></li>\n              </ul>\n              <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html?search=N-gram\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold; font-family:var(--font-mono, monospace);\">\n                <span class=\"mono-emoji\">🔍</span> [VIEW QUESTIONS IN BROWSER &rarr;]\n              </a>\n            </div>\n            ", "children": [{"name": "Laplace & Add-k (Lidstone) Smoothing", "details": "\n                        <h4>Uniform Shift Smoothing</h4>\n                        <ul>\n                          <li><strong>Laplace (Add-1) Smoothing:</strong> Adds $1$ to all counts and normalizes by vocabulary size $|V|$:\n                            <p style=\"text-align:center;\">$$P_{Laplace}(w_i \\mid w_{i-1}) = \\frac{C(w_{i-1}, w_i) + 1}{C(w_{i-1}) + |V|}$$</p>\n                            Shifts far too much probability mass to unseen events in large vocabularies.\n                          </li>\n                          <li><strong>Add-$k$ Smoothing:</strong> Replaces $+1$ with small fractional constant $+k$ ($k \\approx 0.05$).</li>\n                        </ul>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: var(--bg-box, #202225); border: 1px solid var(--border-main, #555555); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; border:1px solid var(--border-main, #555555); background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\">HIGH PRIORITY · 16x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 16 subquestions across 6 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-left:14px; margin-bottom:8px;\">\n                <li><em>What is Bag of words representation? How do you apply Bag of words assumption and conditional indepe</em></li><li><em>Define Stop word. How do you handle Stop word in text classification?</em></li>\n              </ul>\n              <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html?search=Naive\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold; font-family:var(--font-mono, monospace);\">\n                <span class=\"mono-emoji\">🔍</span> [VIEW QUESTIONS IN BROWSER &rarr;]\n              </a>\n            </div>\n            "}, {"name": "Interpolation, Absolute Discounting & Kneser-Ney", "details": "\n                        <h4>Advanced State-of-the-Art Smoothing</h4>\n                        <ul>\n                          <li><strong>Linear Interpolation:</strong> Mixes unigram, bigram, and trigram probabilities: $\\hat{P}(w_i \\mid w_{i-2}, w_{i-1}) = \\lambda_1 P(w_i \\mid w_{i-2}, w_{i-1}) + \\lambda_2 P(w_i \\mid w_{i-1}) + \\lambda_3 P(w_i)$.</li>\n                          <li><strong>Absolute Discounting:</strong> Subtracts fixed discount $d \\approx 0.75$ from non-zero counts and redistributes mass according to lower-order models.</li>\n                          <li><strong>Kneser-Ney Smoothing:</strong> Instead of lower-order unigram probability, uses <em>Continuation Probability</em> $P_{cont}(w)$: how likely word $w$ is to complete an unseen context:\n                            <p style=\"text-align:center;\">$$P_{cont}(w) = \\frac{|\\{w_{i-1} : C(w_{i-1}, w) > 0\\}|}{\\sum_{w'} |\\{w_{i-1} : C(w_{i-1}, w') > 0\\}|}$$</p>\n                            Words like \"San Francisco\" (where \"Francisco\" has high unigram count but only appears after \"San\") receive low continuation probability, drastically improving generalization!\n                          </li>\n                        </ul>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: var(--bg-box, #202225); border: 1px solid var(--border-main, #555555); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; border:1px solid var(--border-main, #555555); background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\">HIGH PRIORITY · 19x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 19 subquestions across 7 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-left:14px; margin-bottom:8px;\">\n                <li><em>Define N-gram language model. How can you compute the probability ofa sentence of n words P(w), w =</em></li><li><em>Consider the following corpus shown in the following figure. What is the most probable (15) next wor</em></li>\n              </ul>\n              <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html?search=N-gram\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold; font-family:var(--font-mono, monospace);\">\n                <span class=\"mono-emoji\">🔍</span> [VIEW QUESTIONS IN BROWSER &rarr;]\n              </a>\n            </div>\n            "}]}, {"name": "5. Text Classification & Naive Bayes", "details": "\n                <h3>Generative Classification & Bag-of-Words Modeling</h3>\n                <p>Assigns a text document $d$ to a category $c \\in C$ using Bayes' Theorem under strong conditional independence assumptions.</p>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: var(--bg-box, #202225); border: 1px solid var(--border-main, #555555); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; border:1px solid var(--border-main, #555555); background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\">HIGH PRIORITY · 16x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 16 subquestions across 6 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-left:14px; margin-bottom:8px;\">\n                <li><em>What is Bag of words representation? How do you apply Bag of words assumption and conditional indepe</em></li><li><em>Define Stop word. How do you handle Stop word in text classification?</em></li>\n              </ul>\n              <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html?search=Naive\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold; font-family:var(--font-mono, monospace);\">\n                <span class=\"mono-emoji\">🔍</span> [VIEW QUESTIONS IN BROWSER &rarr;]\n              </a>\n            </div>\n            ", "children": [{"name": "Multinomial Naive Bayes Formulation", "details": "\n                        <h4>Maximum A Posteriori (MAP) Decision Rule</h4>\n                        <p style=\"text-align:center; font-weight:bold;\">$$c_{MAP} = \\arg\\max_{c \\in C} P(c \\mid d) = \\arg\\max_{c \\in C} P(c) \\prod_{i=1}^n P(w_i \\mid c)$$</p>\n                        <p><strong>Log-Space Parameter Estimation with Laplace Smoothing:</strong></p>\n                        <p style=\"text-align:center;\">$$P(w_i \\mid c) = \\frac{\\text{count}(w_i, c) + 1}{\\sum_{w \\in V} \\text{count}(w, c) + |V|}$$</p>\n                        <p style=\"text-align:center; font-weight:bold;\">$$c_{MAP} = \\arg\\max_{c} \\left[ \\log P(c) + \\sum_{i=1}^n \\log P(w_i \\mid c) \\right]$$</p>\n                        <p>Fast, robust baseline; ignores word order (Bag-of-Words).</p>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: var(--bg-box, #202225); border: 1px solid var(--border-main, #555555); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; border:1px solid var(--border-main, #555555); background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\">HIGH PRIORITY · 16x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 16 subquestions across 6 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-left:14px; margin-bottom:8px;\">\n                <li><em>What is Bag of words representation? How do you apply Bag of words assumption and conditional indepe</em></li><li><em>Define Stop word. How do you handle Stop word in text classification?</em></li>\n              </ul>\n              <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html?search=Naive\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold; font-family:var(--font-mono, monospace);\">\n                <span class=\"mono-emoji\">🔍</span> [VIEW QUESTIONS IN BROWSER &rarr;]\n              </a>\n            </div>\n            "}]}, {"name": "6. Discriminative Classification & Logistic Regression", "details": "\n                <h3>Conditional Probability Modeling & Cross-Entropy Loss</h3>\n                <p>Discriminative modeling directly estimates $P(y \\mid x)$ without modeling the joint distribution $P(x, y)$ of features.</p>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: var(--bg-box, #202225); border: 1px solid var(--border-main, #555555); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; border:1px solid var(--border-main, #555555); background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\">HIGH PRIORITY · 16x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 16 subquestions across 6 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-left:14px; margin-bottom:8px;\">\n                <li><em>What is Bag of words representation? How do you apply Bag of words assumption and conditional indepe</em></li><li><em>Define Stop word. How do you handle Stop word in text classification?</em></li>\n              </ul>\n              <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html?search=Naive\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold; font-family:var(--font-mono, monospace);\">\n                <span class=\"mono-emoji\">🔍</span> [VIEW QUESTIONS IN BROWSER &rarr;]\n              </a>\n            </div>\n            ", "children": [{"name": "Logistic Regression Formulation & Gradient Updates", "details": "\n                        <h4>Sigmoid Activation & Cross-Entropy Optimization</h4>\n                        <p>Linear combination passed through logistic sigmoid function:</p>\n                        <p style=\"text-align:center; font-weight:bold;\">$$P(y = 1 \\mid x) = \\sigma(w^T x + b) = \\frac{1}{1 + e^{-(w^T x + b)}}$$</p>\n                        <p><strong>Binary Cross-Entropy Loss:</strong></p>\n                        <p style=\"text-align:center;\">$$\\mathcal{L}_{CE}(w) = -[y \\log \\hat{y} + (1 - y) \\log(1 - \\hat{y})]$$</p>\n                        <p>Analytical gradient update for feature weight $w_j$:</p>\n                        <p style=\"text-align:center; font-weight:bold;\">$$\\frac{\\partial \\mathcal{L}}{\\partial w_j} = (\\hat{y} - y) x_j \\implies w_j \\leftarrow w_j - \\eta (\\hat{y} - y) x_j$$</p>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: var(--bg-box, #202225); border: 1px solid var(--border-main, #555555); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; border:1px solid var(--border-main, #555555); background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\">HIGH PRIORITY · 16x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 16 subquestions across 6 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-left:14px; margin-bottom:8px;\">\n                <li><em>What is Bag of words representation? How do you apply Bag of words assumption and conditional indepe</em></li><li><em>Define Stop word. How do you handle Stop word in text classification?</em></li>\n              </ul>\n              <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html?search=Naive\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold; font-family:var(--font-mono, monospace);\">\n                <span class=\"mono-emoji\">🔍</span> [VIEW QUESTIONS IN BROWSER &rarr;]\n              </a>\n            </div>\n            "}]}, {"name": "7. Vector Semantics & Word Embeddings", "details": "\n                <h3>Distributional Semantics, TF-IDF, PPMI & Word2Vec</h3>\n                <p>Represents lexical meaning as dense or sparse vectors in high-dimensional continuous embedding spaces.</p>\n                <div style=\"margin-top:8px;\">\n                  <strong>Distributional Hypothesis (J.R. Firth):</strong> <em>\"You shall know a word by the company it keeps!\"</em>\n                </div>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: var(--bg-box, #202225); border: 1px solid var(--border-main, #555555); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; border:1px solid var(--border-main, #555555); background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\">WATCHLIST · 8x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 8 subquestions across 4 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-left:14px; margin-bottom:8px;\">\n                <li><em>What is the difference between tokens and embeddings? Explain the pipeline of creating embedding mod</em></li><li><em>\"TF-IDF has better feature representation than BOW.\"- Is it true? If so, justify.</em></li>\n              </ul>\n              <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html?search=Embeddings\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold; font-family:var(--font-mono, monospace);\">\n                <span class=\"mono-emoji\">🔍</span> [VIEW QUESTIONS IN BROWSER &rarr;]\n              </a>\n            </div>\n            ", "children": [{"name": "TF-IDF & Positive Pointwise Mutual Information (PPMI)", "details": "\n                        <h4>Statistical Sparse Weighting Schemes</h4>\n                        <ul>\n                          <li><strong>TF-IDF:</strong> Weighs term $t$ in document $d$ against corpus frequency:\n                            <p style=\"text-align:center;\">$$\\text{TF-IDF}(t, d) = \\text{TF}(t, d) \\times \\log\\left(\\frac{N}{\\text{DF}(t)}\\right)$$</p>\n                          </li>\n                          <li><strong>PPMI:</strong> Measures whether two words co-occur significantly more than by random chance:\n                            <p style=\"text-align:center;\">$$\\text{PPMI}(w, c) = \\max\\left(0, \\log_2 \\frac{P(w, c)}{P(w) P(c)}\\right)$$</p>\n                          </li>\n                          <li><strong>Cosine Similarity:</strong> $\\cos(u, v) = \\frac{u \\cdot v}{\\|u\\| \\|v\\|}$.</li>\n                        </ul>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: var(--bg-box, #202225); border: 1px solid var(--border-main, #555555); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; border:1px solid var(--border-main, #555555); background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\">HIGH PRIORITY · 16x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 16 subquestions across 6 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-left:14px; margin-bottom:8px;\">\n                <li><em>What is Bag of words representation? How do you apply Bag of words assumption and conditional indepe</em></li><li><em>Define Stop word. How do you handle Stop word in text classification?</em></li>\n              </ul>\n              <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html?search=Naive\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold; font-family:var(--font-mono, monospace);\">\n                <span class=\"mono-emoji\">🔍</span> [VIEW QUESTIONS IN BROWSER &rarr;]\n              </a>\n            </div>\n            "}, {"name": "Word2Vec: Skip-Gram with Negative Sampling (SGNS)", "details": "\n                        <h4>Dense Distributed Representation Learning (Mikolov 2013)</h4>\n                        <table style=\"width:100%; border-collapse:collapse; margin-top:8px; font-size:12px;\">\n                          <tr style=\"background:#1e293b; color:#38bdf8;\">\n                            <th style=\"padding:6px; border:1px solid #334155;\">Model</th>\n                            <th style=\"padding:6px; border:1px solid #334155;\">Prediction Direction</th>\n                            <th style=\"padding:6px; border:1px solid #334155;\">Characteristics</th>\n                          </tr>\n                          <tr>\n                            <td style=\"padding:6px; border:1px solid #334155;\"><strong>CBOW</strong></td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">Context words $\\to$ Target word.</td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">Faster training; better for frequent words.</td>\n                          </tr>\n                          <tr style=\"background:#0f172a;\">\n                            <td style=\"padding:6px; border:1px solid #334155;\"><strong>Skip-Gram (SGNS)</strong></td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">Target word $\\to$ Surrounding context words.</td>\n                            <td style=\"padding:6px; border:1px solid #334155;\">Superior representations for rare words.</td>\n                          </tr>\n                        </table>\n                        <div style=\"margin-top:8px;\">\n                          <strong>SGNS Binary Logistic Objective:</strong>\n                          $$\\mathcal{L} = \\log \\sigma(v'_c \\cdot v_w) + \\sum_{k=1}^K \\mathbb{E}_{w_{neg} \\sim P_n} [\\log \\sigma(-v'_{w_{neg}} \\cdot v_w)]$$\n                          <p>Replaces expensive $|V|$-way softmax over entire vocabulary with $K$ binary logistic regressions!</p>\n                        </div>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: var(--bg-box, #202225); border: 1px solid var(--border-main, #555555); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; border:1px solid var(--border-main, #555555); background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\">HIGH PRIORITY · 19x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 19 subquestions across 7 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-left:14px; margin-bottom:8px;\">\n                <li><em>Define N-gram language model. How can you compute the probability ofa sentence of n words P(w), w =</em></li><li><em>Consider the following corpus shown in the following figure. What is the most probable (15) next wor</em></li>\n              </ul>\n              <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html?search=N-gram\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold; font-family:var(--font-mono, monospace);\">\n                <span class=\"mono-emoji\">🔍</span> [VIEW QUESTIONS IN BROWSER &rarr;]\n              </a>\n            </div>\n            "}]}, {"name": "8. Context-Free Grammars & CKY Parsing", "details": "\n                <h3>Constituency Grammars & Dynamic Programming Parsing</h3>\n                <p>Structures natural language sentences into hierarchical constituent syntax trees.</p>\n                \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: var(--bg-box, #202225); border: 1px solid var(--border-main, #555555); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; border:1px solid var(--border-main, #555555); background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\">HIGH PRIORITY · 19x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 19 subquestions across 7 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-left:14px; margin-bottom:8px;\">\n                <li><em>Define N-gram language model. How can you compute the probability ofa sentence of n words P(w), w =</em></li><li><em>Consider the following corpus shown in the following figure. What is the most probable (15) next wor</em></li>\n              </ul>\n              <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html?search=N-gram\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold; font-family:var(--font-mono, monospace);\">\n                <span class=\"mono-emoji\">🔍</span> [VIEW QUESTIONS IN BROWSER &rarr;]\n              </a>\n            </div>\n            ", "children": [{"name": "Chomsky Normal Form (CNF) & CKY Chart Parser", "details": "\n                        <h4>Cocke-Kasami-Younger (CKY) Parsing Algorithm</h4>\n                        <p>Requires Context-Free Grammar (CFG) in <strong>Chomsky Normal Form (CNF)</strong> where all production rules are strictly:</p>\n                        <ul>\n                          <li>$A \\to B \\ C$ (two non-terminals), OR</li>\n                          <li>$A \\to a$ (single terminal token).</li>\n                        </ul>\n                        <p><strong>CKY Dynamic Programming Grid:</strong> For sentence of $n$ words, constructs an upper-triangular matrix table where cell $[i, j]$ contains non-terminals spanning from word $i$ to word $j$:</p>\n                        <p style=\"text-align:center; font-weight:bold;\">$$S[i, j] = \\bigcup_{k=i+1}^{j-1} \\{ A \\mid A \\to B C, \\ B \\in S[i, k], \\ C \\in S[k, j] \\}$$</p>\n                        <p><strong>Complexity:</strong> Time $O(n^3 |G|)$, Space $O(n^2 |G|)$. Solves exponential syntactic ambiguity in polynomial time.</p>\n                        \n            <div style=\"margin-top: 14px; padding: 10px 12px; background: var(--bg-box, #202225); border: 1px solid var(--border-main, #555555); border-radius: 0 !important;\">\n              <div style=\"display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;\">\n                <span style=\"font-size:12px; font-weight:bold; color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\"><span class=\"mono-emoji\">📝</span> Past University Exam Weight</span>\n                <span style=\"font-size:10px; font-weight:bold; padding:2px 8px; border-radius:0 !important; border:1px solid var(--border-main, #555555); background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); font-family:var(--font-mono, monospace);\">HIGH PRIORITY · 22x Asked</span>\n              </div>\n              <p style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-bottom:6px;\">\n                <strong>Recurrence:</strong> 22 subquestions across 7 exam sessions (2021, 2022, 2023, 2024).\n              </p>\n              <ul style=\"font-size:11.5px; color:var(--text-dim, #b8b8b0); margin-left:14px; margin-bottom:8px;\">\n                <li><em>What is meant by Natural Language Processing (NLP)? How does it differ [COi I Learning (ML)?</em></li><li><em>Why are NLP tasks sometimes become difficult for a machine to do? plain with amples.</em></li>\n              </ul>\n              <a href=\"../question-browser/natural-language-processing-shawon-sir-azhar-sir.html?search=NLP\" target=\"_blank\" style=\"display:inline-flex; align-items:center; gap:5px; padding:5px 10px; background:var(--bg-sheet, #18191b); color:var(--text-ink, #f0f0ea); border:1px solid var(--border-main, #555555); text-decoration:none; border-radius:0 !important; font-size:11px; font-weight:bold; font-family:var(--font-mono, monospace);\">\n                <span class=\"mono-emoji\">🔍</span> [VIEW QUESTIONS IN BROWSER &rarr;]\n              </a>\n            </div>\n            "}]}]};
+
+// 10 Distinct Harmonious Minimalist Domain Themes (Strict Retro Monochrome Wireframe)
+const DOMAIN_THEMES = [
+  { stroke: "#e0e0dc", fill: "#18191b", lightStroke: "#111111", lightFill: "#ffffff", badgeText: "#111111" },
+  { stroke: "#cccccc", fill: "#202225", lightStroke: "#222222", lightFill: "#fcfbf9", badgeText: "#222222" },
+  { stroke: "#b8b8b0", fill: "#1a1b1d", lightStroke: "#333333", lightFill: "#f8f7f3", badgeText: "#333333" },
+  { stroke: "#999994", fill: "#222428", lightStroke: "#444444", lightFill: "#f4f3ef", badgeText: "#444444" },
+  { stroke: "#e0e0dc", fill: "#18191b", lightStroke: "#111111", lightFill: "#ffffff", badgeText: "#111111" },
+  { stroke: "#cccccc", fill: "#202225", lightStroke: "#222222", lightFill: "#fcfbf9", badgeText: "#222222" },
+  { stroke: "#b8b8b0", fill: "#1a1b1d", lightStroke: "#333333", lightFill: "#f8f7f3", badgeText: "#333333" },
+  { stroke: "#999994", fill: "#222428", lightStroke: "#444444", lightFill: "#f4f3ef", badgeText: "#444444" },
+  { stroke: "#e0e0dc", fill: "#18191b", lightStroke: "#111111", lightFill: "#ffffff", badgeText: "#111111" },
+  { stroke: "#cccccc", fill: "#202225", lightStroke: "#222222", lightFill: "#fcfbf9", badgeText: "#222222" },
+];
+
+const ROOT_THEME = {
+  stroke: "#e0e0dc",
+  fill: "#202225",
+  lightStroke: "#111111",
+  lightFill: "#f0eee6",
+  badgeText: "#111111"
+};
+
+// Physics state & node registry
+const nodes = [];
+const links = [];
+const nodeMap = new Map();
+let idCounter = 0;
+
+let storedTheme = localStorage.getItem("hub_theme") || localStorage.getItem("networks_theme");
+let isLightTheme = storedTheme ? storedTheme === "light" : true;
+try {
+  if (window.parent && window.parent.document && window.parent.document.documentElement) {
+    isLightTheme = !window.parent.document.documentElement.classList.contains("dark");
+  }
+} catch (e) {}
+
+if (isLightTheme) {
+  document.body.classList.add("light-theme");
+} else {
+  document.body.classList.remove("light-theme");
+}
+
+window.addEventListener("message", (e) => {
+  if (e.data && (e.data.type === "THEME_CHANGE" || e.data.type === "SET_THEME")) {
+    const shouldBeLight = e.data.theme === "light";
+    if (isLightTheme !== shouldBeLight) {
+      isLightTheme = shouldBeLight;
+      document.body.classList.toggle("light-theme", isLightTheme);
+      localStorage.setItem("hub_theme", isLightTheme ? "light" : "dark");
+      localStorage.setItem("networks_theme", isLightTheme ? "light" : "dark");
+      updateThemeIcon();
+      buildDOMElements();
+      updatePositionsDOM();
+      highlightSelectedNode();
+    }
+  }
+});
+
+const EMOJI_REGEX = /([\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}\u{2B50}\u{2B55}\u{203C}\u{2049}\u{2139}\u{1FA00}-\u{1FAFF}\u{1F000}-\u{1F2FF}])/gu;
+
+function makeEmojisMonochrome(root) {
+  if (!root) root = document.body;
+  if (!root) return;
+  const walker = document.createTreeWalker(
+    root,
+    NodeFilter.SHOW_TEXT,
+    {
+      acceptNode: function(node) {
+        if (!node.nodeValue || !node.nodeValue.match(EMOJI_REGEX)) {
+          return NodeFilter.FILTER_SKIP;
+        }
+        const parent = node.parentElement;
+        if (!parent) return NodeFilter.FILTER_SKIP;
+        const tag = parent.tagName;
+        if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'TEXTAREA' || tag === 'INPUT') {
+          return NodeFilter.FILTER_REJECT;
+        }
+        if (parent.classList && parent.classList.contains('mono-emoji')) {
+          return NodeFilter.FILTER_SKIP;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    }
+  );
+
+  const nodesToProcess = [];
+  while (walker.nextNode()) {
+    nodesToProcess.push(walker.currentNode);
+  }
+
+  nodesToProcess.forEach(textNode => {
+    const parent = textNode.parentNode;
+    if (!parent) return;
+    const text = textNode.nodeValue;
+    const parts = text.split(EMOJI_REGEX);
+    if (parts.length <= 1) return;
+
+    const fragment = document.createDocumentFragment();
+    parts.forEach(part => {
+      if (!part) return;
+      if (part.match(EMOJI_REGEX)) {
+        const span = document.createElement('span');
+        span.className = 'mono-emoji';
+        span.textContent = part;
+        fragment.appendChild(span);
+      } else {
+        fragment.appendChild(document.createTextNode(part));
+      }
+    });
+    parent.replaceChild(fragment, textNode);
+  });
+}
+
+function buildGraphData(rawNode, depth = 0, domainIdx = 0, parent = null) {
+  const node = {
+    id: ++idCounter,
+    name: rawNode.name,
+    details: rawNode.details || "",
+    depth: depth,
+    domainIdx: depth === 0 ? -1 : (depth === 1 ? domainIdx : parent.domainIdx),
+    parent: parent,
+    _children: [],
+    children: [],
+    collapsed: depth >= 2, // Subtopics start collapsed
+    x: 0,
+    y: 0,
+    targetX: 0,
+    targetY: 0,
+    width: 200,
+    height: 36,
+    radius: 20
+  };
+
+  // Dimensions with ample room for Times New Roman font
+  const len = node.name.length;
+  if (depth === 0) {
+    node.width = 410;
+    node.height = 46;
+  } else if (depth === 1) {
+    node.width = Math.min(370, Math.max(240, len * 7.7 + 56));
+    node.height = 40;
+  } else if (depth === 2) {
+    node.width = Math.min(330, Math.max(210, len * 7.4 + 52));
+    node.height = 36;
+  } else {
+    node.width = Math.min(300, Math.max(180, len * 7.0 + 48));
+    node.height = 32;
+  }
+  node.radius = node.width / 2;
+
+  nodeMap.set(node.id, node);
+  nodes.push(node);
+
+  if (parent) {
+    links.push({ source: parent, target: node, length: depth === 1 ? 380 : (depth === 2 ? 300 : 220) });
+  }
+
+  const rawChildren = rawNode.children || [];
+  rawChildren.forEach((childRaw, idx) => {
+    const childNode = buildGraphData(childRaw, depth + 1, depth === 0 ? idx : domainIdx, node);
+    node._children.push(childNode);
+    if (!node.collapsed) {
+      node.children.push(childNode);
+    }
+  });
+
+  return node;
+}
+
+const rootNode = buildGraphData(rawData);
+
+// Compute 360-degree Radial Staggered Multi-Orbit Geometry
+function calculateRadialPositions() {
+  rootNode.targetX = 0;
+  rootNode.targetY = 0;
+  rootNode.x = 0;
+  rootNode.y = 0;
+
+  // 10 Domains distributed with weighted sector widths based on child count and text lengths
+  const domains = rootNode._children;
+  const numDomains = domains.length;
+
+  // Proportional sector weights giving domains with extensive text and subtopics ample room
+  const weights = domains.map(d => {
+    const subs = d._children || [];
+    const totLen = subs.reduce((acc, s) => acc + (s.name.length || 20), 0);
+    return Math.max(4.0, subs.length * 1.8 + totLen * 0.05);
+  });
+  const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+
+  let currentAngle = -Math.PI / 2;
+  domains.forEach((dom, i) => {
+    const domainSpan = (weights[i] / totalWeight) * (2 * Math.PI);
+    const domainCenterAngle = currentAngle + domainSpan / 2;
+    currentAngle += domainSpan;
+
+    // Widescreen elliptical radial geometry to match horizontal capsule dimensions
+    const r1x = 660;
+    const r1y = 470;
+    dom.targetX = r1x * Math.cos(domainCenterAngle);
+    dom.targetY = r1y * Math.sin(domainCenterAngle);
+    if (dom.x === 0 && dom.y === 0) {
+      dom.x = dom.targetX;
+      dom.y = dom.targetY;
+    }
+
+    // Subtopics and deeper concepts fanning out in domain sector
+    const subtopics = dom._children || [];
+    const numSub = subtopics.length;
+    const subSector = domainSpan * 0.82;
+    const tiers = numSub >= 3 ? 3 : (numSub >= 2 ? 2 : 1);
+
+    function layoutDescendants(parentNode, parentAngle, parentRadiusX, parentRadiusY, depth) {
+      const children = parentNode._children || [];
+      if (children.length === 0) return;
+      const count = children.length;
+      const sector = depth === 2 ? subSector : Math.max(0.18, 0.42 / Math.pow(1.15, depth - 2));
+      const childTiers = count >= 4 ? 2 : 1;
+
+      children.forEach((child, k) => {
+        const offset = count > 1 ? ((k - (count - 1) / 2) / (count - 1)) * sector : 0;
+        const angle = parentAngle + offset;
+        const tier = k % childTiers;
+        const stepX = depth === 2 ? (1100 + tier * 350 - parentRadiusX) : (380 + tier * 180);
+        const stepY = depth === 2 ? (800 + tier * 250 - parentRadiusY) : (260 + tier * 130);
+        const rx = parentRadiusX + stepX;
+        const ry = parentRadiusY + stepY;
+
+        child.targetX = rx * Math.cos(angle);
+        child.targetY = ry * Math.sin(angle);
+        if (child.x === 0 && child.y === 0) {
+          child.x = child.targetX;
+          child.y = child.targetY;
+        }
+
+        layoutDescendants(child, angle, rx, ry, depth + 1);
+      });
+    }
+
+    subtopics.forEach((sub, j) => {
+      const subOffset = numSub > 1 ? ((j - (numSub - 1) / 2) / (numSub - 1)) * subSector : 0;
+      const subAngle = domainCenterAngle + subOffset;
+      const tierIdx = (j + (i % 2)) % tiers;
+
+      const r2x = 1100 + tierIdx * 350;
+      const r2y = 800 + tierIdx * 250;
+      sub.targetX = r2x * Math.cos(subAngle);
+      sub.targetY = r2y * Math.sin(subAngle);
+      if (sub.x === 0 && sub.y === 0) {
+        sub.x = sub.targetX;
+        sub.y = sub.targetY;
+      }
+
+      layoutDescendants(sub, subAngle, r2x, r2y, 3);
+    });
+  });
+
+  // Run geometric overlap removal on all initial positions to guarantee zero collisions
+  resolveOverlaps(false);
+
+  // Store settled positions as targetX / targetY for reset button
+  nodes.forEach(n => {
+    n.targetX = n.x;
+    n.targetY = n.y;
+  });
+}
+
+// Deterministic Non-Physics Overlap Removal Pass (Executes once upon render/toggle)
+function resolveOverlaps(onlyVisible = true) {
+  const targetNodes = onlyVisible ? nodes.filter(isVisible) : nodes;
+  const maxIters = 80;
+  for (let it = 0; it < maxIters; it++) {
+    let moved = false;
+    for (let a = 0; a < targetNodes.length; a++) {
+      for (let b = a + 1; b < targetNodes.length; b++) {
+        const nA = targetNodes[a];
+        const nB = targetNodes[b];
+
+        // Safety margins: horizontal width + 40px, vertical height + 28px
+        const minDx = (nA.width + nB.width) / 2 + 40;
+        const minDy = (nA.height + nB.height) / 2 + 28;
+        const dx = nB.x - nA.x;
+        const dy = nB.y - nA.y;
+        const absDx = Math.abs(dx);
+        const absDy = Math.abs(dy);
+
+        if (absDx < minDx && absDy < minDy) {
+          const overlapX = minDx - absDx;
+          const overlapY = minDy - absDy;
+
+          // Push along the axis of smaller relative penetration
+          if (overlapX / minDx < overlapY / minDy) {
+            const pushX = (overlapX / 2) * (dx >= 0 ? 1 : -1);
+            if (nA.depth > 0 && !nA.isPinned) nA.x -= pushX;
+            if (nB.depth > 0 && !nB.isPinned) nB.x += pushX;
+          } else {
+            const pushY = (overlapY / 2) * (dy >= 0 ? 1 : -1);
+            if (nA.depth > 0 && !nA.isPinned) nA.y -= pushY;
+            if (nB.depth > 0 && !nB.isPinned) nB.y += pushY;
+          }
+          moved = true;
+        }
+      }
+    }
+    if (!moved) break;
+  }
+}
+
+calculateRadialPositions();
+
+// Viewport & Pan-Zoom State
+let transform = { x: window.innerWidth / 2, y: window.innerHeight / 2, k: 0.82 };
+let isPanning = false;
+let startPan = { x: 0, y: 0 };
+
+const svg = document.getElementById("svg-canvas");
+const viewport = document.getElementById("viewport");
+const linksLayer = document.getElementById("links-layer");
+const nodesLayer = document.getElementById("nodes-layer");
+
+function updateTransform() {
+  viewport.setAttribute("transform", `translate(${transform.x}, ${transform.y}) scale(${transform.k})`);
+}
+updateTransform();
+
+// Canvas pan
+const container = document.getElementById("canvas-container");
+container.addEventListener("mousedown", (e) => {
+  if (e.target.closest(".node-group") || e.target.closest(".toolbar") || e.target.closest(".details-drawer")) return;
+  isPanning = true;
+  startPan = { x: e.clientX - transform.x, y: e.clientY - transform.y };
+});
+
+window.addEventListener("mousemove", (e) => {
+  if (!isPanning) return;
+  transform.x = e.clientX - startPan.x;
+  transform.y = e.clientY - startPan.y;
+  updateTransform();
+});
+
+window.addEventListener("mouseup", () => isPanning = false);
+
+// Canvas zoom
+container.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  const zoomFactor = 1.14;
+  const direction = e.deltaY < 0 ? 1 : -1;
+  const factor = direction > 0 ? zoomFactor : 1 / zoomFactor;
+
+  const mouseX = e.clientX;
+  const mouseY = e.clientY;
+
+  transform.x = mouseX - (mouseX - transform.x) * factor;
+  transform.y = mouseY - (mouseY - transform.y) * factor;
+  transform.k *= factor;
+  transform.k = Math.max(0.12, Math.min(transform.k, 3.0));
+  updateTransform();
+}, { passive: false });
+
+let draggedNode = null;
+
+function isVisible(node) {
+  let curr = node.parent;
+  while (curr) {
+    if (curr.collapsed) return false;
+    curr = curr.parent;
+  }
+  return true;
+}
+
+// Render Elements (Nodes & Moving Links)
+let selectedNodeId = null;
+
+function buildDOMElements() {
+  linksLayer.innerHTML = "";
+  nodesLayer.innerHTML = "";
+
+  const visibleNodes = nodes.filter(isVisible);
+
+  // Render Links
+  links.forEach(l => {
+    if (!isVisible(l.source) || !isVisible(l.target)) return;
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("class", "link-path");
+    path.id = `link-${l.source.id}-${l.target.id}`;
+    path.dataset.source = l.source.id;
+    path.dataset.target = l.target.id;
+    linksLayer.appendChild(path);
+  });
+
+  // Render Nodes
+  visibleNodes.forEach(n => {
+    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    g.setAttribute("class", "node-group");
+    g.id = `node-${n.id}`;
+
+    const theme = n.depth === 0 ? ROOT_THEME : DOMAIN_THEMES[n.domainIdx % DOMAIN_THEMES.length];
+    const strokeColor = isLightTheme ? theme.lightStroke : theme.stroke;
+    const fillColor = isLightTheme ? theme.lightFill : "var(--node-bg)";
+
+    // Capsule Pill Background (Strict zero-radius rectangle)
+    const capsule = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    capsule.setAttribute("class", "node-capsule" + (n.id === selectedNodeId ? " selected" : ""));
+    capsule.setAttribute("x", -n.width / 2);
+    capsule.setAttribute("y", -n.height / 2);
+    capsule.setAttribute("width", n.width);
+    capsule.setAttribute("height", n.height);
+    capsule.setAttribute("rx", "0");
+    capsule.setAttribute("ry", "0");
+    capsule.setAttribute("fill", fillColor);
+    capsule.setAttribute("stroke", strokeColor);
+    g.appendChild(capsule);
+
+    // Indicator Dot (Retro Square)
+    const dot = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    dot.setAttribute("class", "status-dot");
+    dot.setAttribute("x", -n.width / 2 + 11);
+    dot.setAttribute("y", -3.5);
+    dot.setAttribute("width", 7);
+    dot.setAttribute("height", 7);
+    dot.setAttribute("fill", strokeColor);
+    g.appendChild(dot);
+
+    // Node Text Label in Times New Roman
+    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    let textClass = "node-label";
+    if (n.depth === 0) textClass += " root-label";
+    else if (n.depth === 1) textClass += " domain-label";
+    text.setAttribute("class", textClass);
+    text.setAttribute("x", -n.width / 2 + 28);
+    text.setAttribute("y", 4.5);
+    text.textContent = n.name;
+    g.appendChild(text);
+
+    // Child count badge / Expand indicator
+    if (n._children && n._children.length > 0) {
+      const badgeG = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      badgeG.setAttribute("class", "node-badge");
+      badgeG.setAttribute("transform", `translate(${n.width / 2 - 14}, 0)`);
+      badgeG.style.cursor = "pointer";
+
+      const badgeCircle = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      badgeCircle.setAttribute("x", -7.5);
+      badgeCircle.setAttribute("y", -7.5);
+      badgeCircle.setAttribute("width", 15);
+      badgeCircle.setAttribute("height", 15);
+      badgeCircle.setAttribute("fill", strokeColor);
+      badgeCircle.setAttribute("opacity", "0.9");
+      badgeG.appendChild(badgeCircle);
+
+      const sign = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      sign.setAttribute("class", "badge-count");
+      sign.setAttribute("text-anchor", "middle");
+      sign.setAttribute("y", 4);
+      sign.textContent = n.collapsed ? "+" : "−";
+      badgeG.appendChild(sign);
+
+      badgeG.addEventListener("mousedown", (e) => {
+        e.stopPropagation();
+      });
+
+      badgeG.addEventListener("mouseup", (e) => {
+        e.stopPropagation();
+      });
+
+      badgeG.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleNode(n);
+      });
+
+      g.appendChild(badgeG);
+    }
+
+    // Node drag & click handlers (moving parent moves descendants / contents too)
+    g.addEventListener("mousedown", (e) => {
+      e.stopPropagation();
+      draggedNode = n;
+      const startMouseX = e.clientX;
+      const startMouseY = e.clientY;
+      let prevWorldX = (startMouseX - transform.x) / transform.k;
+      let prevWorldY = (startMouseY - transform.y) / transform.k;
+      let hasMoved = false;
+
+      function onMouseMove(moveEvent) {
+        const curWorldX = (moveEvent.clientX - transform.x) / transform.k;
+        const curWorldY = (moveEvent.clientY - transform.y) / transform.k;
+        const deltaX = curWorldX - prevWorldX;
+        const deltaY = curWorldY - prevWorldY;
+        prevWorldX = curWorldX;
+        prevWorldY = curWorldY;
+
+        if (Math.abs(moveEvent.clientX - startMouseX) > 3 || Math.abs(moveEvent.clientY - startMouseY) > 3) {
+          hasMoved = true;
+        }
+
+        // Move the dragged node
+        draggedNode.x += deltaX;
+        draggedNode.y += deltaY;
+
+        // Move all descendant nodes recursively by the same delta
+        function moveSubtree(node, dx, dy) {
+          if (!node._children) return;
+          for (const child of node._children) {
+            child.x += dx;
+            child.y += dy;
+            moveSubtree(child, dx, dy);
+          }
+        }
+        moveSubtree(draggedNode, deltaX, deltaY);
+
+        updatePositionsDOM();
+      }
+
+      function onMouseUp() {
+        window.removeEventListener("mousemove", onMouseMove);
+        window.removeEventListener("mouseup", onMouseUp);
+        if (!hasMoved) {
+          selectNode(n);
+        }
+        draggedNode = null;
+      }
+
+      window.addEventListener("mousemove", onMouseMove);
+      window.addEventListener("mouseup", onMouseUp);
+    });
+
+    g.addEventListener("dblclick", (e) => {
+      e.stopPropagation();
+      if (n._children && n._children.length > 0) {
+        toggleNode(n);
+      }
+    });
+
+    nodesLayer.appendChild(g);
+  });
+}
+
+function updatePositionsDOM() {
+  const visibleNodes = nodes.filter(isVisible);
+
+  // 1. Update node capsule positions
+  visibleNodes.forEach(n => {
+    const g = document.getElementById(`node-${n.id}`);
+    if (g) {
+      g.setAttribute("transform", `translate(${n.x}, ${n.y})`);
+    }
+  });
+
+  // 2. Update curved movable links in real time
+  links.forEach(l => {
+    if (!isVisible(l.source) || !isVisible(l.target)) return;
+
+    const path = document.getElementById(`link-${l.source.id}-${l.target.id}`);
+    if (!path) return;
+
+    const sx = l.source.x;
+    const sy = l.source.y;
+    const tx = l.target.x;
+    const ty = l.target.y;
+
+    // Organic S-curve Bezier
+    const dx = tx - sx;
+    const dy = ty - sy;
+    const cx1 = sx + dx * 0.45;
+    const cy1 = sy + dy * 0.1;
+    const cx2 = sx + dx * 0.55;
+    const cy2 = sy + dy * 0.9;
+
+    path.setAttribute("d", `M ${sx} ${sy} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${tx} ${ty}`);
+  });
+}
+
+buildDOMElements();
+updatePositionsDOM();
+setTimeout(fitView, 60);
+
+// Node Selection & Details Drawer History
+const navHistory = [];
+
+function selectNode(n, recordHistory = true) {
+  if (recordHistory && selectedNodeId && selectedNodeId !== n.id) {
+    navHistory.push(selectedNodeId);
+  }
+  selectedNodeId = n.id;
+  highlightSelectedNode();
+  showDrawer(n);
+  updateBackButton();
+}
+
+function goBack() {
+  if (navHistory.length > 0) {
+    const prevId = navHistory.pop();
+    const prevNode = nodeMap.get(prevId);
+    if (prevNode) {
+      // Ensure ancestors of prevNode are expanded
+      let p = prevNode.parent;
+      let needsRebuild = false;
+      while (p) {
+        if (p.collapsed) {
+          p.collapsed = false;
+          needsRebuild = true;
+        }
+        p = p.parent;
+      }
+      if (needsRebuild) {
+        resolveOverlaps(true);
+        buildDOMElements();
+        updatePositionsDOM();
+      }
+      selectNode(prevNode, false);
+      focusNode(prevNode);
+      return;
+    }
+  }
+
+  // Fallback: If no history, navigate to parent if exists
+  if (selectedNodeId) {
+    const curr = nodeMap.get(selectedNodeId);
+    if (curr && curr.parent) {
+      selectNode(curr.parent, false);
+      focusNode(curr.parent);
+    }
+  }
+}
+
+function updateBackButton() {
+  const backBtn = document.getElementById("drawer-back");
+  const barBackBtn = document.getElementById("bar-btn-back");
+  const curr = selectedNodeId ? nodeMap.get(selectedNodeId) : null;
+  const canGoBack = navHistory.length > 0 || (curr && curr.parent);
+
+  [backBtn, barBackBtn].forEach(btn => {
+    if (!btn) return;
+    btn.disabled = !canGoBack;
+    btn.style.opacity = canGoBack ? "1" : "0.35";
+    btn.style.cursor = canGoBack ? "pointer" : "not-allowed";
+    btn.style.pointerEvents = canGoBack ? "auto" : "none";
+    if (navHistory.length > 0) {
+      const prev = nodeMap.get(navHistory[navHistory.length - 1]);
+      btn.setAttribute("title", prev ? `Back to "${prev.name}"` : "Back to Previous");
+    } else if (curr && curr.parent) {
+      btn.setAttribute("title", `Back to Parent "${curr.parent.name}"`);
+    } else {
+      btn.setAttribute("title", "No Previous Concept");
+    }
+  });
+}
+
+function highlightSelectedNode() {
+  document.querySelectorAll(".node-capsule").forEach(r => r.classList.remove("selected"));
+  document.querySelectorAll(".link-path").forEach(l => l.classList.remove("highlighted"));
+
+  if (!selectedNodeId) return;
+
+  const g = document.getElementById(`node-${selectedNodeId}`);
+  if (g) {
+    const cap = g.querySelector(".node-capsule");
+    if (cap) cap.classList.add("selected");
+  }
+
+  // Highlight ancestor links up to root
+  let curr = nodeMap.get(selectedNodeId);
+  while (curr && curr.parent) {
+    const lPath = document.getElementById(`link-${curr.parent.id}-${curr.id}`);
+    if (lPath) lPath.classList.add("highlighted");
+    curr = curr.parent;
+  }
+}
+
+function toggleNode(n) {
+  n.collapsed = !n.collapsed;
+  resolveOverlaps(true);
+  buildDOMElements();
+  updatePositionsDOM();
+  highlightSelectedNode();
+}
+
+function showDrawer(n) {
+  const drawer = document.getElementById("details-drawer");
+  const drawerBadge = document.getElementById("drawer-badge");
+  const drawerTitle = document.getElementById("drawer-title");
+  const drawerBody = document.getElementById("drawer-body");
+
+  const theme = n.depth === 0 ? ROOT_THEME : DOMAIN_THEMES[n.domainIdx % DOMAIN_THEMES.length];
+  const color = isLightTheme ? theme.lightStroke : theme.stroke;
+
+  drawerBadge.style.background = isLightTheme ? "var(--btn-bg, #f5f5f0)" : "var(--btn-bg, #1e1f22)";
+  drawerBadge.style.color = "var(--text-primary)";
+  drawerBadge.style.borderColor = "var(--panel-border)";
+
+  if (n.depth === 0) drawerBadge.textContent = "Root System Overview";
+  else if (n.depth === 1) drawerBadge.textContent = `Domain ${n.domainIdx + 1} Architecture`;
+  else if (n.depth === 2) drawerBadge.textContent = `Subtopic • Domain ${n.domainIdx + 1}`;
+  else drawerBadge.textContent = "Deep Concept Disambiguation";
+
+  drawerTitle.textContent = n.name;
+  drawerTitle.style.color = "var(--text-primary)";
+
+  let html = "";
+  if (n.details) {
+    html += `<div>${n.details}</div>`;
+  } else {
+    html += `<p style="color: var(--text-muted);">Explore child concepts or surrounding domain modules for specific architectural models and disambiguation matrices.</p>`;
+  }
+
+  // Clickable Subtopic / Concept Pills
+  if (n._children && n._children.length > 0) {
+    html += `<h3 style="margin-top: 20px; border-top: 1px solid var(--panel-border); padding-top: 14px;">Direct Subtopics & Concepts (${n._children.length}):</h3>`;
+    html += `<div class="concept-pills">`;
+    n._children.forEach(c => {
+      html += `<div class="concept-pill" data-id="${c.id}">📍 ${c.name}</div>`;
+    });
+    html += `</div>`;
+  }
+
+  drawerBody.innerHTML = html;
+  makeEmojisMonochrome(drawer);
+
+  // Subtopic pill click listeners
+  drawerBody.querySelectorAll(".concept-pill").forEach(pill => {
+    pill.addEventListener("click", () => {
+      const targetId = parseInt(pill.dataset.id, 10);
+      const targetNode = nodeMap.get(targetId);
+      if (targetNode) {
+        if (n.collapsed) toggleNode(n);
+        selectNode(targetNode);
+        focusNode(targetNode);
+      }
+    });
+  });
+
+  drawer.classList.add("open");
+  const overlay = document.getElementById("drawer-overlay");
+  if (overlay) overlay.classList.add("active");
+}
+
+function closeDrawer() {
+  const drawer = document.getElementById("details-drawer");
+  const overlay = document.getElementById("drawer-overlay");
+  if (drawer) drawer.classList.remove("open");
+  if (overlay) overlay.classList.remove("active");
+}
+
+function focusNode(n) {
+  transform.x = window.innerWidth / 2 - n.x * transform.k - 100;
+  transform.y = window.innerHeight / 2 - n.y * transform.k;
+  updateTransform();
+}
+
+const drawerBackBtn = document.getElementById("drawer-back");
+if (drawerBackBtn) drawerBackBtn.addEventListener("click", goBack);
+
+const barBackBtn = document.getElementById("bar-btn-back");
+if (barBackBtn) barBackBtn.addEventListener("click", goBack);
+
+document.getElementById("drawer-close").addEventListener("click", closeDrawer);
+
+const drawerOverlay = document.getElementById("drawer-overlay");
+if (drawerOverlay) {
+  drawerOverlay.addEventListener("click", closeDrawer);
+}
+
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    closeDrawer();
+  } else if ((e.altKey && e.key === "ArrowLeft") || (e.key === "Backspace" && document.activeElement.tagName !== "INPUT" && document.activeElement.tagName !== "TEXTAREA")) {
+    const drawer = document.getElementById("details-drawer");
+    if (drawer && drawer.classList.contains("open")) {
+      e.preventDefault();
+      goBack();
+    }
+  }
+});
+
+document.getElementById("bar-btn-focus").addEventListener("click", () => {
+  if (selectedNodeId) {
+    const n = nodeMap.get(selectedNodeId);
+    if (n) focusNode(n);
+  }
+});
+
+document.getElementById("bar-btn-pin").addEventListener("click", () => {
+  if (selectedNodeId) {
+    const n = nodeMap.get(selectedNodeId);
+    if (n) {
+      n.isPinned = !n.isPinned;
+      const pinBtn = document.getElementById("bar-btn-pin");
+      pinBtn.classList.toggle("active", n.isPinned);
+      pinBtn.setAttribute("title", n.isPinned ? "Node Pinned (Click to unpin)" : "Pin Node");
+    }
+  }
+});
+
+document.getElementById("bar-btn-copy").addEventListener("click", () => {
+  if (selectedNodeId) {
+    const n = nodeMap.get(selectedNodeId);
+    if (n) {
+      const text = `${n.name}
+
+${n.details ? n.details.replace(/<[^>]+>/g, '') : ''}`;
+      navigator.clipboard.writeText(text).then(() => {
+        const copyIcon = document.getElementById("copy-icon");
+        copyIcon.innerHTML = `<polyline points="20 6 9 17 4 12"></polyline>`;
+        setTimeout(() => {
+          copyIcon.innerHTML = `<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>`;
+        }, 1500);
+      });
+    }
+  }
+});
+
+// Fit View to Visible Nodes
+function fitView() {
+  const visibleNodes = nodes.filter(isVisible);
+  if (visibleNodes.length === 0) return;
+
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  visibleNodes.forEach(n => {
+    minX = Math.min(minX, n.x - n.width / 2);
+    maxX = Math.max(maxX, n.x + n.width / 2);
+    minY = Math.min(minY, n.y - n.height / 2);
+    maxY = Math.max(maxY, n.y + n.height / 2);
+  });
+
+  const spanW = maxX - minX;
+  const spanH = maxY - minY;
+  const availW = window.innerWidth - 120;
+  const availH = window.innerHeight - 120;
+
+  const k = Math.min(availW / spanW, availH / spanH, 1.05);
+  transform.k = Math.max(0.18, k);
+  transform.x = window.innerWidth / 2 - ((minX + maxX) / 2) * transform.k - 40;
+  transform.y = window.innerHeight / 2 - ((minY + maxY) / 2) * transform.k;
+  updateTransform();
+}
+
+document.getElementById("btn-fit").addEventListener("click", fitView);
+
+// Expand All
+document.getElementById("btn-expand").addEventListener("click", () => {
+  nodes.forEach(n => {
+    n.collapsed = false;
+  });
+  resolveOverlaps(true);
+  buildDOMElements();
+  updatePositionsDOM();
+  highlightSelectedNode();
+  setTimeout(fitView, 50);
+});
+
+// Collapse to Domains
+document.getElementById("btn-collapse").addEventListener("click", () => {
+  nodes.forEach(n => {
+    if (n.depth >= 1) n.collapsed = true;
+  });
+  resolveOverlaps(true);
+  buildDOMElements();
+  updatePositionsDOM();
+  highlightSelectedNode();
+  setTimeout(fitView, 50);
+});
+
+// Theme Switcher (Monochrome Sun/Moon Toggle)
+const themeBtn = document.getElementById("btn-theme");
+const themeIcon = document.getElementById("theme-icon");
+
+function updateThemeIcon() {
+  if (isLightTheme) {
+    // Moon icon for switching back to dark
+    themeIcon.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
+    themeBtn.setAttribute("title", "Switch to Dark Mode");
+  } else {
+    // Sun icon for switching to light
+    themeIcon.innerHTML = `<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>`;
+    themeBtn.setAttribute("title", "Switch to Light Mode");
+  }
+}
+updateThemeIcon();
+
+themeBtn.addEventListener("click", () => {
+  isLightTheme = !isLightTheme;
+  document.body.classList.toggle("light-theme", isLightTheme);
+  localStorage.setItem("hub_theme", isLightTheme ? "light" : "dark");
+  localStorage.setItem("networks_theme", isLightTheme ? "light" : "dark");
+  updateThemeIcon();
+  buildDOMElements();
+  updatePositionsDOM();
+  highlightSelectedNode();
+});
+
+// Grid Visibility Toggle
+const gridBtn = document.getElementById("btn-grid");
+const gridPlane = document.getElementById("grid-plane");
+gridBtn.addEventListener("click", () => {
+  gridPlane.classList.toggle("hidden");
+  gridBtn.classList.toggle("active", !gridPlane.classList.contains("hidden"));
+});
+
+// Reset Layout to Default Radial Grid
+const resetBtn = document.getElementById("btn-reset");
+if (resetBtn) {
+  resetBtn.addEventListener("click", () => {
+    nodes.forEach(n => {
+      n.x = n.targetX;
+      n.y = n.targetY;
+    });
+    resolveOverlaps(true);
+    updatePositionsDOM();
+    fitView();
+  });
+}
+
+// Real-Time Search & Match Cycling
+let matchedNodes = [];
+let currentMatchIdx = -1;
+
+const searchInput = document.getElementById("search-input");
+const searchBadge = document.getElementById("search-badge");
+const searchPrev = document.getElementById("search-prev");
+const searchNext = document.getElementById("search-next");
+
+searchInput.addEventListener("input", (e) => {
+  const query = e.target.value.trim().toLowerCase();
+  document.querySelectorAll(".node-capsule").forEach(r => r.classList.remove("matched"));
+
+  matchedNodes = [];
+  currentMatchIdx = -1;
+
+  if (!query) {
+    searchBadge.style.display = "none";
+    searchPrev.style.display = "none";
+    searchNext.style.display = "none";
+    return;
+  }
+
+  nodes.forEach(n => {
+    const isMatch = n.name.toLowerCase().includes(query) || (n.details && n.details.toLowerCase().includes(query));
+    if (isMatch) {
+      matchedNodes.push(n);
+      // Auto expand ancestors so match is rendered
+      let curr = n.parent;
+      while (curr) {
+        curr.collapsed = false;
+        curr = curr.parent;
+      }
+    }
+  });
+
+  buildDOMElements();
+  highlightSelectedNode();
+
+  if (matchedNodes.length > 0) {
+    searchBadge.style.display = "inline-block";
+    searchPrev.style.display = "inline-flex";
+    searchNext.style.display = "inline-flex";
+    currentMatchIdx = 0;
+    updateSearchMatch();
+  } else {
+    searchBadge.style.display = "inline-block";
+    searchBadge.textContent = "0";
+    searchPrev.style.display = "none";
+    searchNext.style.display = "none";
+  }
+});
+
+function updateSearchMatch() {
+  document.querySelectorAll(".node-capsule").forEach(r => r.classList.remove("matched"));
+  searchBadge.textContent = `${currentMatchIdx + 1}/${matchedNodes.length}`;
+
+  matchedNodes.forEach(mn => {
+    const g = document.getElementById(`node-${mn.id}`);
+    if (g) {
+      const cap = g.querySelector(".node-capsule");
+      if (cap) cap.classList.add("matched");
+    }
+  });
+
+  const target = matchedNodes[currentMatchIdx];
+  if (target) {
+    focusNode(target);
+    selectNode(target);
+  }
+}
+
+searchNext.addEventListener("click", () => {
+  if (matchedNodes.length > 0) {
+    currentMatchIdx = (currentMatchIdx + 1) % matchedNodes.length;
+    updateSearchMatch();
+  }
+});
+
+searchPrev.addEventListener("click", () => {
+  if (matchedNodes.length > 0) {
+    currentMatchIdx = (currentMatchIdx - 1 + matchedNodes.length) % matchedNodes.length;
+    updateSearchMatch();
+  }
+});
+
+// Initial View Fit
+setTimeout(() => {
+  fitView();
+  makeEmojisMonochrome(document.body);
+}, 120);
+
+// URL Search & Node Deep-linking
+setTimeout(() => {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const qSearch = params.get("search") || params.get("q") || params.get("topic") || params.get("node");
+    if (qSearch && searchInput) {
+      searchInput.value = decodeURIComponent(qSearch);
+      searchInput.dispatchEvent(new Event("input"));
+    }
+  } catch (e) {
+    console.error("URL search init error:", e);
+  }
+}, 250);
+
+window.addEventListener("resize", () => {
+  fitView();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,228 @@
+{
+  "generated_at": "2026-10-17T13:10:00",
+  "institution": "Khulna University of Engineering & Technology (KUET)",
+  "department": "Computer Science & Engineering",
+  "academic_session": "4th Year 1st Term",
+  "summary_metrics": {
+    "total_subjects": 5,
+    "total_faculty_modules": 10,
+    "total_slide_decks": 95,
+    "total_slides_count": 4192,
+    "total_merged_pdf_books": 10,
+    "total_merged_pdf_pages": 4212,
+    "total_exam_questions": 1517,
+    "total_exam_marks": 13347,
+    "total_exam_scans": 1652,
+    "total_mind_maps": 11
+  },
+  "subjects": [
+    {
+      "subject_title": "Computer Graphics & Digital Image Processing",
+      "course_codes": [
+        "CSE 4107",
+        "CSE 4125"
+      ],
+      "combined_exam_questions": 468,
+      "combined_exam_marks": 4503,
+      "combined_scans": 520,
+      "modules": [
+        {
+          "module": "Computer Graphics",
+          "course_code": "CSE 4107",
+          "faculty": "Graphics Module (Sec A)",
+          "slide_folder": "slides/Graphics",
+          "deck_count": 12,
+          "slide_count": 664,
+          "merged_pdf": "final/graphics.pdf",
+          "pdf_pages": 664,
+          "exam_questions": 255,
+          "exam_marks": 2474,
+          "exam_scans": 282,
+          "mindmap_html": "mindmaps/graphics_masudul_sir_mindmap.html",
+          "question_browser_html": "question-browser/computer-graphics-masudul-sir.html"
+        },
+        {
+          "module": "Digital Image Processing",
+          "course_code": "CSE 4125",
+          "faculty": "Prof. Masudul Ahsan (Sec B)",
+          "slide_folder": "slides/Image",
+          "deck_count": 12,
+          "slide_count": 649,
+          "merged_pdf": "final/image-processing-masudul-ahsan.pdf",
+          "pdf_pages": 653,
+          "exam_questions": 213,
+          "exam_marks": 2029,
+          "exam_scans": 238,
+          "mindmap_html": "mindmaps/image_processing_masudul_ahsan_sir_mindmap.html",
+          "question_browser_html": "question-browser/image-processing-masudul-ahsan-sir.html"
+        }
+      ]
+    },
+    {
+      "subject_title": "Computer Networks",
+      "course_codes": [
+        "CSE 3201",
+        "CSE 3202"
+      ],
+      "combined_exam_questions": 274,
+      "combined_exam_marks": 2457,
+      "combined_scans": 299,
+      "modules": [
+        {
+          "module": "Routing & LANs",
+          "course_code": "CSE 3201",
+          "faculty": "Prof. Sakhawat Sir (Sec A)",
+          "slide_folder": "slides/Networks-Sakhawat-Sir",
+          "deck_count": 8,
+          "slide_count": 713,
+          "merged_pdf": "final/networks-sakhawat-sir.pdf",
+          "pdf_pages": 713,
+          "exam_questions": 274,
+          "exam_marks": 2457,
+          "exam_scans": 299,
+          "mindmap_html": "mindmaps/networks_sakhawat_sir_mindmap.html",
+          "question_browser_html": "question-browser/computer-networks-sakhawat-sir-sadi-sir.html"
+        },
+        {
+          "module": "Core & Transport Protocols",
+          "course_code": "CSE 3201",
+          "faculty": "Sadi Sir (Sec B)",
+          "slide_folder": "slides/Networks-Sadi-Sir",
+          "deck_count": 8,
+          "slide_count": 290,
+          "merged_pdf": "final/networks-sadi-sir.pdf",
+          "pdf_pages": 290,
+          "exam_questions": 274,
+          "exam_marks": 2457,
+          "exam_scans": 299,
+          "mindmap_html": "mindmaps/networks_sadi_sir_mindmap.html",
+          "question_browser_html": "question-browser/computer-networks-sakhawat-sir-sadi-sir.html"
+        }
+      ]
+    },
+    {
+      "subject_title": "Natural Language Processing",
+      "course_codes": [
+        "CSE 4241"
+      ],
+      "combined_exam_questions": 196,
+      "combined_exam_marks": 1791,
+      "combined_scans": 211,
+      "modules": [
+        {
+          "module": "Deep Sequences & Transformers",
+          "course_code": "CSE 4241",
+          "faculty": "Shawon Sir (Sec A)",
+          "slide_folder": "slides/NLP-Shawon-Sir",
+          "deck_count": 12,
+          "slide_count": 521,
+          "merged_pdf": "final/nlp-shawon-sir.pdf",
+          "pdf_pages": 521,
+          "exam_questions": 196,
+          "exam_marks": 1791,
+          "exam_scans": 211,
+          "mindmap_html": "mindmaps/nlp_shawon_sir_mindmap.html",
+          "question_browser_html": "question-browser/natural-language-processing-shawon-sir-azhar-sir.html"
+        },
+        {
+          "module": "Statistical Foundations & Semantics",
+          "course_code": "CSE 4241",
+          "faculty": "Azhar Sir (Sec B)",
+          "slide_folder": "slides/NLP-Azhar-Sir",
+          "deck_count": 7,
+          "slide_count": 329,
+          "merged_pdf": "final/nlp-azhar-sir.pdf",
+          "pdf_pages": 329,
+          "exam_questions": 196,
+          "exam_marks": 1791,
+          "exam_scans": 211,
+          "mindmap_html": "mindmaps/nlp_azhar_sir_mindmap.html",
+          "question_browser_html": "question-browser/natural-language-processing-shawon-sir-azhar-sir.html"
+        }
+      ]
+    },
+    {
+      "subject_title": "Machine Learning",
+      "course_codes": [
+        "CSE 4111",
+        "CSE 4112"
+      ],
+      "combined_exam_questions": 241,
+      "combined_exam_marks": 1729,
+      "combined_scans": 264,
+      "modules": [
+        {
+          "module": "Neural Networks & Ensembles",
+          "course_code": "CSE 4111",
+          "faculty": "Prof. Dr. M.A.H. Akhand (Sec A)",
+          "slide_folder": "slides/ML-Akhand-Sir",
+          "deck_count": 14,
+          "slide_count": 347,
+          "merged_pdf": "final/ml-akhand-sir.pdf",
+          "pdf_pages": 347,
+          "exam_questions": 241,
+          "exam_marks": 1729,
+          "exam_scans": 264,
+          "mindmap_html": "mindmaps/ml_akhand_sir_mindmap.html",
+          "question_browser_html": "question-browser/machine-learning-akhand-sir-rocky-sir.html"
+        },
+        {
+          "module": "Nature-Inspired Optimization & Swarm",
+          "course_code": "CSE 4111",
+          "faculty": "Rocky Sir (Sec B)",
+          "slide_folder": "slides/ML-Rocky-Sir",
+          "deck_count": 4,
+          "slide_count": 181,
+          "merged_pdf": "final/ml-rocky-sir.pdf",
+          "pdf_pages": 181,
+          "exam_questions": 241,
+          "exam_marks": 1729,
+          "exam_scans": 264,
+          "mindmap_html": "mindmaps/ml_rocky_sir_mindmap.html",
+          "question_browser_html": "question-browser/machine-learning-akhand-sir-rocky-sir.html"
+        }
+      ]
+    },
+    {
+      "subject_title": "Computer & Network Security",
+      "course_codes": [
+        "CSE 4109"
+      ],
+      "combined_exam_questions": 338,
+      "combined_exam_marks": 2867,
+      "combined_scans": 358,
+      "modules": [
+        {
+          "module": "Software Security & System Flaws",
+          "course_code": "CSE 4109",
+          "faculty": "Dola Mam (Sec B)",
+          "slide_folder": "slides/Security-Dola-Mam",
+          "deck_count": 12,
+          "slide_count": 305,
+          "merged_pdf": "final/security-dola-mam.pdf",
+          "pdf_pages": 305,
+          "exam_questions": 338,
+          "exam_marks": 2867,
+          "exam_scans": 358,
+          "mindmap_html": "mindmaps/security_dola_mam_mindmap.html",
+          "question_browser_html": "question-browser/computer-and-network-security-dola-mam-rokib-sir.html"
+        },
+        {
+          "module": "Applied Cryptography & Protocols",
+          "course_code": "CSE 4109",
+          "faculty": "Rokib Sir (Sec A)",
+          "slide_folder": "slides/Security-Rokib-Sir",
+          "deck_count": 6,
+          "slide_count": 193,
+          "merged_pdf": "final/security-rokib-sir.pdf",
+          "pdf_pages": 193,
+          "exam_questions": 338,
+          "exam_marks": 2867,
+          "exam_scans": 358,
+          "mindmap_html": "mindmaps/security_rokib_sir_mindmap.html",
+          "question_browser_html": "question-browser/computer-and-network-security-dola-mam-rokib-sir.html"
+        }
+      ]
+    }
+  ]
+}
