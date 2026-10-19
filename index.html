@@ -1662,6 +1662,7 @@ html.dark .full-exam-img {
         <div id="navBreadcrumbs" class="breadcrumbs"><a href="#/" onclick="navigateHome(event)">[KUET CSE HUB]</a><span>/</span><span id="navSubpath">Subject Selection</span>
         </div>
         <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;"><span id="globalProgressBadge">SYLLABUS: 0/107 READ (0%)</span>
+          <button id="navNotesBtn" onclick="selectSubject('merged'); switchSubjectTab('books');">[📚 FACULTY NOTES]</button>
           <button id="navCalendarBtn" onclick="document.getElementById('examCalendarSection').scrollIntoView({behavior:'smooth'})">[📅 EXAM CALENDAR]</button>
           <button id="themeToggleBtn" onclick="toggleTheme()">[THEME: LIGHT]</button>
         </div>
@@ -1707,6 +1708,10 @@ html.dark .full-exam-img {
               </div>
               <button onclick="selectSubject('machine-learning')" style="width:100%; justify-content:center; padding:0.6rem;"><span>ENTER SUBJECT PORTAL →</span>
               </button>
+              <div style="display:flex; gap:0.4rem; flex-wrap:wrap; margin-top:0.4rem;">
+                <a href="final/ml-akhand-sir.pdf" target="_blank" class="btn btn-xs" style="flex:1; justify-content:center;">[📑 Akhand Sir Notes ↗]</a>
+                <a href="final/ml-rocky-sir.pdf" target="_blank" class="btn btn-xs" style="flex:1; justify-content:center;">[📑 Rocky Sir Notes ↗]</a>
+              </div>
             </div>
           </div>
           <div class="subject-card">
@@ -1723,6 +1728,10 @@ html.dark .full-exam-img {
               </div>
               <button onclick="selectSubject('computer-networks')" style="width:100%; justify-content:center; padding:0.6rem;"><span>ENTER SUBJECT PORTAL →</span>
               </button>
+              <div style="display:flex; gap:0.4rem; flex-wrap:wrap; margin-top:0.4rem;">
+                <a href="final/networks-sakhawat-sir.pdf" target="_blank" class="btn btn-xs" style="flex:1; justify-content:center;">[📑 Sakhawat Sir Notes ↗]</a>
+                <a href="final/networks-sadi-sir.pdf" target="_blank" class="btn btn-xs" style="flex:1; justify-content:center;">[📑 Sadi Sir Notes ↗]</a>
+              </div>
             </div>
           </div>
           <div class="subject-card">
@@ -1739,6 +1748,10 @@ html.dark .full-exam-img {
               </div>
               <button onclick="selectSubject('computer-and-network-security')" style="width:100%; justify-content:center; padding:0.6rem;"><span>ENTER SUBJECT PORTAL →</span>
               </button>
+              <div style="display:flex; gap:0.4rem; flex-wrap:wrap; margin-top:0.4rem;">
+                <a href="final/security-dola-mam.pdf" target="_blank" class="btn btn-xs" style="flex:1; justify-content:center;">[📑 Dola Mam Notes ↗]</a>
+                <a href="final/security-rokib-sir.pdf" target="_blank" class="btn btn-xs" style="flex:1; justify-content:center;">[📑 Rokib Sir Notes ↗]</a>
+              </div>
             </div>
           </div>
           <div class="subject-card">
@@ -1755,6 +1768,10 @@ html.dark .full-exam-img {
               </div>
               <button onclick="selectSubject('natural-language-processing')" style="width:100%; justify-content:center; padding:0.6rem;"><span>ENTER SUBJECT PORTAL →</span>
               </button>
+              <div style="display:flex; gap:0.4rem; flex-wrap:wrap; margin-top:0.4rem;">
+                <a href="final/nlp-shawon-sir.pdf" target="_blank" class="btn btn-xs" style="flex:1; justify-content:center;">[📑 Shawon Sir Notes ↗]</a>
+                <a href="final/nlp-azhar-sir.pdf" target="_blank" class="btn btn-xs" style="flex:1; justify-content:center;">[📑 Azhar Sir Notes ↗]</a>
+              </div>
             </div>
           </div>
           <div class="subject-card">
@@ -1771,6 +1788,9 @@ html.dark .full-exam-img {
               </div>
               <button onclick="selectSubject('computer-graphics')" style="width:100%; justify-content:center; padding:0.6rem;"><span>ENTER SUBJECT PORTAL →</span>
               </button>
+              <div style="display:flex; gap:0.4rem; flex-wrap:wrap; margin-top:0.4rem;">
+                <a href="final/graphics.pdf" target="_blank" class="btn btn-xs" style="flex:1; justify-content:center;">[📑 Masudul Sir Notes ↗]</a>
+              </div>
             </div>
           </div>
           <div class="subject-card">
@@ -1787,6 +1807,9 @@ html.dark .full-exam-img {
               </div>
               <button onclick="selectSubject('image-processing-and-computer-vision')" style="width:100%; justify-content:center; padding:0.6rem;"><span>ENTER SUBJECT PORTAL →</span>
               </button>
+              <div style="display:flex; gap:0.4rem; flex-wrap:wrap; margin-top:0.4rem;">
+                <a href="final/image-processing-masudul-ahsan.pdf" target="_blank" class="btn btn-xs" style="flex:1; justify-content:center;">[📑 Masudul Ahsan Sir Notes ↗]</a>
+              </div>
             </div>
           </div>
         </div>
@@ -1794,7 +1817,7 @@ html.dark .full-exam-img {
         <div style="margin-top:2rem; padding:1.2rem; border:1px solid var(--border-main); background:var(--bg-sheet); display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:0.75rem;">
           <div><span class="font-mono text-xs font-bold">COMPLETE COURSE PACK:</span><span style="margin-left:0.5rem; color:var(--text-dim);" class="text-xs font-mono">Merged official papers & syllabus tree</span>
           </div>
-          <div style="display:flex; gap:0.5rem; flex-wrap:wrap;"><a href="master_study_mindmap.html?search=CSE" target="_blank" class="btn">[Master Mind Map ↗]</a><a href="artifacts/Copy of merged questions.pdf" target="_blank" class="btn">[Merged Questions PDF (49 MB) ↗]</a><a href="artifacts/Copy of Exam Schedule of 4-1, 2026.pdf" target="_blank" class="btn">[Exam Schedule (Nov 2026) ↗]</a>
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap;"><a href="master_study_mindmap.html?search=CSE" target="_blank" class="btn">[Master Mind Map ↗]</a><a href="artifacts/Copy of merged questions.pdf" target="_blank" class="btn">[Merged Questions PDF (58 MB) ↗]</a><button onclick="selectSubject('merged'); switchSubjectTab('books');" class="btn" style="background:var(--accent-math, #dca561); color:#121314; font-weight:bold;">[📚 All 10 Faculty Notes ↗]</button><a href="artifacts/Copy of Exam Schedule of 4-1, 2026.pdf" target="_blank" class="btn">[Exam Schedule (Nov 2026) ↗]</a>
           </div>
         </div>
       </section>
@@ -1903,6 +1926,9 @@ ii) Figures in the right margin indicate full marks. Original authentic exam pap
               <div id="fullExamPaperBar" class="exam-paper-bar">
                 <div style="display:flex; gap:0.4rem; align-items:center; flex-wrap:wrap;"><span style="font-size:0.75rem; font-weight:700; color:var(--text-dim);" class="font-mono">ORIGINAL FULL EXAM PAPER:</span>
                   <button id="btnToggleFullPaper" onclick="toggleFullPaperSection()" class="btn btn-xs">[VIEW FULL PAPER SCANS (<span id="paperScanCount">0</span> PAGES)]</button><a id="linkFullPaperPdf" href="#" target="_blank" class="btn btn-xs">[DOWNLOAD YEAR PDF ↗]</a><a id="linkAllYearsPdf" href="#" target="_blank" class="btn btn-xs">[ALL YEARS QUESTION PDF ↗]</a><a id="linkMergedArchivePdf" href="#" target="_blank" class="btn btn-xs">[JUMP TO MERGED ARCHIVE (P.<span id="paperArchivePages">--</span>) ↗]</a>
+                </div>
+                <div id="facultyNotesBar" style="display:flex; gap:0.4rem; align-items:center; flex-wrap:wrap; margin-top:0.45rem; padding-top:0.45rem; border-top:1px dashed var(--border-subtle);"><span style="font-size:0.75rem; font-weight:700; color:var(--accent-math, #dca561);" class="font-mono">FACULTY LECTURE NOTES:</span>
+                  <div id="facultyNotesButtons" style="display:inline-flex; gap:0.4rem; flex-wrap:wrap;"></div>
                 </div>
               </div>
               <!-- FULL QUESTION PAPER SCANS COLLAPSIBLE GALLERY-->
@@ -3379,6 +3405,14 @@ function renderExamPaper(slug, year) {
       linkMerged.style.display = "inline-flex";
     }
     if (galleryTitle) galleryTitle.textContent = `${slug === 'merged' ? 'All Core Courses' : (cdata.course || sObj?.name || slug)} — ${year} (Pages ${fullPaperInfo.pages.join(", ")})`;
+
+    const notesBtnsContainer = $("#facultyNotesButtons");
+    if (notesBtnsContainer && sObj && sObj.books) {
+      const noteBooks = sObj.books.filter(b => b.url.startsWith("final/"));
+      notesBtnsContainer.innerHTML = noteBooks.map(b => `
+        <a href="${b.url}" target="_blank" class="btn btn-xs" style="background:var(--bg-sheet); color:var(--text-ink); font-weight:bold; border-color:var(--border-main);">[📑 ${b.name.replace(' Master Book', '').replace('Prof. ', '')} (${b.pages}) ↗]</a>
+      `).join("");
+    }
 
     if (galleryGrid) {
       galleryGrid.innerHTML = fullPaperInfo.pages.map((p, idx) => `
