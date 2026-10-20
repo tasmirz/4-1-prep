@@ -1610,15 +1610,39 @@ html.dark .full-exam-img {
 }
 
 /* UNIFIED TOP NAVBAR BUTTON & BADGE SIZING (PIXEL-PERFECT ALIGNMENT) */
-#globalProgressBadge,
-#navCalendarBtn,
-#themeToggleBtn {
+#globalProgressBadge {
   box-sizing: border-box !important;
   font-family: var(--font-mono) !important;
-  font-size: 0.78rem !important;
+  font-size: 0.74rem !important;
   font-weight: 700 !important;
   line-height: 1 !important;
-  padding: 0 0.85rem !important;
+  padding: 0 0.65rem !important;
+  border: 1px solid var(--border-main) !important;
+  background: var(--bg-box) !important;
+  color: var(--text-ink) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: default !important;
+  user-select: text !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+  white-space: nowrap !important;
+}
+
+.nav-icon-btn {
+  box-sizing: border-box !important;
+  font-family: var(--font-mono) !important;
+  font-size: 1.05rem !important;
+  line-height: 1 !important;
+  width: 32px !important;
+  min-width: 32px !important;
+  max-width: 32px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+  padding: 0 !important;
   border: 1px solid var(--border-main) !important;
   background: var(--bg-sheet) !important;
   color: var(--text-ink) !important;
@@ -1626,19 +1650,18 @@ html.dark .full-exam-img {
   align-items: center !important;
   justify-content: center !important;
   cursor: pointer !important;
-  height: 32px !important;
-  min-height: 32px !important;
-  max-height: 32px !important;
-  white-space: nowrap !important;
+  text-decoration: none !important;
+  flex-shrink: 0 !important;
+  transition: background 0.12s ease, transform 0.08s ease;
 }
-#globalProgressBadge {
+
+.nav-icon-btn:hover {
   background: var(--bg-box) !important;
-  cursor: default !important;
-  user-select: text !important;
+  border-color: var(--border-main) !important;
 }
-#navCalendarBtn:hover,
-#themeToggleBtn:hover {
-  background: var(--bg-box) !important;
+
+.nav-icon-btn:active {
+  transform: translateY(1px);
 }
 
 /* Calendar header action buttons */
@@ -1661,9 +1684,12 @@ html.dark .full-exam-img {
       <div class="nav-container">
         <div id="navBreadcrumbs" class="breadcrumbs"><a href="#/" onclick="navigateHome(event)">[KUET CSE HUB]</a><span>/</span><span id="navSubpath">Subject Selection</span>
         </div>
-        <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;"><span id="globalProgressBadge">SYLLABUS: 0/107 READ (0%)</span>
-          <button id="navCalendarBtn" onclick="document.getElementById('examCalendarSection').scrollIntoView({behavior:'smooth'})">[📅 EXAM CALENDAR]</button>
-          <button id="themeToggleBtn" onclick="toggleTheme()">[THEME: LIGHT]</button>
+        <div style="display:flex; align-items:center; gap:0.45rem; flex-wrap:nowrap;">
+          <span id="globalProgressBadge" title="Syllabus Reading Progress">📊 0/107 (0%)</span>
+          <button id="navNotesBtn" onclick="handleNavNotesClick()" title="Faculty Notes (Books)" class="nav-icon-btn">📚</button>
+          <a id="navQuestionsBtn" href="artifacts/Copy of merged questions.pdf" target="_blank" title="Solved Examination Questions PDF (58 MB) ↗" class="nav-icon-btn">❓</a>
+          <button id="navCalendarBtn" onclick="handleNavCalendarClick()" title="Academic Exam Calendar" class="nav-icon-btn">📅</button>
+          <button id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Theme" class="nav-icon-btn">🌓</button>
         </div>
       </div>
     </header>
@@ -1671,10 +1697,8 @@ html.dark .full-exam-img {
     <main class="site-content">
       <!-- VIEW 1: HUB HOME (SUBJECT SELECTION)-->
       <section id="view-home">
-        <div style="text-align:center; padding: 2rem 1rem; border: 1px solid var(--border-main); background: var(--bg-sheet); margin-bottom: 1.5rem; box-shadow: 2px 2px 0px var(--border-main);">
-          <h1 style="font-size:1.6rem; font-weight:900; text-transform:uppercase; letter-spacing:0.02em;">KUET CSE Academic Study & Examination Archive</h1>
-          <p style="font-family:var(--font-mono); font-size:0.85rem; color:var(--text-dim); margin-top:0.4rem;">4th Year 1st Term · 6 Core Courses · 10 Merged Slide Books · 1,517 Solved Exam Questions with Authentic Scan Crops</p>
-          <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;">Select a subject to enter its dedicated portal:</p>
+        <div style="text-align:center; padding: 1.25rem 1rem; border: 1px solid var(--border-main); background: var(--bg-sheet); margin-bottom: 1.25rem; box-shadow: 2px 2px 0px var(--border-main);">
+          <h1 style="font-size:1.4rem; font-weight:900; text-transform:uppercase; letter-spacing:0.02em; margin:0;">KUET CSE Academic Study &amp; Examination Archive</h1>
         </div>
         <div id="subjectCardsGrid" class="subject-grid">
           <div class="subject-card featured-merged-card">
@@ -2647,7 +2671,10 @@ function updateGlobalProgress() {
   TOPICS.forEach(t => { if (isTopicDone(t.slug, t.topic)) done++; });
   const pct = TOPICS.length ? Math.round((done / TOPICS.length) * 100) : 0;
   const badge = $("#globalProgressBadge");
-  if (badge) badge.textContent = `SYLLABUS: ${done}/${TOPICS.length} READ (${pct}%)`;
+  if (badge) {
+    badge.textContent = `📊 ${done}/${TOPICS.length} (${pct}%)`;
+    badge.setAttribute("title", `Syllabus Reading Progress: ${done} of ${TOPICS.length} topics read (${pct}%)`);
+  }
 }
 
 // Question Practice LocalStorage Tracking
@@ -3066,13 +3093,14 @@ function initTheme() {
   if (isDark) {
     document.documentElement.classList.add("dark");
     document.documentElement.classList.remove("light");
-    const btn = $("#themeToggleBtn");
-    if (btn) btn.textContent = "[THEME: DARK]";
   } else {
     document.documentElement.classList.remove("dark");
     document.documentElement.classList.add("light");
-    const btn = $("#themeToggleBtn");
-    if (btn) btn.textContent = "[THEME: LIGHT]";
+  }
+  const btn = $("#themeToggleBtn");
+  if (btn) {
+    btn.textContent = isDark ? "🌙" : "☀️";
+    btn.setAttribute("title", isDark ? "Theme: Dark (Switch to Light)" : "Theme: Light (Switch to Dark)");
   }
   syncIframeTheme(isDark);
 }
@@ -3081,8 +3109,36 @@ function toggleTheme() {
   document.documentElement.classList.toggle("light", !isDark);
   localStorage.setItem("hub_theme", isDark ? "dark" : "light");
   const btn = $("#themeToggleBtn");
-  if (btn) btn.textContent = isDark ? "[THEME: DARK]" : "[THEME: LIGHT]";
+  if (btn) {
+    btn.textContent = isDark ? "🌙" : "☀️";
+    btn.setAttribute("title", isDark ? "Theme: Dark (Switch to Light)" : "Theme: Light (Switch to Dark)");
+  }
   syncIframeTheme(isDark);
+}
+
+// Top Navbar Icon Actions
+function handleNavNotesClick() {
+  if (CURRENT_SUBJECT && CURRENT_SUBJECT !== "home" && !$("#view-subject").classList.contains("hidden")) {
+    switchSubjectTab("books");
+  } else {
+    selectSubject("merged");
+    setTimeout(() => {
+      switchSubjectTab("books");
+    }, 60);
+  }
+}
+
+function handleNavCalendarClick() {
+  const cal = document.getElementById("examCalendarSection");
+  if (!cal) return;
+  if ($("#view-home").classList.contains("hidden")) {
+    window.location.hash = "#/";
+    setTimeout(() => {
+      cal.scrollIntoView({ behavior: "smooth" });
+    }, 80);
+  } else {
+    cal.scrollIntoView({ behavior: "smooth" });
+  }
 }
 
 // 3. Navigation Actions
