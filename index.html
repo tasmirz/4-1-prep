@@ -1676,6 +1676,285 @@ html.dark .full-exam-img {
   padding: 0 0.65rem !important;
 }
 
+/* ==========================================================================
+   GLOBAL QUESTION STATEMENT VIEW MODES (TEXT ONLY / BOTH / SCANS ONLY)
+   ========================================================================== */
+.q-text-statement {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text-ink);
+  margin: 0.5rem 0 0.75rem 0;
+  padding: 0.65rem 0.85rem;
+  background: var(--bg-box);
+  border-left: 3px solid var(--border-main);
+  box-shadow: 1px 1px 0px var(--border-subtle);
+  user-select: text !important;
+  word-break: break-word;
+}
+html.dark .q-text-statement {
+  background: var(--bg-subtle);
+}
+
+/* Visibility rules governed by GLOBAL_QUESTION_VIEW_MODE */
+.view-mode-text .q-scan-primary {
+  display: none !important;
+}
+.view-mode-text .q-text-statement {
+  display: block !important;
+}
+
+.view-mode-scans .q-text-statement {
+  display: none !important;
+}
+.view-mode-scans .q-scan-primary {
+  display: block !important;
+}
+
+.view-mode-both .q-text-statement,
+.view-mode-both .q-scan-primary {
+  display: block !important;
+}
+
+/* ==========================================================================
+   MOBILE-FIRST RESPONSIVE OPTIMIZATIONS (PRECIOUS SCREEN SPACE)
+   ========================================================================== */
+@media (max-width: 768px) {
+  /* 1. Explicit Subject Switch Bar: sleek horizontal swipeable chip row */
+  .archive-switch-bar {
+    display: flex !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+    gap: 0.3rem !important;
+    padding: 0.35rem 0.5rem !important;
+    scrollbar-width: none !important;
+    margin-bottom: 0.5rem !important;
+  }
+  .archive-switch-bar::-webkit-scrollbar {
+    display: none !important;
+  }
+  .archive-switch-bar span {
+    white-space: nowrap !important;
+    font-size: 0.68rem !important;
+    align-self: center !important;
+  }
+  .archive-switch-bar .btn {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    padding: 0.25rem 0.55rem !important;
+    font-size: 0.72rem !important;
+  }
+
+  /* 2. Course Hero Box: compact header without giant paragraph pushdown */
+  #view-subject > div[style*="padding:1.5rem"] {
+    padding: 0.65rem 0.85rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  #subjectPortalTitle {
+    font-size: 1.15rem !important;
+    margin: 0.15rem 0 !important;
+  }
+  #subjectPortalFaculty {
+    font-size: 0.75rem !important;
+    margin-top: 0.15rem !important;
+  }
+  #subjectPortalDesc {
+    display: none !important; /* Hide redundant paragraph on mobile */
+  }
+
+  /* 3. Subject Navigation Tabs: horizontal swipeable row (1 line instead of 4) */
+  .subject-tab-strip {
+    display: flex !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    gap: 0.25rem !important;
+    margin-bottom: 0.5rem !important;
+    border-bottom: 2px solid var(--border-main) !important;
+  }
+  .subject-tab-strip::-webkit-scrollbar {
+    display: none !important;
+  }
+  .sub-tab-btn {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    padding: 0.35rem 0.6rem !important;
+    font-size: 0.72rem !important;
+  }
+
+  /* 4. Examination Controls Box & Year Strip: 1 line swipeable row */
+  .exam-controls-box {
+    padding: 0.55rem 0.75rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  .exam-controls-box .controls-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.3rem !important;
+  }
+  .exam-controls-box .controls-row > span {
+    min-width: 0 !important;
+    font-size: 0.68rem !important;
+  }
+  .year-strip {
+    width: 100% !important;
+    display: flex !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    gap: 0.25rem !important;
+    padding: 2px 0 4px 0 !important;
+  }
+  .year-strip::-webkit-scrollbar {
+    display: none !important;
+  }
+  .year-strip button {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.72rem !important;
+  }
+
+  /* Filter buttons row wrapping */
+  .exam-controls-box .controls-row:last-child {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.4rem !important;
+  }
+  .exam-controls-box .controls-row:last-child > div {
+    display: flex !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    scrollbar-width: none !important;
+    gap: 0.3rem !important;
+    width: 100% !important;
+  }
+  .exam-controls-box .controls-row:last-child input {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* 5. Hierarchy Nav Box: 1 row per tier instead of 20 vertical buttons */
+  .hierarchy-nav-box {
+    padding: 0.5rem 0.65rem !important;
+    margin-bottom: 0.65rem !important;
+  }
+  .hierarchy-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.2rem !important;
+    margin-bottom: 0.35rem !important;
+  }
+  .hierarchy-label {
+    min-width: 0 !important;
+    width: 100% !important;
+    font-size: 0.68rem !important;
+    margin-bottom: 0.1rem !important;
+  }
+  .hierarchy-btns {
+    width: 100% !important;
+    display: flex !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    gap: 0.25rem !important;
+    padding-bottom: 2px !important;
+  }
+  .hierarchy-btns::-webkit-scrollbar {
+    display: none !important;
+  }
+  .hierarchy-btns .nav-tab-btn {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    padding: 0.22rem 0.45rem !important;
+    font-size: 0.7rem !important;
+  }
+
+  /* 6. Faculty Lecture Notes: horizontal scroll chip row instead of 10 vertical buttons */
+  #facultyNotesButtons {
+    display: flex !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    gap: 0.3rem !important;
+    padding-bottom: 4px !important;
+    width: 100% !important;
+  }
+  #facultyNotesButtons::-webkit-scrollbar {
+    display: none !important;
+  }
+  #facultyNotesButtons .btn {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    font-size: 0.7rem !important;
+    padding: 0.25rem 0.5rem !important;
+  }
+
+  /* 7. Exam Sheet & Cards on Mobile */
+  .exam-sheet {
+    padding: 0.75rem 0.6rem !important;
+  }
+  .exam-header {
+    padding-bottom: 0.6rem !important;
+    margin-bottom: 0.85rem !important;
+  }
+  .exam-univ {
+    font-size: 0.95rem !important;
+  }
+  .exam-dept {
+    font-size: 0.8rem !important;
+  }
+  .exam-term {
+    font-size: 0.72rem !important;
+  }
+  .exam-meta-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.2rem !important;
+    font-size: 0.72rem !important;
+  }
+  .exam-instructions {
+    display: none !important; /* Save space on mobile */
+  }
+
+  .question-card {
+    padding: 0.75rem 0.65rem !important;
+    margin-bottom: 1rem !important;
+  }
+  .q-header-strip {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.35rem !important;
+  }
+  .q-header-left {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 0.3rem !important;
+  }
+  .q-header-right {
+    align-self: flex-end !important;
+  }
+  .q-tags-row {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 0.3rem !important;
+  }
+
+  .q-text-statement {
+    font-size: 0.88rem !important;
+    line-height: 1.55 !important;
+    padding: 0.5rem 0.65rem !important;
+    margin: 0.35rem 0 0.5rem 0 !important;
+  }
+}
+
     </style>
   </head>
   <body>
@@ -1893,7 +2172,9 @@ html.dark .full-exam-img {
               <div style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
                 <button onclick="toggleAllSolutions(true)" class="btn btn-xs">[+ EXPAND SOLUTIONS]</button>
                 <button onclick="toggleAllSolutions(false)" class="btn btn-xs">[- COLLAPSE]</button>
-                <button onclick="toggleAllScans()" class="btn btn-xs">[TOGGLE SCANS]</button>
+                <button id="btnGlobalViewMode" onclick="cycleGlobalQuestionViewMode()" class="btn btn-xs font-mono font-bold" title="Toggle Question View: Text Only (crisp & compact for mobile) / Both / Scans Only">
+                  <span id="globalViewModeLabel">[📄 VIEW: TEXT]</span>
+                </button>
                 <input id="qnaSearchInput" type="text" oninput="filterQuestionsSearch()" placeholder="Search keyword..." style="width:160px; padding:0.25rem 0.5rem; font-size:0.75rem;">
               </div>
             </div>
@@ -3599,6 +3880,7 @@ function renderExamPaper(slug, year) {
   renderSectionQuestions("sectionAQuestionsList", secA, "A");
   renderSectionQuestions("sectionBQuestionsList", secB, "B");
   applyQuestionFilters();
+  applyGlobalQuestionViewMode();
   makeEmojisMonochrome($("#printableExamSheet"));
 }
 
@@ -3801,12 +4083,17 @@ function renderSectionQuestions(elementId, qList, sectionName) {
               </div>
             </div>
 
-            <!-- PRIMARY QUESTION STATEMENT: AUTHENTIC SCAN CROP (DOUBLE-CLICK TO ZOOM QUESTION) -->
+            <!-- PRIMARY QUESTION STATEMENT: READABLE FORMATTED TEXT (CRISP & RESILIENT ON MOBILE) -->
+            <div class="q-text-statement selectable-text" id="qtext-${q.id}">
+              ${formatQuestionText(q.question)}
+            </div>
+
+            <!-- PRIMARY QUESTION STATEMENT: AUTHENTIC SCAN CROP (CLICK OR TAP TO ZOOM QUESTION) -->
             ${cropFileName ? `
-              <div class="q-scan-primary" id="crop-wrap-${q.id}" title="Double-click to zoom directly to this question on the full exam sheet" ondblclick="openZoomModal('${cropPath}', '${q.id}', '${sourcePageNum}')">
+              <div class="q-scan-primary" id="crop-wrap-${q.id}" title="Tap or click to zoom directly to this question on the full exam sheet (Page ${sourcePageNum})" onclick="openZoomModal('${cropPath}', '${q.id}', '${sourcePageNum}')">
                 <img src="${cropPath}" alt="Official University Examination Question Paper Scan Crop" class="exam-scan-img" onerror="this.onerror=null; this.closest('.q-scan-primary').style.display='none'; document.getElementById('ocr-drawer-${q.id}').classList.remove('hidden');" />
                 <div class="scan-hover-hint">
-                  <span>[DOUBLE-CLICK TO ZOOM QUESTION · P.${sourcePageNum}]</span>
+                  <span>[TAP TO ZOOM OFFICIAL SCAN SHEET · P.${sourcePageNum}]</span>
                 </div>
               </div>
             ` : ''}
@@ -3920,9 +4207,49 @@ function renderSectionQuestions(elementId, qList, sectionName) {
   makeEmojisMonochrome(container);
   renderMath(container);
   renderMermaidInContainer(container);
+  applyGlobalQuestionViewMode();
 }
 
-      function toggleScanVisibility(qId) {
+let GLOBAL_QUESTION_VIEW_MODE = localStorage.getItem("global_question_view_mode") || (window.innerWidth <= 768 ? "text" : "both");
+
+function applyGlobalQuestionViewMode() {
+  const sheet = document.getElementById("printableExamSheet");
+  const btnLabel = document.getElementById("globalViewModeLabel");
+  const btn = document.getElementById("btnGlobalViewMode");
+  if (sheet) {
+    sheet.classList.remove("view-mode-text", "view-mode-scans", "view-mode-both");
+    sheet.classList.add(`view-mode-${GLOBAL_QUESTION_VIEW_MODE}`);
+  }
+  if (btnLabel && btn) {
+    if (GLOBAL_QUESTION_VIEW_MODE === "text") {
+      btnLabel.textContent = "[📄 VIEW: TEXT]";
+      btn.title = "Currently in crisp readable text mode (ideal for mobile). Click to view both text and scans.";
+      btn.classList.add("btn-active");
+    } else if (GLOBAL_QUESTION_VIEW_MODE === "both") {
+      btnLabel.textContent = "[📄+🖼️ VIEW: BOTH]";
+      btn.title = "Currently showing both text and scans. Click for scans only.";
+      btn.classList.add("btn-active");
+    } else {
+      btnLabel.textContent = "[🖼️ VIEW: SCANS]";
+      btn.title = "Currently showing scan crops only. Click for crisp readable text.";
+      btn.classList.remove("btn-active");
+    }
+  }
+}
+
+function cycleGlobalQuestionViewMode() {
+  if (GLOBAL_QUESTION_VIEW_MODE === "text") {
+    GLOBAL_QUESTION_VIEW_MODE = "both";
+  } else if (GLOBAL_QUESTION_VIEW_MODE === "both") {
+    GLOBAL_QUESTION_VIEW_MODE = "scans";
+  } else {
+    GLOBAL_QUESTION_VIEW_MODE = "text";
+  }
+  localStorage.setItem("global_question_view_mode", GLOBAL_QUESTION_VIEW_MODE);
+  applyGlobalQuestionViewMode();
+}
+
+function toggleScanVisibility(qId) {
   const wrap = document.getElementById("crop-wrap-" + qId);
   const label = document.getElementById("scan-toggle-label-" + qId);
   if (!wrap) return;
@@ -3931,14 +4258,7 @@ function renderSectionQuestions(elementId, qList, sectionName) {
 }
 
 function toggleAllScans() {
-  ALL_SCANS_VISIBLE = !ALL_SCANS_VISIBLE;
-  $$(".q-crop-wrap").forEach(w => {
-    if (ALL_SCANS_VISIBLE) w.classList.remove("hidden");
-    else w.classList.add("hidden");
-  });
-  $$("[id^='scan-toggle-label-']").forEach(l => {
-    l.innerHTML = ALL_SCANS_VISIBLE ? `<abbr title="Hide exam scan crop">${ICONS.eye}</abbr>` : `<abbr title="Show exam scan crop">${ICONS.eyeOff}</abbr>`;
-  });
+  cycleGlobalQuestionViewMode();
 }
 
 function toggleSolutionDrawer(qId) {
@@ -4327,6 +4647,7 @@ function boot() {
   updateGlobalPracticeCounter();
   updateDynamicExamCountdown();
   router();
+  applyGlobalQuestionViewMode();
   makeEmojisMonochrome(document.body);
   renderMath($("#printableExamSheet"));
   // Automatically refresh countdown every minute
