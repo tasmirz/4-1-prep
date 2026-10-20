@@ -974,7 +974,7 @@ html.dark .q-scan-primary {
 .zoom-content {
   position: absolute;
   transform-origin: 0 0;
-  transition: transform 0.03s linear;
+  will-change: transform;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2925,6 +2925,32 @@ function zoomToQuestion(targetQId) {
   }
 }
 
+function zoomAt(targetX, targetY, factor) {
+  const vp = document.getElementById("zoomViewport");
+  const img = document.getElementById("zoomModalImg");
+  if (!vp || !img) return;
+
+  const vw = vp.clientWidth;
+  const vh = vp.clientHeight;
+  const imgW = img.naturalWidth || img.clientWidth || vw;
+  const imgH = img.naturalHeight || img.clientHeight || vh;
+
+  const newScale = Math.min(Math.max(zoomScale * factor, 0.25), 8.0);
+  if (Math.abs(newScale - zoomScale) < 0.0001) return;
+
+  const originX = (vw - imgW) / 2;
+  const originY = (vh - imgH) / 2;
+
+  const imgX = (targetX - originX - panX) / zoomScale;
+  const imgY = (targetY - originY - panY) / zoomScale;
+
+  panX = targetX - originX - (imgX * newScale);
+  panY = targetY - originY - (imgY * newScale);
+  zoomScale = newScale;
+
+  applyZoomTransform();
+}
+
 function handleZoomDblClick(e) {
   const vp = document.getElementById("zoomViewport");
   const img = document.getElementById("zoomModalImg");
@@ -2943,21 +2969,7 @@ function handleZoomDblClick(e) {
   const rect = vp.getBoundingClientRect();
   const clickX = e.clientX - rect.left;
   const clickY = e.clientY - rect.top;
-
-  const vw = vp.clientWidth;
-  const vh = vp.clientHeight;
-  const imgW = img.naturalWidth;
-  const imgH = img.naturalHeight;
-
-  const newScale = Math.min(zoomScale * 1.5, 4.5);
-
-  const imgX = (clickX - (vw - imgW) / 2 - panX) / zoomScale;
-  const imgY = (clickY - (vh - imgH) / 2 - panY) / zoomScale;
-
-  panX = Math.round(clickX - (vw - imgW) / 2 - imgX * newScale);
-  panY = Math.round(clickY - (vh - imgH) / 2 - imgY * newScale);
-  zoomScale = newScale;
-  applyZoomTransform();
+  zoomAt(clickX, clickY, 1.6 / zoomScale);
 }
 
 function closeZoomModal() {
@@ -2986,13 +2998,15 @@ function applyZoomTransform() {
 }
 
 function zoomIn() {
-  zoomScale = Math.min(zoomScale * 1.25, 6.0);
-  applyZoomTransform();
+  const vp = document.getElementById("zoomViewport");
+  if (!vp) return;
+  zoomAt(vp.clientWidth / 2, vp.clientHeight / 2, 1.25);
 }
 
 function zoomOut() {
-  zoomScale = Math.max(zoomScale / 1.25, 0.25);
-  applyZoomTransform();
+  const vp = document.getElementById("zoomViewport");
+  if (!vp) return;
+  zoomAt(vp.clientWidth / 2, vp.clientHeight / 2, 0.8);
 }
 
 function zoomReset() {
@@ -3036,14 +3050,19 @@ function toggleZoomInvert() {
 
 function handleZoomWheel(e) {
   e.preventDefault();
-  const delta = e.deltaY < 0 ? 1.15 : 0.87;
-  const newScale = Math.min(Math.max(zoomScale * delta, 0.25), 6.0);
+  const vp = document.getElementById("zoomViewport");
+  if (!vp) return;
+  const rect = vp.getBoundingClientRect();
+  const mouseX = e.clientX - rect.left;
+  const mouseY = e.clientY - rect.top;
 
-  // Zoom relative to viewport center
-  panX = panX * (newScale / zoomScale);
-  panY = panY * (newScale / zoomScale);
-  zoomScale = newScale;
-  applyZoomTransform();
+  let factor;
+  if (e.ctrlKey) {
+    factor = Math.exp(-e.deltaY * 0.01);
+  } else {
+    factor = e.deltaY < 0 ? 1.15 : 0.87;
+  }
+  zoomAt(mouseX, mouseY, factor);
 }
 
 function startPan(e) {
