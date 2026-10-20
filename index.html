@@ -171,14 +171,17 @@ input[type="text"]:focus, select:focus {
 header.top-nav {
   background: var(--bg-sheet);
   border-bottom: 1px solid var(--border-main);
-  padding: 0.6rem 1rem;
+  padding: 0.5rem 0;
   position: sticky;
   top: 0;
   z-index: 50;
+  width: 100%;
 }
 .nav-container {
-  max-width: 1100px;
+  max-width: 1140px;
   margin: 0 auto;
+  padding: 0 1rem;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -204,8 +207,8 @@ header.top-nav {
 
 /* MAIN CONTENT CONTAINER */
 main.site-content {
-  max-width: 1020px;
-  margin: 1.5rem auto 4rem auto;
+  max-width: 1140px;
+  margin: 1.25rem auto 4rem auto;
   padding: 0 1rem;
   width: 100%;
   box-sizing: border-box;
@@ -2126,7 +2129,7 @@ html.dark .q-text-statement {
       <!-- VIEW 2: DEDICATED SUBJECT PORTAL (WITH TABS)-->
       <section id="view-subject" class="hidden">
         <!-- QUICK ARCHIVE SWITCHER STRIP-->
-        <div style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap; margin-bottom:1rem; padding:0.55rem 0.85rem; border:1px solid var(--border-main); background:var(--bg-sheet); box-shadow: 2px 2px 0px var(--border-main);" class="archive-switch-bar"><span class="font-mono text-xs font-bold">ARCHIVE SWITCH:</span>
+        <div style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap; margin-bottom:0.65rem; padding:0.45rem 0.75rem; border:1px solid var(--border-main); background:var(--bg-sheet); box-shadow: 2px 2px 0px var(--border-main);" class="archive-switch-bar"><span class="font-mono text-xs font-bold">SWITCH:</span>
           <button id="switchBtn-merged" onclick="selectSubject('merged')" class="btn btn-xs">[★ MERGED QB]</button>
           <button id="switchBtn-computer-networks" onclick="selectSubject('computer-networks')" class="btn btn-xs">[NETWORKS]</button>
           <button id="switchBtn-machine-learning" onclick="selectSubject('machine-learning')" class="btn btn-xs">[ML]</button>
@@ -2135,13 +2138,16 @@ html.dark .q-text-statement {
           <button id="switchBtn-computer-graphics" onclick="selectSubject('computer-graphics')" class="btn btn-xs">[GRAPHICS]</button>
           <button id="switchBtn-image-processing-and-computer-vision" onclick="selectSubject('image-processing-and-computer-vision')" class="btn btn-xs">[IMAGE]</button>
         </div>
-        <div style="border:1px solid var(--border-main); background:var(--bg-sheet); padding:1.5rem; box-shadow: 2px 2px 0px var(--border-main);">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
-            <button onclick="navigateHome(event)">[← BACK TO ALL SUBJECTS]</button><span id="subjectMetaCode" style="border:1px solid var(--border-main); padding:0.2rem 0.5rem; background:var(--bg-subtle); font-weight:800;" class="font-mono text-xs">CSE 3201</span>
+        <div class="subject-hero-card" style="border:1px solid var(--border-main); background:var(--bg-sheet); padding:0.65rem 0.85rem; box-shadow: 2px 2px 0px var(--border-main); margin-bottom:0.75rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+            <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+              <button onclick="navigateHome(event)" class="btn btn-xs font-mono font-bold">[← ALL SUBJECTS]</button>
+              <h2 id="subjectPortalTitle" style="font-size:1.15rem; font-weight:900; margin:0; line-height:1.2;">Subject Title</h2>
+              <span id="subjectMetaCode" style="border:1px solid var(--border-main); padding:0.15rem 0.45rem; background:var(--bg-subtle); font-weight:800;" class="font-mono text-xs">CSE 3201</span>
+            </div>
+            <div id="subjectPortalFaculty" style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-dim); margin:0;">Faculty: Loading...</div>
           </div>
-          <h2 id="subjectPortalTitle" style="font-size:1.75rem; font-weight:900;">Subject Title</h2>
-          <p id="subjectPortalFaculty" style="font-family:var(--font-mono); font-size:0.85rem; color:var(--text-dim); margin-top:0.25rem;">Faculty: Loading...</p>
-          <p id="subjectPortalDesc" style="font-size:0.88rem; margin-top:0.6rem; color:var(--text-dim); line-height:1.5;">Detailed course description...</p>
+          <p id="subjectPortalDesc" style="display:none;"></p>
         </div>
         <!-- SUBJECT NAVIGATION TABS-->
         <div class="subject-tab-strip">
@@ -2213,14 +2219,10 @@ html.dark .q-text-statement {
               <div class="exam-dept">Department of Computer Science and Engineering</div>
               <div class="exam-term">B.Sc. Engineering 4th Year 1st Term Examination, <span id="paperYearTitle">2024</span></div>
               <div class="exam-meta-grid">
-                <div><b>Course Code: </b><span id="paperCourseCode">CSE 3201</span></b>
-                </div>
-                <div style="text-align:right;"><b>Full Marks: </b>60 (30 + 30)</b>
-                </div>
-                <div><b>Course Title: </b><span id="paperCourseTitle">Computer Networks</span></b>
-                </div>
-                <div style="text-align:right;"><b>Time: </b>3 Hours</b>
-                </div>
+                <div><b>Course Code: </b><span id="paperCourseCode">CSE 3201</span></div>
+                <div style="text-align:right;"><b>Full Marks: </b>60 (30 + 30)</div>
+                <div><b>Course Title: </b><span id="paperCourseTitle">Computer Networks</span></div>
+                <div style="text-align:right;"><b>Time: </b>3 Hours</div>
               </div>
               <p class="exam-instructions">N.B. i) Answer any THREE questions from each section in separate scripts.<br>
 ii) Figures in the right margin indicate full marks. Original authentic exam paper scan crops shown with complete step-by-step solutions below.
@@ -3564,9 +3566,10 @@ function router() {
     vHome.classList.add("hidden");
     vSubject.classList.remove("hidden");
     if (breadcrumbs) {
+      const shortName = COURSE_SHORT_NAMES[slug] || sObj.code || sObj.name;
       breadcrumbs.innerHTML = `
         <a href="#/" onclick="navigateHome(event)">[KUET CSE HUB]</a> <span>/</span>
-        <span>[${esc(sObj.name)}] Portal</span>
+        <span>[${esc(shortName)}]</span>
       `;
     }
     renderSubjectPortal(slug, year);
@@ -3622,7 +3625,8 @@ function renderSubjectPortal(slug, targetYear) {
 
   $("#subjectMetaCode").textContent = sObj.code;
   $("#subjectPortalTitle").textContent = sObj.name;
-  $("#subjectPortalFaculty").textContent = `Faculty: ${sObj.faculty}`;
+  const cleanFaculty = (sObj.faculty || "").replace(" · Unified 4-1 Examination Archive", "");
+  $("#subjectPortalFaculty").textContent = cleanFaculty ? `Faculty: ${cleanFaculty}` : "";
   $("#subjectPortalDesc").textContent = sObj.desc;
 
   // Render Slide Books Panel
