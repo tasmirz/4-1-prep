@@ -2516,15 +2516,94 @@ if (window.mermaid) {
   }
 }
 
-function renderMermaidInContainer(container) {
-  if (!window.mermaid || !container) return;
-  try {
-    const mNodes = container.querySelectorAll('.mermaid:not([data-processed="true"])');
-    if (mNodes.length > 0) {
-      mermaid.run({ nodes: mNodes }).catch(e => console.warn('Mermaid render error:', e));
+const MERMAID_SVG_CACHE = new Map();
+
+// Restore SVG cache from sessionStorage on boot for instantaneous refreshes
+try {
+  const savedCache = sessionStorage.getItem("MERMAID_SVG_CACHE");
+  if (savedCache) {
+    const parsed = JSON.parse(savedCache);
+    for (const [k, v] of Object.entries(parsed)) {
+      MERMAID_SVG_CACHE.set(k, v);
     }
-  } catch (e) {
-    console.warn("Mermaid run error:", e);
+  }
+} catch (e) {}
+
+function saveMermaidCache() {
+  try {
+    const obj = {};
+    let count = 0;
+    for (const [k, v] of MERMAID_SVG_CACHE.entries()) {
+      if (count++ < 160) obj[k] = v;
+    }
+    sessionStorage.setItem("MERMAID_SVG_CACHE", JSON.stringify(obj));
+  } catch (e) {}
+}
+
+function hashMermaidCode(str) {
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) + hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return "mmd_" + (hash >>> 0).toString(36);
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+let _mermaidRenderSeq = 0;
+
+async function renderMermaidInContainer(container) {
+  if (!window.mermaid || !container) return;
+
+  const mNodes = container.querySelectorAll('.mermaid:not([data-processed="true"])');
+  if (mNodes.length === 0) return;
+
+  for (const node of mNodes) {
+    // 1. Get raw code and preserve it for diff/hashing
+    const rawCode = (node.getAttribute("data-mermaid-code") || node.textContent || "").trim();
+    if (!rawCode) continue;
+    if (!node.getAttribute("data-mermaid-code")) {
+      node.setAttribute("data-mermaid-code", rawCode);
+    }
+
+    const key = hashMermaidCode(rawCode);
+
+    // 2. Check Cache First (0ms instant restore from memory or sessionStorage)
+    if (MERMAID_SVG_CACHE.has(key)) {
+      node.innerHTML = MERMAID_SVG_CACHE.get(key);
+      node.setAttribute("data-processed", "true");
+      continue;
+    }
+
+    // 3. Skip rendering if hidden in closed drawer or 0-dimension container
+    // Prevents "translate(undefined, NaN)" errors on elements with 0 dimensions
+    const isHidden = !node.offsetParent && window.getComputedStyle(node).position !== "fixed";
+    const inClosedDrawer = node.closest(".solution-drawer:not(.open)");
+    if (isHidden || inClosedDrawer) {
+      continue; // Lazily rendered when user opens the solution drawer
+    }
+
+    // 4. Render visible node with error boundary
+    try {
+      const renderId = `mermaid_chart_${key}_${++_mermaidRenderSeq}`;
+      const { svg } = await mermaid.render(renderId, rawCode);
+      MERMAID_SVG_CACHE.set(key, svg);
+      node.innerHTML = svg;
+      node.setAttribute("data-processed", "true");
+      saveMermaidCache();
+    } catch (err) {
+      console.warn("Mermaid diagram rendering handled gracefully:", key, err.message || err);
+      node.innerHTML = `<pre class="font-mono text-xs p-2 bg-subtle border border-main" style="white-space:pre-wrap; overflow-x:auto;">${escapeHtml(rawCode)}</pre>`;
+      node.setAttribute("data-processed", "fallback");
+    }
   }
 }
 const slugify = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
